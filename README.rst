@@ -5,7 +5,7 @@ liaf-arff
 The liac-arff module implements functions to read and write ARFF files in 
 Python. 
 
-Attribute Relationship File Format (`ARFF <http://weka.wikispaces.com/ARFF>`_) 
+Attribute Relationship File Format (`ARFF <http://weka.wikispaces.com/ARFF>`_ ) 
 is the text format file used by Weka to store data in a database. This module 
 is an ARFF file handler based on other python parser modules (such json and 
 yaml).
