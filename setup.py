@@ -13,14 +13,18 @@ except ImportError:
 
 from setuptools import setup, find_packages
 
-f = open('README.rst','rU')
-long_description = f.read()
-f.close()
+try:
+    f = open('README.rst','rU')
+    long_description = f.read()
+    f.close()
+except:
+    long_description = ''
 
 setup(
     name = 'liac-arff',
     version = __version__,
     author = __author__,
+    author_email = __author_email__,
     license='MIT License',
     description = 'A library for read and write ARFF files in Python',
     long_description=long_description,
@@ -43,4 +47,5 @@ setup(
     ],
     keywords='arff weka parser liac python',
     py_modules=['arff'],
+    package_data={'':['README.rst', 'LICENSE']}
     )
