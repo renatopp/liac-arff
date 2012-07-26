@@ -85,8 +85,7 @@ ARFF_TYPES = {
     'NUMERIC': float, 
     'REAL': float, 
     'INTEGER': int, 
-    'STRING': __arff_to_str,
-    'NOMINAL': __arff_to_str
+    'STRING': __arff_to_str
 }
 
 COMMENT = '%'
@@ -199,12 +198,12 @@ def dumps(obj):
     for line in obj['attributes']:
         name = __str_to_arff(line[0])
 
-        if line[1].upper() != 'NOMINAL':
-            type_values = __str_to_arff(line[1])
+        if not isinstance(line[1], (list, tuple)):
+            type_values = __str_to_arff(line[1].upper())
 
         else:
             type_values = '{'+', '.join(
-                [(__str_to_arff(i)) for i in line[2]]
+                [(__str_to_arff(i)) for i in line[1]]
             )+'}'
 
         writer.write(ATTRIBUTE, name, type_values)
@@ -231,3 +230,4 @@ if __name__ == '__main__':
     data = load(fp)
     import pprint
     pprint.pprint(data)
+    print dumps(data)
