@@ -56,9 +56,8 @@ def __decode_attribute(type_values):
         type = type_values.upper()
         return (type, )
     else:
-        type = 'NOMINAL'
         values = next(csv.reader([type_values.strip('{} ')]))
-        return (type, [v.strip(', \'"') for v in values])
+        return ([v.strip(', \'"') for v in values], )
 
 def __decode_values(values, attributes):
     '''Eval the values relative to attributes'''
@@ -71,6 +70,8 @@ def __decode_values(values, attributes):
 
         if val == '?': 
             value = None
+        elif isinstance(type, (list, tuple)):
+            value = val
         else:
             value = ARFF_TYPES[type](val)
 
@@ -224,3 +225,9 @@ def dumps(obj):
 def dump(fp, obj):
     '''Write an ARFF file with the obj'''
     fp.write(dumps(obj))
+
+if __name__ == '__main__':
+    fp = open('C:\\Program Files (x86)\\weka-3-7\\data\\iris.arff')
+    data = load(fp)
+    import pprint
+    pprint.pprint(data)

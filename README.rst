@@ -46,11 +46,11 @@ Which results in::
     >>> data
     {
     'attributes': [
-        ('outlook', 'NOMINAL', ['sunny', 'overcast', 'rainy']),
+        ('outlook', ['sunny', 'overcast', 'rainy']),
         ('temperature', 'REAL'),
         ('humidity', 'REAL'),
-        ('windy', 'NOMINAL', ['TRUE', 'FALSE']),
-        ('play', 'NOMINAL', ['yes', 'no'])],
+        ('windy', ['TRUE', 'FALSE']),
+        ('play', ['yes', 'no'])],
     'data': [
         ['sunny', 85.0, 85.0, 'FALSE', 'no'],
         ['sunny', 80.0, 90.0, 'TRUE', 'no'],
