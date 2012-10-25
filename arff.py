@@ -52,6 +52,38 @@ def __str_to_arff(s):
     s = unicode(s)
     return u"'%s'" % s.replace("\\", r"\\").replace("'", r"\'").replace("\n", ' ').replace("\r", ' ')
 
+def __check_nominal(values, s):
+    assert s in values, "%s was not listed as a valid nominal value"
+    return s
+
+def __check_nominal_factory(values):
+    return lambda (x): __check_nominal(values, x)
+
+def __encode_attribute(type_values):
+    '''create encoding functions for the attribute'''
+    if type_values.upper() in ARFF_TYPES:
+        type = ARFF_TYPES[type_values.upper()]
+        return type
+    else:
+        values = type_values
+        return __check_nominal_factory(values)
+
+def __encode_values(values, attributes):
+    '''Encode the values relative to their attributes'''
+    result = []
+    for attr_func, val in zip(attributes, values):
+        if val == None:
+            result.append( '?' )
+        else:
+            try:
+                result.append(unicode(attr_func(val)))
+            except AssertionError, e:
+                raise AssertionError( "\n".join( str(e), "Values:", values) )
+            except ValueError, e:
+                raise AssertionError( "\n".join( str(e), "Values:", values) )
+
+    return result
+
 def __decode_attribute(type_values):
     '''Eval the type/values of the attribute'''
     if type_values.upper() in ARFF_TYPES:
@@ -197,6 +229,7 @@ def dumps(obj):
     writer.write()
 
     # Attributes
+    data_funcs = []
     for line in obj['attributes']:
         name = __str_to_arff(line[0])
 
@@ -209,12 +242,13 @@ def dumps(obj):
             )+'}'
 
         writer.write(ATTRIBUTE, name, type_values)
+        data_funcs.append( __encode_attribute( line[1] ) )
     writer.write()
 
     # Data and data values
     writer.write(DATA)
     for line in obj['data']:
-        writer.write(u','.join([__str_to_arff(i) for i in line]))
+        writer.write(u','.join(__encode_values(line, data_funcs)))
 
     # Filler
     writer.write(COMMENT)
