@@ -39,8 +39,10 @@ import csv
 def __arff_to_str(s):
     '''Converts an ARFF value to a Python string'''
     s = s.strip(u'')
-    if s.startswith('"') or s.startswith("'"):
-        return s[1:-1]
+    if s.startswith('"') and s.endswith('"'):
+        return s[1:-1].replace(r'\"', '"')
+    elif s.startswith("'") and s.endswith("'"):
+        return s[1:-1].replace(r"\'", "'")
     else:
         return s
 
