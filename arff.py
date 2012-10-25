@@ -38,7 +38,7 @@ import csv
 # Interal Helpers =============================================================
 def __arff_to_str(s):
     '''Converts an ARFF value to a Python string'''
-    s = s.strip('')
+    s = s.strip(u'')
     if s.startswith('"') or s.startswith("'"):
         return s[1:-1]
     else:
@@ -47,7 +47,7 @@ def __arff_to_str(s):
 def __str_to_arff(s):
     '''Converts a string to an ARFF value'''
     if s is None: s = '?'
-    s = str(s)
+    s = unicode(s)
     return "'%s'"%s if ' 'in s else s
 
 def __decode_attribute(type_values):
@@ -176,8 +176,8 @@ class Writer(object):
     def write(self, *args):
         self.s += ' '.join(args)+'\n'
 
-    def __str__(self):
-        return str(self.s)
+    def __unicode__(self):
+        return unicode(self.s)
 
 def dumps(obj):
     '''Returns a string in ARFF format from a given structure'''
@@ -212,14 +212,14 @@ def dumps(obj):
     # Data and data values
     writer.write(DATA)
     for line in obj['data']:
-        writer.write(','.join([__str_to_arff(i) for i in line]))
+        writer.write(u','.join([__str_to_arff(i) for i in line]))
 
     # Filler
     writer.write(COMMENT)
     writer.write(COMMENT)
     writer.write(COMMENT)
 
-    return str(writer)
+    return unicode(writer)
 
 def dump(fp, obj):
     '''Write an ARFF file with the obj'''
