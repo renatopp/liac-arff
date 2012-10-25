@@ -48,7 +48,7 @@ def __str_to_arff(s):
     '''Converts a string to an ARFF value'''
     if s is None: s = '?'
     s = unicode(s)
-    return "'%s'"%s if ' 'in s else s
+    return u"'%s'" % s.replace("\\", r"\\").replace("'", r"\'").replace("\n", ' ').replace("\r", ' ')
 
 def __decode_attribute(type_values):
     '''Eval the type/values of the attribute'''
