@@ -64,8 +64,8 @@ def __encode_attribute(type_values):
     if isinstance(type_values, (list, tuple)):
         values = type_values
         return __check_nominal_factory(values)
-    elif type_values.upper() in ARFF_TYPES:
-        type = ARFF_TYPES[type_values.upper()]
+    elif type_values.upper() in ENCODE_ARFF_TYPES:
+        type = ENCODE_ARFF_TYPES[type_values.upper()]
         return type
     else:
         raise ValueError("%s is not of a supported attribute type" % type_values)
@@ -73,6 +73,7 @@ def __encode_attribute(type_values):
 def __encode_values(values, attributes):
     '''Encode the values relative to their attributes'''
     result = []
+    print values, attributes
     for attr_func, val in zip(attributes, values):
         if val == None:
             result.append( '?' )
@@ -88,7 +89,7 @@ def __encode_values(values, attributes):
 
 def __decode_attribute(type_values):
     '''Eval the type/values of the attribute'''
-    if type_values.upper() in ARFF_TYPES:
+    if type_values.upper() in DECODE_ARFF_TYPES:
         type = type_values.upper()
         return (type, )
     else:
@@ -109,7 +110,7 @@ def __decode_values(values, attributes):
         elif isinstance(type, (list, tuple)):
             value = val
         else:
-            value = ARFF_TYPES[type](val)
+            value = DECODE_ARFF_TYPES[type](val)
 
         result.append(value)
 
@@ -117,7 +118,13 @@ def __decode_values(values, attributes):
 # =============================================================================
 
 # Constants ===================================================================
-ARFF_TYPES = {
+ENCODE_ARFF_TYPES = {
+    'NUMERIC': float, 
+    'REAL': float, 
+    'INTEGER': int, 
+    'STRING': __str_to_arff
+}
+DECODE_ARFF_TYPES = {
     'NUMERIC': float, 
     'REAL': float, 
     'INTEGER': int, 
