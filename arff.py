@@ -73,7 +73,6 @@ def __encode_attribute(type_values):
 def __encode_values(values, attributes):
     '''Encode the values relative to their attributes'''
     result = []
-    print values, attributes
     for attr_func, val in zip(attributes, values):
         if val == None:
             result.append( '?' )
