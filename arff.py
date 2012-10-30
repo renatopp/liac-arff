@@ -53,7 +53,7 @@ def __str_to_arff(s):
     return u"'%s'" % s.replace("\\", r"\\").replace("'", r"\'").replace("\n", ' ').replace("\r", ' ')
 
 def __check_nominal(values, s):
-    assert s in values, "%s was not listed as a valid nominal value"
+    assert s in values, "%s was not listed as a valid nominal value" % s
     return s
 
 def __check_nominal_factory(values):
@@ -61,12 +61,14 @@ def __check_nominal_factory(values):
 
 def __encode_attribute(type_values):
     '''create encoding functions for the attribute'''
-    if type_values.upper() in ARFF_TYPES:
+    if isinstance(type_values, (list, tuple)):
+        values = type_values
+        return __check_nominal_factory(values)
+    elif type_values.upper() in ARFF_TYPES:
         type = ARFF_TYPES[type_values.upper()]
         return type
     else:
-        values = type_values
-        return __check_nominal_factory(values)
+        raise ValueError("%s is not of a supported attribute type" % type_values)
 
 def __encode_values(values, attributes):
     '''Encode the values relative to their attributes'''
