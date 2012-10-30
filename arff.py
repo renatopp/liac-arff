@@ -80,9 +80,9 @@ def __encode_values(values, attributes):
             try:
                 result.append(unicode(attr_func(val)))
             except AssertionError, e:
-                raise AssertionError( "\n".join( str(e), "Values:", values) )
+                raise AssertionError( "\n".join( [str(e), "Values:", str(values) ] ) )
             except ValueError, e:
-                raise AssertionError( "\n".join( str(e), "Values:", values) )
+                raise AssertionError( "\n".join( [str(e), "Values:", str(values) ] ) )
 
     return result
 
