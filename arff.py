@@ -38,21 +38,57 @@ import csv
 # Interal Helpers =============================================================
 def __arff_to_str(s):
     '''Converts an ARFF value to a Python string'''
-    s = s.strip('')
-    if s.startswith('"') or s.startswith("'"):
-        return s[1:-1]
+    s = s.strip(u'')
+    if s.startswith('"') and s.endswith('"'):
+        return s[1:-1].replace(r'\"', '"')
+    elif s.startswith("'") and s.endswith("'"):
+        return s[1:-1].replace(r"\'", "'")
     else:
         return s
 
 def __str_to_arff(s):
     '''Converts a string to an ARFF value'''
     if s is None: s = '?'
-    s = str(s)
-    return "'%s'"%s if ' 'in s else s
+    s = unicode(s)
+    return u"'%s'" % s.replace("\\", r"\\").replace("'", r"\'").replace("\n", ' ').replace("\r", ' ')
+
+def __check_nominal(values, s):
+    assert s in values, "%s was not listed as a valid nominal value" % s
+    return s
+
+def __check_nominal_factory(values):
+    return lambda (x): __check_nominal(values, x)
+
+def __encode_attribute(type_values):
+    '''create encoding functions for the attribute'''
+    if isinstance(type_values, (list, tuple)):
+        values = type_values
+        return __check_nominal_factory(values)
+    elif type_values.upper() in ENCODE_ARFF_TYPES:
+        type = ENCODE_ARFF_TYPES[type_values.upper()]
+        return type
+    else:
+        raise ValueError("%s is not of a supported attribute type" % type_values)
+
+def __encode_values(values, attributes):
+    '''Encode the values relative to their attributes'''
+    result = []
+    for attr_func, val in zip(attributes, values):
+        if val == None:
+            result.append( '?' )
+        else:
+            try:
+                result.append(unicode(attr_func(val)))
+            except AssertionError, e:
+                raise AssertionError( "\n".join( [str(e), "Values:", str(values) ] ) )
+            except ValueError, e:
+                raise AssertionError( "\n".join( [str(e), "Values:", str(values) ] ) )
+
+    return result
 
 def __decode_attribute(type_values):
     '''Eval the type/values of the attribute'''
-    if type_values.upper() in ARFF_TYPES:
+    if type_values.upper() in DECODE_ARFF_TYPES:
         type = type_values.upper()
         return (type, )
     else:
@@ -73,7 +109,7 @@ def __decode_values(values, attributes):
         elif isinstance(type, (list, tuple)):
             value = val
         else:
-            value = ARFF_TYPES[type](val)
+            value = DECODE_ARFF_TYPES[type](val)
 
         result.append(value)
 
@@ -81,7 +117,13 @@ def __decode_values(values, attributes):
 # =============================================================================
 
 # Constants ===================================================================
-ARFF_TYPES = {
+ENCODE_ARFF_TYPES = {
+    'NUMERIC': float, 
+    'REAL': float, 
+    'INTEGER': int, 
+    'STRING': __str_to_arff
+}
+DECODE_ARFF_TYPES = {
     'NUMERIC': float, 
     'REAL': float, 
     'INTEGER': int, 
@@ -176,8 +218,8 @@ class Writer(object):
     def write(self, *args):
         self.s += ' '.join(args)+'\n'
 
-    def __str__(self):
-        return str(self.s)
+    def __unicode__(self):
+        return unicode(self.s)
 
 def dumps(obj):
     '''Returns a string in ARFF format from a given structure'''
@@ -195,6 +237,7 @@ def dumps(obj):
     writer.write()
 
     # Attributes
+    data_funcs = []
     for line in obj['attributes']:
         name = __str_to_arff(line[0])
 
@@ -207,19 +250,20 @@ def dumps(obj):
             )+'}'
 
         writer.write(ATTRIBUTE, name, type_values)
+        data_funcs.append( __encode_attribute( line[1] ) )
     writer.write()
 
     # Data and data values
     writer.write(DATA)
     for line in obj['data']:
-        writer.write(','.join([__str_to_arff(i) for i in line]))
+        writer.write(u','.join(__encode_values(line, data_funcs)))
 
     # Filler
     writer.write(COMMENT)
     writer.write(COMMENT)
     writer.write(COMMENT)
 
-    return str(writer)
+    return unicode(writer)
 
 def dump(fp, obj):
     '''Write an ARFF file with the obj'''
