@@ -167,22 +167,28 @@ def load(fp):
     '''Load an ARFF file'''
     return loads(fp.read())
 
-class Writer(object):
-    '''ARFF Writer'''
+class StringWriter(object):
+    '''ARFF String Writer'''
 
     def __init__(self):
-        self.s = u''
+        self.lines = []
 
     def write(self, *args):
-        self.s += ' '.join(args)+'\n'
+        self.lines += [' '.join(args)]
 
     def __str__(self):
-        return str(self.s)
+        return str('\n'.join(self.lines))
 
-def dumps(obj):
-    '''Returns a string in ARFF format from a given structure'''
-    writer = Writer()
+class ARFFWriter(object):
+    '''ARFF File Writer'''
 
+    def __init__(self, f):
+        self.f = f
+
+    def write(self, *args):
+        self.f.write(u' '.join(args) + '\n')
+
+def dump_to_writer(writer, obj):
     # Description
     if 'description' in obj and obj['description']:
         for line in obj['description'].split('\n'):
@@ -219,11 +225,17 @@ def dumps(obj):
     writer.write(COMMENT)
     writer.write(COMMENT)
 
+def dumps(obj):
+    '''Returns a string in ARFF format from a given structure'''
+
+    writer = StringWriter()
+    dump_to_writer(writer, obj)
     return str(writer)
 
 def dump(fp, obj):
     '''Write an ARFF file with the obj'''
-    fp.write(dumps(obj))
+    writer = ARFFWriter(fp)
+    dump_to_writer(writer, obj)
 
 if __name__ == '__main__':
     fp = open('C:\\Program Files (x86)\\weka-3-7\\data\\iris.arff')
