@@ -101,6 +101,12 @@ You can write an ARFF file with this structure::
     %
 
 
+Contributors
+------------
+
+- `Nate Moseley (FinalDoom) <http://csh.rit.edu/~nmoseley/>`_
+
+
 Project Page
 ------------
 
