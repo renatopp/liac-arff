@@ -285,11 +285,3 @@ def dump(fp, obj):
     '''Write an ARFF file with the obj'''
     writer = ARFFWriter(fp)
     dump_to_writer(writer, obj)
-
-
-if __name__ == '__main__':
-    fp = open('C:\\Program Files\\weka-3-6\\data\\iris.arff')
-    data = load(fp)
-    import pprint
-    pprint.pprint(data)
-    print dumps(data)
