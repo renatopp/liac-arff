@@ -35,6 +35,17 @@ __version__ = '1.0'
 import re
 import csv
 
+
+if 'unicode' not in dir(__builtins__):
+    # if `unicode` is not defined, we run in a python3 enviroment where all
+    # string literals are unicode, so we don't need to convert it to one.
+    # if `s` is not a string, we need to convert it...
+    def unicode(s):
+        if isinstance(s, str):
+            return s
+        return str(s)
+
+
 # Interal Helpers =============================================================
 def __arff_to_str(s):
     '''Converts an ARFF value to a Python string'''
@@ -57,7 +68,7 @@ def __check_nominal(values, s):
     return s
 
 def __check_nominal_factory(values):
-    return lambda (x): __check_nominal(values, x)
+    return lambda x: __check_nominal(values, x)
 
 def __encode_attribute(type_values):
     '''create encoding functions for the attribute'''
@@ -79,9 +90,9 @@ def __encode_values(values, attributes):
         else:
             try:
                 result.append(unicode(attr_func(val)))
-            except AssertionError, e:
+            except AssertionError as e:
                 raise AssertionError( "\n".join( [str(e), "Values:", str(values) ] ) )
-            except ValueError, e:
+            except ValueError as e:
                 raise AssertionError( "\n".join( [str(e), "Values:", str(values) ] ) )
 
     return result
