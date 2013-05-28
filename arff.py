@@ -189,7 +189,7 @@ class Reader(object):
 
 def loads(s): 
     '''Loads a string that contains an ARFF format structure'''
-    reader = Reader(s)
+    reader = Reader(s.decode('utf-8'))
     arff = {
         'description': u'',
         'relation': u'',
