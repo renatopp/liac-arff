@@ -35,6 +35,7 @@ __version__ = '1.0'
 import re
 import csv
 
+import random
 
 if 'unicode' not in dir(__builtins__):
     # if `unicode` is not defined, we run in a python3 enviroment where all
@@ -187,6 +188,27 @@ class Reader(object):
             else:
                 yield (VALUE, line)
 
+    
+def split(arff, n):
+    ''' Randomly splits ARFF data into n parts'''
+    arff_splits = []
+    splits = [[] for i in range(n)]
+    print len(splits)
+    data = arff['data']
+    random.shuffle(data)
+    print len(data)
+    for d in range(len(data)):
+        splits[d % n].append(data[d])
+    for split in splits:
+        arff_split = {
+            'description': arff['description'],
+            'relation': arff['relation'],
+            'attributes': arff['attributes'],
+            'data': split
+        }
+        arff_splits.append(arff_split)
+    return arff_splits
+    
 def loads(s): 
     '''Loads a string that contains an ARFF format structure'''
     reader = Reader(s.decode('utf-8'))
