@@ -62,7 +62,7 @@ def __arff_to_str(s):
 
 def __str_to_arff(s):
     '''Converts a string to an ARFF value'''
-    if s is None: s = '?'
+    if not s: s = '?'
     s = unicode(s)
     return u"'%s'" % s.replace("\\", r"\\").replace("'", r"\'").replace("\n", ' ').replace("\r", ' ')
 
@@ -88,7 +88,7 @@ def __encode_values(values, attributes):
     '''Encode the values relative to their attributes'''
     result = []
     for attr_func, val in zip(attributes, values):
-        if val == None:
+        if not val:
             result.append( '?' )
         else:
             try:
