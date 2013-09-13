@@ -50,6 +50,11 @@ if 'unicode' not in __builtins__:
 
 
 # Interal Helpers =============================================================
+
+#Exceptions
+class WrongTypeException(Exception):
+    pass
+
 def __arff_to_str(s):
     '''Converts an ARFF value to a Python string'''
     s = s.strip(u'')
@@ -62,7 +67,7 @@ def __arff_to_str(s):
 
 def __str_to_arff(s):
     '''Converts a string to an ARFF value'''
-    if not s: s = '?'
+    if s is None: s = '?'
     s = unicode(s)
     return u"'%s'" % s.replace("\\", r"\\").replace("'", r"\'").replace("\n", ' ').replace("\r", ' ')
 
@@ -88,15 +93,15 @@ def __encode_values(values, attributes):
     '''Encode the values relative to their attributes'''
     result = []
     for attr_func, val in zip(attributes, values):
-        if not val:
+        if val is None:
             result.append( '?' )
         else:
             try:
-                result.append(unicode(attr_func(val)))
+                result.append(unicode(attr_func[1](val)))
             except AssertionError as e:
                 raise AssertionError( "\n".join( [str(e), "Values:", str(values) ] ) )
             except ValueError as e:
-                raise AssertionError( "\n".join( [str(e), "Values:", str(values) ] ) )
+                raise WrongTypeException(val, attr_func[0], str(values))
 
     return result
 
@@ -299,7 +304,7 @@ def dump_to_writer(writer, obj):
             )+'}'
 
         writer.write(ATTRIBUTE, name, type_values)
-        data_funcs.append( __encode_attribute( line[1] ) )
+        data_funcs.append( (line[1], __encode_attribute( line[1] )) )
     writer.write()
 
     # Data and data values
