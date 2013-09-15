@@ -104,7 +104,10 @@ You can write an ARFF file with this structure::
 Contributors
 ------------
 
-- `Nate Moseley (FinalDoom) <http://csh.rit.edu/~nmoseley/>`_
+- `Nate Moseley (FinalDoom) <https://github.com/FinalDoom>`_
+- `Tarek Amr (gr33ndata) <https://github.com/gr33ndata>`_
+- `Simon (M3t0r) <https://github.com/M3t0r>`_
+- `Gonzalo Almeida (flecox) <https://github.com/flecox>`_
 
 
 Project Page
