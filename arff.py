@@ -90,7 +90,11 @@ def __encode_attribute(type_values):
         raise ValueError("%s is not of a supported attribute type" % type_values)
 
 def __encode_values(values, attributes):
-    '''Encode the values relative to their attributes'''
+    '''
+        Encode the values relative to their attributes.
+    attributes is a list of tuples with the arff type and the conversion function.
+    e.g. [('REAL',<type 'float'>)]
+    '''
     result = []
     for attr_func, val in zip(attributes, values):
         if val is None:
@@ -101,6 +105,8 @@ def __encode_values(values, attributes):
             except AssertionError as e:
                 raise AssertionError( "\n".join( [str(e), "Values:", str(values) ] ) )
             except ValueError as e:
+                # pass as argument to the exeption the value,
+                #the arff type, and the list of values
                 raise WrongTypeException(val, attr_func[0], str(values))
 
     return result
@@ -304,6 +310,7 @@ def dump_to_writer(writer, obj):
             )+'}'
 
         writer.write(ATTRIBUTE, name, type_values)
+        #append a tuple with the srff type and the python coversion function
         data_funcs.append( (line[1], __encode_attribute( line[1] )) )
     writer.write()
 
