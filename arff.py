@@ -193,7 +193,7 @@ class Reader(object):
 
             # Attributes
             elif line.upper().startswith(ATTRIBUTE):
-                _, name, value = re.sub('( |\t)+', ' ', line).split(' ', 2)
+                _, name, value = line.partition(' '.join(re.sub('( |\t)+', ' ', line).split(' ')[1:-1]))
                 yield (ATTRIBUTE, name, value)
 
             # Data
