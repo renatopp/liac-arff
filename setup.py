@@ -2,7 +2,7 @@
 
 __author__ = 'Renato de Pontes Pereira'
 __author_email__ = 'renato.ppontes@gmail.com'
-__version__ = '1.1'
+__version__ = '2.0'
 __date__ = '2012 07 25'
 
 try:
@@ -26,9 +26,9 @@ setup(
     author = __author__,
     author_email = __author_email__,
     license='MIT License',
-    description = 'A library for read and write ARFF files in Python',
+    description = 'A module for read and write ARFF files in Python.',
     long_description=long_description,
-    url = 'http://inf.ufrgs.br/~rppereira',
+    url = 'http://inf.ufrgs.br/~rppereira/arff',
     download_url = 'https://github.com/renatopp/liac-arff',
     classifiers=[
         'Development Status :: 5 - Production/Stable',
@@ -47,5 +47,5 @@ setup(
     ],
     keywords='arff weka parser liac python',
     py_modules=['arff'],
-    package_data={'':['README.rst', 'LICENSE']}
-    )
+    package_data={'':['README.rst', 'CHANGES.rst', 'LICENSE']}
+)
