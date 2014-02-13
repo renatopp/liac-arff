@@ -5,7 +5,7 @@ LIAC-ARFF 2.0
 -------------
 
 - new: ArffEncoder and ArffDecoder helpers which actually do the serialization
-       and loading of ARFF files.
+  and loading of ARFF files.
 - new: UnitTest cases for all classes and functions.
 - new: Detailed exceptions for many cases.
 - fix: load, loads, dump, dumps are now simpler.
