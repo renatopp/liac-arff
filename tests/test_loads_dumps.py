@@ -61,4 +61,3 @@ class TestLoadDump(unittest.TestCase):
             arff = dumps(obj)
             self.assertEqual(arff, ARFF)
 
-        assert False

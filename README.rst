@@ -1,5 +1,5 @@
 =========
-LIAF-ARFF
+LIAC-ARFF
 =========
 
 The liac-arff module implements functions to read and write ARFF files in

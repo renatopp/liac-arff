@@ -160,6 +160,18 @@ _TK_VALUE       = ''
 _RE_RELATION     = re.compile(r'^(\".*\"|\'.*\'|\S*)$', re.UNICODE)
 _RE_ATTRIBUTE    = re.compile(r'^(\".*\"|\'.*\'|\S*)\s+(.+)$', re.UNICODE)
 _RE_TYPE_NOMINAL = re.compile(r'^\{\s*((\".*\"|\'.*\'|\S*)\s*,\s*)*(\".*\"|\'.*\'|\S*)}$', re.UNICODE)
+_RE_ESCAPE = re.compile(r'\\\'|\\\"|\\\%|[\\"\'%]')
+
+_ESCAPE_DCT = {
+    ' ': ' ',
+    "'": "\\'",
+    '"': '\\"',
+    '%': '\\%',
+    '\\': '\\',
+    '\\\'': '\\\'',
+    '\\"': '\\"',
+    '\\%': '\\%',
+}
 # =============================================================================
 
 # COMPATIBILITY WITH PYTHON 3.3 ===============================================
@@ -232,6 +244,11 @@ class BadObject(ArffException):
 # =============================================================================
 
 # INTERNAL ====================================================================
+def encode_string(s):
+    def replace(match):
+        return _ESCAPE_DCT[match.group(0)]
+    return u"'" + _RE_ESCAPE.sub(replace, s) + u"'"
+
 class Conversor(object):
     '''Conversor is a helper used for converting ARFF types to Python types.'''
 
@@ -592,8 +609,10 @@ class ArffEncoder(object):
         new_data = []
         for v in data:
             s = unicode(v)
-            if u' ' in s:
-                s = u'"%s"'%s
+            for escape_char in _ESCAPE_DCT:
+                if escape_char in s:
+                    s = encode_string(s)
+                    break
             new_data.append(s)
 
         return u','.join(new_data)

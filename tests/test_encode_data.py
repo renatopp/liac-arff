@@ -11,7 +11,7 @@ class TestEncodeData(unittest.TestCase):
 
         fixture = [1, 3, 'Renato', 'Name with spaces']
         result = encoder._encode_data(fixture)
-        expected = u'1,3,Renato,"Name with spaces"'
+        expected = u"1,3,Renato,'Name with spaces'"
 
         self.assertEqual(result, expected)
 
