@@ -1,6 +1,12 @@
 What's New on LIAC-ARFF
 =======================
 
+LIAC-ARFF 2.0.1
+-------------
+
+- fix: dump now escapes correctly special symbols, such %, ', ", and \.
+
+
 LIAC-ARFF 2.0
 -------------
 

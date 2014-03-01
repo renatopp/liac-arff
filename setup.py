@@ -2,7 +2,7 @@
 
 __author__ = 'Renato de Pontes Pereira'
 __author_email__ = 'renato.ppontes@gmail.com'
-__version__ = '2.0'
+__version__ = '2.0.1'
 __date__ = '2012 07 25'
 
 try:
