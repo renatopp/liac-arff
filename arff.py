@@ -160,7 +160,7 @@ _TK_VALUE       = ''
 _RE_RELATION     = re.compile(r'^(\".*\"|\'.*\'|\S*)$', re.UNICODE)
 _RE_ATTRIBUTE    = re.compile(r'^(\".*\"|\'.*\'|\S*)\s+(.+)$', re.UNICODE)
 _RE_TYPE_NOMINAL = re.compile(r'^\{\s*((\".*\"|\'.*\'|\S*)\s*,\s*)*(\".*\"|\'.*\'|\S*)}$', re.UNICODE)
-_RE_TYPE_HIERARCHICAL = re.compile(r'^hierarchical\s*((\".*/.*\"|\'.*/.*\'|\S*)\s*,\s*)*(\".*/.*\"|\'.*/.*\'|\S*)$', re.UNICODE)
+_RE_TYPE_HIERARCHICAL = re.compile(r'^hierarchical\s*((\".*/.*\"|\'.*/.*\'|\S*)\s*,\s*)*(\".*/.*\"|\'.*/.*\'|\S*)$', re.UNICODE|re.IGNORECASE)
 _RE_ESCAPE = re.compile(r'\\\'|\\\"|\\\%|[\\"\'%]')
 
 _ESCAPE_DCT = {
@@ -218,6 +218,11 @@ class BadNominalValue(ArffException):
     declared into it respective attribute declaration.'''
     message = 'Data value not found in nominal declaration, at line %d.'
 
+class BadHierarchicalValue(ArffException):
+    '''Error raised when a value in used in some data instance but is not 
+    declared into it respective attribute declaration.'''
+    message = 'Data value not found in hierarchical declaration, at line %d.'
+
 class BadNumericalValue(ArffException):
     '''Error raised when and invalid numerical value is used in some data 
     instance.'''
@@ -266,6 +271,8 @@ class Conversor(object):
             self._conversor = self._integer
         elif type_ == 'NOMINAL':
             self._conversor = self._nominal
+        elif type_ == 'HIERARCHICAL':
+            self._conversor = self._hierarchical
         else:
             raise BadAttributeType()
 
@@ -292,6 +299,40 @@ class Conversor(object):
         if value not in self.values:
             raise BadNominalValue()
         return self._string(value)
+
+    def _is_valid_hierarchical(self, value):
+        '''check if the instance value is a valid hierarchical value
+        declared in hierarchical attribute, or if it is in a higher hierarchy,
+        also deemed valid'''
+        valid = False
+        if value in self.values:
+            valid = True
+        else:
+            for valid_value in self.values:
+                if valid_value.startswith(value):
+                    if valid_value.split(value, 1)[1].startswith('/'):
+                        valid = True
+                        print valid
+                        break
+        return valid
+
+    def _hierarchical(self, value):
+        '''check if the instance value contains multiple hvalues and then verify
+        if each hvalue is declared in hierarchical attribute. Finally convert it 
+        to string.'''
+        if '@' in value:
+            hvalues = []
+            values = value.split('@')
+            for v in values:
+                if not self._is_valid_hierarchical(v):
+                    raise BadHierarchicalValue()
+                else:
+                    hvalues.append(self._string(v))
+            return hvalues
+        else:
+            if not self._is_valid_hierarchical(value):
+                raise BadHierarchicalValue()
+            return self._string(value)
 
     def __call__(self, value):
         '''Convert a ``value`` to a given type. 
@@ -375,7 +416,7 @@ class ArffDecoder(object):
 
         The nominal names follow the rules for the attribute names, i.e., they
         must be quoted if the name contains whitespaces.
-        - Hierachical attributes with format:
+        - Hierarchical attributes with format:
 
             hierarchical <hvalue1>, <hvalue2>, <hvalue3>, ...
 
@@ -410,6 +451,7 @@ class ArffDecoder(object):
             # If follows the hierarchical structure, parse with csv reader as well.
             values = next(csv.reader([type_.strip('hierarchical')]))
             values = [unicode(v_.strip(' ').strip('"\'')) for v_ in values]
+            values.insert(0,['HIERARCHICAL']) # to distinguish with nominal, insert a list at the begining
             type_ = values
 
         else:
@@ -491,9 +533,12 @@ class ArffDecoder(object):
                 attr = self._decode_attribute(row)
                 obj['attributes'].append(attr)
 
-                if isinstance(attr[1], (list, tuple)): 
-                    conversor = Conversor('NOMINAL', attr[1]) 
-                    ## HIERARCHICAL can be conversed using "NOMINAL" conversor as well
+                if isinstance(attr[1], (list, tuple)):
+                    if isinstance(attr[1][0], (list, tuple)):
+                        conversor = Conversor('HIERARCHICAL',attr[1][1:])
+                    else:
+                        conversor = Conversor('NOMINAL', attr[1]) 
+
                 else:
                     conversor = Conversor(attr[1])
 
@@ -594,6 +639,10 @@ class ArffEncoder(object):
         This method must receive a the name of the attribute and its type, if
         the attribute type is nominal, ``type`` must be a list of values.
 
+        - Hierarchical attributes with format:
+
+            hierarchical <hvalue1>, <hvalue2>, <hvalue3>, ...
+
         :param name: a string.
         :param type_: a string or a list of string.
         :return: a string with the encoded attribute declaration.
@@ -602,9 +651,12 @@ class ArffEncoder(object):
             name = '"%s"'%name
 
         if isinstance(type_, (tuple, list)):
-            type_ = [u'"%s"'%t if ' ' in t else u'%s'%t for t in type_]
-            type_ = u'{%s}'%(u', '.join(type_))
-
+            if not isinstance(type_[0], (tuple, list)): # nominal
+                type_ = [u'"%s"'%t if ' ' in t else u'%s'%t for t in type_]
+                type_ = u'{%s}'%(u', '.join(type_))
+            else: # hierarchical
+                type_ = [u'"%s"'%t if ' ' in t else u'%s'%t for t in type_[1:]]
+                type_ = u'hierarchical %s'%(u', '.join(type_))
         return u'%s %s %s'%(_TK_ATTRIBUTE, name, type_)
 
     def _encode_data(self, data):
@@ -618,7 +670,10 @@ class ArffEncoder(object):
         '''
         new_data = []
         for v in data:
-            s = unicode(v)
+            if not isinstance(v, (list, tuple)):
+                s = unicode(v)
+            else:
+                s = '@'.join(v) # to join multiple hvalues for Hierarchical
             for escape_char in _ESCAPE_DCT:
                 if escape_char in s:
                     s = encode_string(s)
