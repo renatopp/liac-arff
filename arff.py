@@ -160,6 +160,7 @@ _TK_VALUE       = ''
 _RE_RELATION     = re.compile(r'^(\".*\"|\'.*\'|\S*)$', re.UNICODE)
 _RE_ATTRIBUTE    = re.compile(r'^(\".*\"|\'.*\'|\S*)\s+(.+)$', re.UNICODE)
 _RE_TYPE_NOMINAL = re.compile(r'^\{\s*((\".*\"|\'.*\'|\S*)\s*,\s*)*(\".*\"|\'.*\'|\S*)}$', re.UNICODE)
+_RE_TYPE_HIERARCHICAL = re.compile(r'^hierarchical\s*((\".*/.*\"|\'.*/.*\'|\S*)\s*,\s*)*(\".*/.*\"|\'.*/.*\'|\S*)$', re.UNICODE)
 _RE_ESCAPE = re.compile(r'\\\'|\\\"|\\\%|[\\"\'%]')
 
 _ESCAPE_DCT = {
@@ -290,7 +291,6 @@ class Conversor(object):
         '''Verify the value of nominal attribute and convert it to string.'''
         if value not in self.values:
             raise BadNominalValue()
-
         return self._string(value)
 
     def __call__(self, value):
@@ -375,6 +375,9 @@ class ArffDecoder(object):
 
         The nominal names follow the rules for the attribute names, i.e., they
         must be quoted if the name contains whitespaces.
+        - Hierachical attributes with format:
+
+            hierarchical <hvalue1>, <hvalue2>, <hvalue3>, ...
 
         This method must receive a normalized string, i.e., a string without
         padding, including the "\r\n" characters. 
@@ -400,6 +403,12 @@ class ArffDecoder(object):
         if _RE_TYPE_NOMINAL.match(type_):
             # If follows the nominal structure, parse with csv reader.
             values = next(csv.reader([type_.strip('{} ')]))
+            values = [unicode(v_.strip(' ').strip('"\'')) for v_ in values]
+            type_ = values
+
+        elif _RE_TYPE_HIERARCHICAL.match(type_):
+            # If follows the hierarchical structure, parse with csv reader as well.
+            values = next(csv.reader([type_.strip('hierarchical')]))
             values = [unicode(v_.strip(' ').strip('"\'')) for v_ in values]
             type_ = values
 
@@ -482,8 +491,9 @@ class ArffDecoder(object):
                 attr = self._decode_attribute(row)
                 obj['attributes'].append(attr)
 
-                if isinstance(attr[1], (list, tuple)):
-                    conversor = Conversor('NOMINAL', attr[1])
+                if isinstance(attr[1], (list, tuple)): 
+                    conversor = Conversor('NOMINAL', attr[1]) 
+                    ## HIERARCHICAL can be conversed using "NOMINAL" conversor as well
                 else:
                     conversor = Conversor(attr[1])
 
