@@ -111,7 +111,7 @@ class TestDecodeAttributeTypes(unittest.TestCase):
         self.assertEqual(result[1][2], expected[1][2])
 
         # Quoted/Spaced/Number case
-        fixture = u'@ATTRIBUTE attribute-name {"name with spce", 1,    lol,2}'
+        fixture = u'@ATTRIBUTE attribute-name {"name with spce", 1,    lol,2 }'
         result = decoder._decode_attribute(fixture)
         expected = (u'attribute-name', [u'name with spce', u'1', u'lol', u'2'])
 

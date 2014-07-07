@@ -159,7 +159,7 @@ _TK_VALUE       = ''
 
 _RE_RELATION     = re.compile(r'^(\".*\"|\'.*\'|\S*)$', re.UNICODE)
 _RE_ATTRIBUTE    = re.compile(r'^(\".*\"|\'.*\'|\S*)\s+(.+)$', re.UNICODE)
-_RE_TYPE_NOMINAL = re.compile(r'^\{\s*((\".*\"|\'.*\'|\S*)\s*,\s*)*(\".*\"|\'.*\'|\S*)}$', re.UNICODE)
+_RE_TYPE_NOMINAL = re.compile(r'^\{\s*((\".*\"|\'.*\'|\S*)\s*,\s*)*(\".*\"|\'.*\'|\S*)\s*\}$', re.UNICODE)
 _RE_ESCAPE = re.compile(r'\\\'|\\\"|\\\%|[\\"\'%]')
 
 _ESCAPE_DCT = {
@@ -612,7 +612,10 @@ class ArffEncoder(object):
         '''
         new_data = []
         for v in data:
-            s = unicode(v)
+            if v is None or v == u'':
+                s = '?'
+            else:
+                s = unicode(v)
             for escape_char in _ESCAPE_DCT:
                 if escape_char in s:
                     s = encode_string(s)
