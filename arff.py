@@ -612,7 +612,10 @@ class ArffEncoder(object):
         '''
         new_data = []
         for v in data:
-            s = unicode(v)
+            if v is None or v == u'':
+                s = '?'
+            else:
+                s = unicode(v)
             for escape_char in _ESCAPE_DCT:
                 if escape_char in s:
                     s = encode_string(s)
