@@ -135,6 +135,9 @@ Contributors
 - `Simon (M3t0r) <https://github.com/M3t0r>`_
 - `Gonzalo Almeida (flecox) <https://github.com/flecox>`_
 - `André Nordbø (AndyNor) <http://andynor.net>`_
+- `Niedakh <https://github.com/niedakh>`_
+- `Zichen Wang (wangz10) <https://github.com/wangz10>`_
+- `Matthias Feurer (mfeurer) <https://github.com/mfeurer>`_
 
 Project Page
 ------------
