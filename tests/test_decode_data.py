@@ -44,7 +44,7 @@ class TestDecodeData(unittest.TestCase):
             ConversorStub(int),
         ])
 
-        fixture = u'{0 Iris,1 3.4,2 2}'
+        fixture = u'{0 Iris,1 3.4, 2 2}'
         result = decoder._decode_data(fixture)
         expected = [u'Iris', 3.4, 2, u'0', 0.0, 0]
 
