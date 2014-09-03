@@ -459,6 +459,8 @@ class ArffDecoder(object):
             # Ignore empty lines
             row = row.strip(' \r\n')
             if not row: continue
+            # Ignore "empty" lines in sparse format
+            elif row.replace(' ', '') == '{}': continue
 
             u_row = row.upper()
 
