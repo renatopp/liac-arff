@@ -428,7 +428,7 @@ class ArffDecoder(object):
         values = next(csv.reader([s.strip(' ')]))
 
         if values[0][0].strip(" ") == '{':
-            vdict = dict(map(lambda x: (int(x[0]), x[1]),[i.strip("{").strip("}").split(' ') for i in values]))
+            vdict = dict(map(lambda x: (int(x[0]), x[1]),[i.strip("{").strip("}").strip(" ").split(' ') for i in values]))
             values = [unicode(vdict[i]) if i in vdict else unicode(0) for i in xrange(len(self._conversors))]
 
         if len(values) != len(self._conversors):
