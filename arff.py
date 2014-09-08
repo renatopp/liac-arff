@@ -158,7 +158,7 @@ _TK_DATA        = '@DATA'
 _TK_VALUE       = ''
 
 _RE_RELATION     = re.compile(r'^(\".*\"|\'.*\'|\S*)$', re.UNICODE)
-_RE_ATTRIBUTE    = re.compile(r'^(\".*\"|\'.*\'|\S*)\s+(.+)$', re.UNICODE)
+_RE_ATTRIBUTE    = re.compile(r'^(\"[a-zA-Z].*\"|\'[a-zA-Z].*\'|[a-zA-Z]\S*)\s+(.+)$', re.UNICODE)
 _RE_TYPE_NOMINAL = re.compile(r'^\{\s*((\".*\"|\'.*\'|\S*)\s*,\s*)*(\".*\"|\'.*\'|\S*)\s*\}$', re.UNICODE)
 _RE_ESCAPE = re.compile(r'\\\'|\\\"|\\\%|[\\"\'%]')
 

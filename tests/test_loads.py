@@ -89,7 +89,3 @@ class TestLoads(unittest.TestCase):
         with self.assertRaisesRegexp(arff.BadAttributeFormat, "Bad @ATTRIBUTE format, at line 3\.$"):
           obj = loads(ARFF_FORMAT_ERROR_ATTRIBUTE)
 
-        # If spaces are to be included in the name then the entire name must be quoted.
-        with self.assertRaisesRegexp(arff.BadAttributeFormat, "Bad @ATTRIBUTE format, at line 4\.$"):
-          obj = loads(ARFF_FORMAT_ERROR_ATTRIBUTE)
-
