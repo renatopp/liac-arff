@@ -201,7 +201,7 @@ class BadRelationFormat(ArffException):
 
 class BadAttributeFormat(ArffException):
     '''Error raised when some attribute declaration is in an invalid format.'''
-    message = 'Bad @ATTIBUTE format, at line %d.'
+    message = 'Bad @ATTRIBUTE format, at line %d.'
 
 class BadDataFormat(ArffException):
     '''Error raised when some data instance is in an invalid format.'''
