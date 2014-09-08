@@ -86,10 +86,10 @@ class TestLoads(unittest.TestCase):
         loads = self.get_loads()
 
         # the <attribute-name> must start with an alphabetic character.
-        with self.assertRaisesRegexp(arff.BadAttributeType, "Bad @ATTRIBUTE type, at line 3\.$"):
+        with self.assertRaisesRegexp(arff.BadAttributeFormat, "Bad @ATTRIBUTE format, at line 3\.$"):
           obj = loads(ARFF_FORMAT_ERROR_ATTRIBUTE)
 
         # If spaces are to be included in the name then the entire name must be quoted.
-        with self.assertRaisesRegexp(arff.BadAttributeType, "Bad @ATTRIBUTE type, at line 4\.$"):
+        with self.assertRaisesRegexp(arff.BadAttributeFormat, "Bad @ATTRIBUTE format, at line 4\.$"):
           obj = loads(ARFF_FORMAT_ERROR_ATTRIBUTE)
 
