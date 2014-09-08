@@ -337,8 +337,8 @@ class ArffDecoder(object):
 
         The relation declaration is a line with the format ``@RELATION 
         <relation-name>``, where ``relation-name`` is a string. The string must
-        be quoted if the name includes spaces, otherwise this method will raise
-        a `BadRelationFormat` exception.
+        start with alphabetic character and must be quoted if the name includes
+        spaces, otherwise this method will raise a `BadRelationFormat` exception.
 
         This method must receive a normalized string, i.e., a string without
         padding, including the "\r\n" characters. 
