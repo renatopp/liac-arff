@@ -138,6 +138,7 @@ Contributors
 - `Niedakh <https://github.com/niedakh>`_
 - `Zichen Wang (wangz10) <https://github.com/wangz10>`_
 - `Matthias Feurer (mfeurer) <https://github.com/mfeurer>`_
+- `Hongjoo Lee (midnightradio) <https://github.com/midnightradio>`_
 
 Project Page
 ------------
