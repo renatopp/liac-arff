@@ -158,7 +158,7 @@ _TK_DATA        = '@DATA'
 _TK_VALUE       = ''
 
 _RE_RELATION     = re.compile(r'^(\".*\"|\'.*\'|\S*)$', re.UNICODE)
-_RE_ATTRIBUTE    = re.compile(r'^(\".*\"|\'.*\'|\S*)\s+(.+)$', re.UNICODE)
+_RE_ATTRIBUTE    = re.compile(r'^(\"[a-zA-Z].*\"|\'[a-zA-Z].*\'|[a-zA-Z]\S*)\s+(.+)$', re.UNICODE)
 _RE_TYPE_NOMINAL = re.compile(r'^\{\s*((\".*\"|\'.*\'|\S*)\s*,\s*)*(\".*\"|\'.*\'|\S*)\s*\}$', re.UNICODE)
 _RE_ESCAPE = re.compile(r'\\\'|\\\"|\\\%|[\\"\'%]')
 
@@ -201,7 +201,7 @@ class BadRelationFormat(ArffException):
 
 class BadAttributeFormat(ArffException):
     '''Error raised when some attribute declaration is in an invalid format.'''
-    message = 'Bad @ATTIBUTE format, at line %d.'
+    message = 'Bad @ATTRIBUTE format, at line %d.'
 
 class BadDataFormat(ArffException):
     '''Error raised when some data instance is in an invalid format.'''
@@ -337,8 +337,8 @@ class ArffDecoder(object):
 
         The relation declaration is a line with the format ``@RELATION 
         <relation-name>``, where ``relation-name`` is a string. The string must
-        be quoted if the name includes spaces, otherwise this method will raise
-        a `BadRelationFormat` exception.
+        start with alphabetic character and must be quoted if the name includes
+        spaces, otherwise this method will raise a `BadRelationFormat` exception.
 
         This method must receive a normalized string, i.e., a string without
         padding, including the "\r\n" characters. 
