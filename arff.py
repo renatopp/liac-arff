@@ -265,6 +265,9 @@ class Conversor(object):
             self._conversor = self._integer
         elif type_ == 'NOMINAL':
             self._conversor = self._nominal
+        elif type_ == 'ENCODED_NOMINAL':
+            self._conversor = self._encoded_nominal
+            self._encoded_values = {value: i for i, value in enumerate(values)}
         else:
             raise BadAttributeType()
 
@@ -292,6 +295,14 @@ class Conversor(object):
             raise BadNominalValue()
 
         return self._string(value)
+
+    def _encoded_nominal(self, value):
+        '''Perform label encoding (convert labels to integers) while reading
+        the .arff file.'''
+        if value not in self.values:
+            raise BadNominalValue()
+
+        return self._encoded_values[value]
 
     def __call__(self, value):
         '''Convert a ``value`` to a given type. 
@@ -437,7 +448,7 @@ class ArffDecoder(object):
         values = [self._conversors[i](values[i]) for i in xrange(len(values))]
         return values
 
-    def _decode(self, s):
+    def _decode(self, s, encode_nominal=False):
         '''Do the job the ``encode``.'''
 
         # If string, convert to a list of lines
@@ -489,7 +500,10 @@ class ArffDecoder(object):
                 obj['attributes'].append(attr)
 
                 if isinstance(attr[1], (list, tuple)):
-                    conversor = Conversor('NOMINAL', attr[1])
+                    if encode_nominal:
+                        conversor = Conversor('ENCODED_NOMINAL', attr[1])
+                    else:
+                        conversor = Conversor('NOMINAL', attr[1])
                 else:
                     conversor = Conversor(attr[1])
 
@@ -524,16 +538,18 @@ class ArffDecoder(object):
 
         return obj
 
-    def decode(self, s):
+    def decode(self, s, encode_nominal=False):
         '''Returns the Python representation of a given ARFF file.
 
         When a file object is passed as an argument, this method read lines 
         iteratively, avoiding to load unnecessary information to the memory.
 
         :param s: a string or file object with the ARFF file.
+        :param encode_nominal: boolean, if True perform a label encoding
+            while reading the .arff file.
         '''
         try:
-            return self._decode(s)
+            return self._decode(s, encode_nominal=encode_nominal)
         except ArffException as e:
             # print e
             e.line = self._current_line

@@ -94,9 +94,27 @@ class TestDecodeConversor(unittest.TestCase):
         expected = u'3.4'
         self.assertEqual(result, expected)
 
+    def test_encoded_nominal(self):
+        '''Convert nominal to encoded nominal value.'''
+        conversor = self.get_conversor('ENCODED_NOMINAL', [u'a', u'b', u'3.4'])
+
+        fixtures_and_expectations = [(u'a', 0), (u'b', 1), (u'3.4', 2)]
+        for fixture, expected in fixtures_and_expectations:
+            result = conversor(fixture)
+            self.assertEqual(result, expected)
+
     def test_null_value(self):
-        '''Values auch "?", or "".'''
+        '''Values such as "?", or "".'''
         conversor = self.get_conversor('NOMINAL', [u'a', u'b', u'3.4'])
+        result = conversor('?')
+        expected = None
+        self.assertEqual(result, expected)
+
+        result = conversor('')
+        expected = None
+        self.assertEqual(result, expected)
+
+        conversor = self.get_conversor('ENCODED_NOMINAL', [u'a', u'b', u'3.4'])
         result = conversor('?')
         expected = None
         self.assertEqual(result, expected)
