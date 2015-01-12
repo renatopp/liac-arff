@@ -5,6 +5,7 @@ LIAC-ARFF 2.0.2 (DEV)
 ---------------------
 
 - fix: attribute names now must start with alphabetic character.
+- new: encoded nominal values.
 
 
 LIAC-ARFF 2.0.1
