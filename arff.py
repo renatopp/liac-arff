@@ -438,14 +438,16 @@ class ArffDecoder(object):
         '''
         values = next(csv.reader([s.strip(' ')]))
 
+        # Sparse lines start with a '{' and are converted into dense lists. not listed values are set to zero
         if values[0][0].strip(" ") == '{':
             vdict = dict(map(lambda x: (int(x[0]), x[1]),[i.strip("{").strip("}").strip(" ").split(' ') for i in values]))
             values = [unicode(vdict[i]) if i in vdict else unicode(0) for i in xrange(len(self._conversors))]
+	# dense lines are decoded one by one
+        else:
+            if len(values) != len(self._conversors):
+                raise BadDataFormat()
+            values = [self._conversors[i](values[i]) for i in xrange(len(values))]
 
-        if len(values) != len(self._conversors):
-            raise BadDataFormat()
-
-        values = [self._conversors[i](values[i]) for i in xrange(len(values))]
         return values
 
     def _decode(self, s, encode_nominal=False):
