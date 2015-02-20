@@ -1,3 +1,4 @@
+import math
 import unittest
 import arff
 
@@ -116,21 +117,19 @@ class TestDecodeConversor(unittest.TestCase):
 
         conversor = self.get_conversor('ENCODED_NOMINAL', [u'a', u'b', u'3.4'])
         result = conversor('?')
-        expected = None
-        self.assertEqual(result, expected)
+        self.assertTrue(math.isnan(result))
 
         result = conversor('')
-        expected = None
-        self.assertEqual(result, expected)
+        self.assertTrue(math.isnan(result))
 
-        conversor = self.get_conversor('INTEGER')
-        result = conversor('?')
-        expected = None
-        self.assertEqual(result, expected)
+        numerical_types = ['INTEGER', 'REAL', 'NUMERIC']
+        for numerical_type in numerical_types:
+            conversor = self.get_conversor(numerical_type)
+            result = conversor('?')
+            self.assertTrue(math.isnan(result))
 
-        result = conversor('')
-        expected = None
-        self.assertEqual(result, expected)
+            result = conversor('')
+            self.assertTrue(math.isnan(result))
 
     def test_padding_value(self):
         '''Values such "    3.1415   "'''
