@@ -145,7 +145,6 @@ __version__ = '2.0.2'
 
 import re
 import csv
-import sys
 
 # CONSTANTS ===================================================================
 _SIMPLE_TYPES = ['NUMERIC', 'REAL', 'INTEGER', 'STRING']
@@ -259,15 +258,20 @@ class Conversor(object):
 
         if type_ == 'NUMERIC' or type_ == 'REAL':
             self._conversor = self._float
+            self._none = float('NaN')
         elif type_ == 'STRING':
             self._conversor = self._string
+            self._none = None
         elif type_ == 'INTEGER':
             self._conversor = self._integer
+            self._none = float('NaN')
         elif type_ == 'NOMINAL':
             self._conversor = self._nominal
+            self._none = None
         elif type_ == 'ENCODED_NOMINAL':
             self._conversor = self._encoded_nominal
             self._encoded_values = {value: i for i, value in enumerate(values)}
+            self._none = float('NaN')
         else:
             raise BadAttributeType()
 
@@ -313,7 +317,7 @@ class Conversor(object):
         value = value.strip(' ').strip('\"\'')
 
         if value == u'?' or value == u'':
-            return None
+            return self._none
 
         return self._conversor(value)
 # =============================================================================
