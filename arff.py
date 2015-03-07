@@ -324,8 +324,14 @@ class ArffDecoder(object):
 
     def __init__(self):
         '''Constructor.'''
-        self._conversors = []
+        self._conversors   = []
         self._current_line = 0
+
+        ''' 
+        The obj is build with some data when the iter_encode function first 
+        called. Then the second, third ... call of the iter_encode function 
+        will update the data in obj.
+        '''
 
     def _decode_comment(self, s):
         '''(INTERNAL) Decodes a comment line.
@@ -448,6 +454,128 @@ class ArffDecoder(object):
         values = [self._conversors[i](values[i]) for i in xrange(len(values))]
         return values
 
+
+    def _iter_decode(self, f, encode_nominal=False, batch = 20, obj = None):
+        '''Do the job the ``encode``.'''        
+        
+        '''A obj with batch data instances is built, when the iter_enode 
+        function first called. The subsequent calls of the iter_encode function 
+        will update the data in obj.
+        '''
+
+        #----------------------------------------------------------------
+        # NOT first call
+        #----------------------------------------------------------------
+        if None != obj:
+            obj["data"] = [];
+            NUM_DATA = 0;
+            for row in f:
+              
+                # Ignore empty lines
+                row = row.strip(' \r\n')
+                if not row or '{}' == row.replace(' ', ''):
+                    i -= 1;
+                    continue;
+                
+                u_row = row.upper();
+                obj['data'].append(self._decode_data(row))
+                
+                NUM_DATA += 1
+                if NUM_DATA >= batch:   break;   
+         
+            return obj;
+
+
+        #-----------------------------------------------------------------
+        # first call
+        #-----------------------------------------------------------------
+        # Create the return object
+        obj = {
+            u'description': u'',
+            u'relation': u'',
+            u'attributes': [],
+            u'data': []
+        }
+
+        # Read all lines
+        NUM_DATA = 0
+        STATE = _TK_DESCRIPTION
+        for row in f:
+            self._current_line += 1
+            # Ignore empty lines
+            row = row.strip(' \r\n')
+            if not row: continue
+            # Ignore "empty" lines in sparse format
+            elif row.replace(' ', '') == '{}': continue
+
+            u_row = row.upper()
+
+            # DESCRIPTION -----------------------------------------------------
+            if u_row.startswith(_TK_DESCRIPTION) and STATE == _TK_DESCRIPTION:
+                obj['description'] += self._decode_comment(row) + '\n'
+            # -----------------------------------------------------------------
+
+            # RELATION --------------------------------------------------------
+            elif u_row.startswith(_TK_RELATION):
+                if STATE != _TK_DESCRIPTION:
+                    raise BadLayout()
+
+                STATE = _TK_RELATION
+                obj['relation'] = self._decode_relation(row)
+            # -----------------------------------------------------------------
+
+            # ATTRIBUTE -------------------------------------------------------
+            elif u_row.startswith(_TK_ATTRIBUTE):
+                if STATE != _TK_RELATION and STATE != _TK_ATTRIBUTE:
+                    raise BadLayout()
+
+                STATE = _TK_ATTRIBUTE
+
+                attr = self._decode_attribute(row)
+                obj['attributes'].append(attr)
+
+                if isinstance(attr[1], (list, tuple)):
+                    if encode_nominal:
+                        conversor = Conversor('ENCODED_NOMINAL', attr[1])
+                    else:
+                        conversor = Conversor('NOMINAL', attr[1])
+                else:
+                    conversor = Conversor(attr[1])
+
+                self._conversors.append(conversor)
+            # -----------------------------------------------------------------
+
+            # DATA ------------------------------------------------------------
+            elif u_row.startswith(_TK_DATA):
+                if STATE != _TK_ATTRIBUTE:
+                    raise BadLayout()
+
+                STATE = _TK_DATA
+            # -----------------------------------------------------------------
+
+            # COMMENT ---------------------------------------------------------
+            elif u_row.startswith(_TK_COMMENT):
+                pass
+            # -----------------------------------------------------------------
+
+            # DATA INSTANCES --------------------------------------------------
+            elif STATE == _TK_DATA:
+                obj['data'].append(self._decode_data(row))
+                NUM_DATA += 1
+                if NUM_DATA >= batch: break;
+            # -----------------------------------------------------------------
+
+            # UNKNOWN INFORMATION ---------------------------------------------
+            else:
+                raise BadLayout()
+            # -----------------------------------------------------------------
+
+        if obj['description'].endswith('\n'):
+            obj['description'] = obj['description'][:-1]
+
+        return obj
+        
+
     def _decode(self, s, encode_nominal=False):
         '''Do the job the ``encode``.'''
 
@@ -537,6 +665,30 @@ class ArffDecoder(object):
             obj['description'] = obj['description'][:-1]
 
         return obj
+
+    def iter_decode(self, f, encode_nominal = False, obj = None, batch = 20):
+        '''Returns the Python representation of a given ARFF file.
+
+        Obj is passed as None and is built with some data, when the first call of this 
+        function. The subsequent calls of this method updates data in Obj.
+        
+        :param f: a ARFF file
+        :param encode_nominal: boolean, if True perform a label encoding while reading 
+            the .arff file.
+        :param obj: the Python representation
+        :param batch: the number of data instances in a batch
+        :return: the obj contains the arff information
+        '''
+
+        try:
+            return self._iter_decode( f, \
+                                      encode_nominal = encode_nominal, \
+                                      obj = obj, \
+                                      batch = batch );
+        except ArffException as e:
+            # print e
+            e.line = self._current_line
+            raise e;
 
     def decode(self, s, encode_nominal=False):
         '''Returns the Python representation of a given ARFF file.
