@@ -71,12 +71,30 @@ class TestLoads(unittest.TestCase):
         with self.assertRaisesRegexp(arff.BadRelationFormat, "Bad @RELATION format, at line 1\.$"):
           obj = loads(ARFF_FORMAT_ERROR_RELATION)
 
+    def test_format_error_attribute1(self):
+        ARFF_FORMAT_ERROR_ATTRIBUTE = '''\
+        @relation "software metric"
+    
+        @attribute lines of code numeric
+        @attribute defect density numeric
+
+        @data 10,10,10
+        '''
+
+        loads = self.get_loads();
+        
+        # The attribute name must be quoted if it includes spaces
+        with self.assertRaisesRegexp(arff.BadAttributeType, "Bad @ATTRIBUTE type, at line 3\.$"):
+            obj = loads(ARFF_FORMAT_ERROR_ATTRIBUTE)
 
     def test_format_error_attribute(self):
         ARFF_FORMAT_ERROR_ATTRIBUTE = '''\
         @relation "software metric"
-
+    
+        @attribute _files numeric
+        @attribute 000    numeric
         @attribute #_of_files numeric
+        @attribute { numeric
         @attribute lines of code numeric
         @attribute defect density numeric
 
@@ -85,7 +103,6 @@ class TestLoads(unittest.TestCase):
 
         loads = self.get_loads()
 
-        # the <attribute-name> must start with an alphabetic character.
-        with self.assertRaisesRegexp(arff.BadAttributeFormat, "Bad @ATTRIBUTE format, at line 3\.$"):
-          obj = loads(ARFF_FORMAT_ERROR_ATTRIBUTE)
+        with self.assertRaisesRegexp(arff.BadAttributeFormat, "Bad @ATTRIBUTE format, at line 6\.$"):
+            obj = loads(ARFF_FORMAT_ERROR_ATTRIBUTE)
 
