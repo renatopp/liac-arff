@@ -120,7 +120,6 @@ class TestEncodeComment(unittest.TestCase):
             self.assertEqual(r, e)
        
         
-
     def test_invalid_object(self):
         encoder = self.get_encoder()
 

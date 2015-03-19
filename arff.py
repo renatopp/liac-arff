@@ -479,8 +479,10 @@ class ArffDecoder(object):
                     continue;
                 
                 u_row = row.upper();
-                obj['data'].append(self._decode_data(row))
-                
+                if u_row.startswith(_TK_COMMENT):
+                    continue
+
+                obj['data'].append(self._decode_data(row)) 
                 NUM_DATA += 1
                 if NUM_DATA >= batch:   break;   
          
