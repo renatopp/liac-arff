@@ -712,6 +712,7 @@ class ArffDecoder(object):
 class ArffEncoder(object):
     '''An ARFF encoder.'''
 
+
     def _encode_comment(self, s=''):
         '''(INTERNAL) Encodes a comment line.
 
@@ -805,7 +806,8 @@ class ArffEncoder(object):
 
         return u'\n'.join(data)
 
-    def iter_encode(self, obj):
+    def iter_encode(self, obj, is_first_call = True):
+
         '''The iterative version of `arff.ArffEncoder.encode`.
 
         This encodes iteratively a given object and return, one-by-one, the 
@@ -814,53 +816,75 @@ class ArffEncoder(object):
         :param obj: the object containing the ARFF information.
         :return: (yields) the ARFF file as unicode strings.
         '''
-        # DESCRIPTION
-        if obj.get('description', None):
-            for row in obj['description'].split('\n'):
-                yield self._encode_comment(row)
 
-        # RELATION
-        if not obj.get('relation'):
-            raise BadObject('Relation name not found or with invalid value.')
+        if True == is_first_call:
 
-        yield self._encode_relation(obj['relation'])
-        yield u''
+            # DESCRIPTION
+            if obj.get('description', None):
+                for row in obj['description'].split('\n'):
+                    yield self._encode_comment(row)
 
-        # ATTRIBUTES
-        if not obj.get('attributes'):
-            raise BadObject('Attributes not found.')
-            
-        for attr in obj['attributes']:
-            # Verify for bad object format
-            if not isinstance(attr, (tuple, list)) or \
-               len(attr) != 2 or \
-               not isinstance(attr[0], basestring):
-                raise BadObject('Invalid attribute declaration "%s"'%str(attr))
+            # RELATION
+            if not obj.get('relation'):
+                raise BadObject('Relation name not found or'
+                                ' with invalid value.')
 
-            if isinstance(attr[1], basestring):
-                # Verify for invalid types
-                if attr[1] not in _SIMPLE_TYPES:
+            yield self._encode_relation(obj['relation'])
+            yield u''
+
+            # ATTRIBUTES
+            if not obj.get('attributes'):
+                raise BadObject('Attributes not found.')
+                
+            for attr in obj['attributes']:
+                # Verify for bad object format
+                if not isinstance(attr, (tuple, list)) or \
+                   len(attr) != 2 or \
+                   not isinstance(attr[0], basestring):
+                    raise BadObject('Invalid attribute declaration'
+                                    ' "%s"'%str(attr))
+
+                if isinstance(attr[1], basestring):
+                    # Verify for invalid types
+                    if attr[1] not in _SIMPLE_TYPES:
+                        raise BadObject('Invalid attribute type'
+                                        ' "%s"'%str(attr))
+
+                # Verify for bad object format
+                elif not isinstance(attr[1], (tuple, list)):
                     raise BadObject('Invalid attribute type "%s"'%str(attr))
 
-            # Verify for bad object format
-            elif not isinstance(attr[1], (tuple, list)):
-                raise BadObject('Invalid attribute type "%s"'%str(attr))
+                yield self._encode_attribute(attr[0], attr[1])
+            yield u''
 
-            yield self._encode_attribute(attr[0], attr[1])
-        yield u''
+            # DATA
+            yield _TK_DATA
+            if not obj.get('data'):
+                raise BadObject('Data declaration not found.')
 
-        # DATA
-        yield _TK_DATA
-        if not obj.get('data'):
-            raise BadObject('Data declaration not found.')
+            for inst in obj['data']:
+                yield self._encode_data(inst)
 
-        for inst in obj['data']:
-            yield self._encode_data(inst)
+            # FILLER
+            yield self._encode_comment()
+            yield self._encode_comment()
+            yield self._encode_comment()
 
-        # FILLER
-        yield self._encode_comment()
-        yield self._encode_comment()
-        yield self._encode_comment()
+        ##not the first call of the iter_encode method, only encode data
+        else:
+            # DATA
+            # yield _TK_DATA
+            if not obj.get('data'):
+                raise BadObject('Data declaration not found.');
+           
+            for inst in obj['data']:
+                yield self._encode_data(inst)
+
+            # FILTER
+            yield self._encode_comment()
+            yield self._encode_comment()
+            yield self._encode_comment()
+
 # =============================================================================
 
 # BASIC INTERFACE =============================================================
