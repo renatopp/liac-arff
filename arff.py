@@ -874,7 +874,7 @@ class ArffEncoder(object):
         else:
             # DATA
             # yield _TK_DATA
-            if not obj.get('data'):
+            if ("data" not in obj) or (None == obj.get('data')):
                 raise BadObject('Data declaration not found.');
            
             for inst in obj['data']:

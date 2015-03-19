@@ -1,5 +1,6 @@
 import unittest
 import arff
+import copy
 
 ARFF = '''% 
 % DESCRIPTION HERE
@@ -81,6 +82,44 @@ class TestEncodeComment(unittest.TestCase):
 
         for r, e in zip(result, expected):
             self.assertEqual(r, e)
+
+    def test_iter_encode1(self):
+        encoder = self.get_encoder()
+        expected = ARFF.split('\n');       
+
+        #part1
+        obj = copy.deepcopy(OBJ);
+        obj["data"] = [];
+        for i in xrange(2):
+            obj["data"].append(OBJ["data"][i]);
+        result = encoder.iter_encode(obj);
+
+        str_result = u''
+        store = [];
+        for row in result:
+            store.append(row);
+        for i in xrange(len(store) - 3):    
+            str_result += store[i] + u'\n';
+
+        #part2
+        obj = copy.deepcopy(OBJ);
+        obj["data"] = [];
+        for i in xrange(2,len(OBJ["data"])):
+            obj["data"].append(OBJ["data"][i]);
+        result2 = encoder.iter_encode(obj, is_first_call = False);
+
+        last_row = result2.next()
+        for row in result2:
+            str_result += last_row + u'\n';
+            last_row = row;
+        str_result += last_row;
+
+        ##comparsion
+        result_split = str_result.split('\n');
+        for r, e in zip(result_split, expected):
+            self.assertEqual(r, e)
+       
+        
 
     def test_invalid_object(self):
         encoder = self.get_encoder()
