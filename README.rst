@@ -33,20 +33,20 @@ The param obj are expected to be set as the return of the previous call at the
 subsequent calls. At this time, the iter_decode will update the instances in obj 
 with the arff file.
 
-Here is an example. Assume the content in the test.arff:
-      >>> 
-      @RELATION weather
-
-      @ATTRIBUTE outlook {sunny, overcast, rainy}
-      @ATTRIBUTE temperature REAL
-      @ATTRIBUTE humidity REAL
-      @ATTRIBUTE windy {TRUE, FALSE}
-      @ATTRIBUTE play {yes, no}
-
-      @DATA
-      sunny,85.0,85.0,FALSE,no
-      sunny,80.0,90.0,TRUE,no
-      overcast,83.0,86.0,FALSE,yes
+Here is an example. Assume the content in the test.arff::
+      
+      @RELATION weather\n
+      \n
+      @ATTRIBUTE outlook {sunny, overcast, rainy}\n
+      @ATTRIBUTE temperature REAL\n
+      @ATTRIBUTE humidity REAL\n
+      @ATTRIBUTE windy {TRUE, FALSE}\n
+      @ATTRIBUTE play {yes, no}\n
+      \n
+      @DATA\n
+      sunny,85.0,85.0,FALSE,no\n
+      sunny,80.0,90.0,TRUE,no\n
+      overcast,83.0,86.0,FALSE,yes\n
 
 There are two instances in the arff file. Then We run the code::
   
