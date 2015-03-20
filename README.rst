@@ -18,7 +18,7 @@ rustle1314/liac-arff
   The params are listed as follows::
   
     file, the arff file to read and decode.
-    encode_nominal, (default false). 
+    encode_nominal, I don't what the param is for (default false). 
     obj,  python representation of a given ARFF file (default None).
     batch,  the number of instances once (default 20).
   
