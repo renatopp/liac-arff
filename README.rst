@@ -2,53 +2,53 @@
 rustle1314/liac-arff
 ====================
 
-  I have modified some code to make liac-arff to handle large-scale data.
+I have modified some code to make liac-arff to handle large-scale data.
 
-  The main changes are two, namely 1) adding the ArffDecoder and 2) chaning 
-  the ArffEncoder.iter_encode method. These changes will not change the 
-  usages of the original interfaces (i.e., the four methods: load, loads, 
-  dump, dumps).
+The main changes are two, namely 1) adding the ArffDecoder and 2) chaning 
+the ArffEncoder.iter_encode method. These changes will not change the 
+usages of the original interfaces (i.e., the four methods: load, loads, 
+dump, dumps).
 
 --------------------------------------------
 1. Adding the ArffDecoder.iter_decode method.
 --------------------------------------------
 
-  1.1 params
+1.1 params
 
-  ArffDecoder.iter_decode(self, file, encode_nominal = False, obj = None,
-  batch = 20). The params are listed as follows::
+ArffDecoder.iter_decode(self, file, encode_nominal = False, obj = None,
+batch = 20). The params are listed as follows::
   
     file, the arff file to read and decode.
     encode_nominal, I don't what the param is for (default false). 
     obj,  python representation of a given ARFF file (default None).
     batch,  the number of instances once (default 20).
   
-  1.2 usages and examples
+1.2 usages and examples
   
-  You are expected to set the param obj = None when you first call the method. 
-  At the first call, the iter_decode will read the arff file and decode the Arff 
-  information (i.e., relations, attributes...) and some instances. 
+You are expected to set the param obj = None when you first call the method. 
+At the first call, the iter_decode will read the arff file and decode the Arff 
+information (i.e., relations, attributes...) and some instances. 
   
-  The param obj are expected to be set as the return of the previous call at the 
-  subsequent calls. At this time, the iter_decode will update the instances in obj 
-  with the arff file.
+The param obj are expected to be set as the return of the previous call at the 
+subsequent calls. At this time, the iter_decode will update the instances in obj 
+with the arff file.
 
-  Here is an example. Assume the content in the test.arff:
+Here is an example. Assume the content in the test.arff:
       
-      @RELATION weather
+    @RELATION weather
 
-      @ATTRIBUTE outlook {sunny, overcast, rainy}
-      @ATTRIBUTE temperature REAL
-      @ATTRIBUTE humidity REAL
-      @ATTRIBUTE windy {TRUE, FALSE}
-      @ATTRIBUTE play {yes, no}
+    @ATTRIBUTE outlook {sunny, overcast, rainy}
+    @ATTRIBUTE temperature REAL
+    @ATTRIBUTE humidity REAL
+    @ATTRIBUTE windy {TRUE, FALSE}
+    @ATTRIBUTE play {yes, no}
 
-      @DATA
-      sunny,85.0,85.0,FALSE,no
-      sunny,80.0,90.0,TRUE,no
-      overcast,83.0,86.0,FALSE,yes
+    @DATA
+    sunny,85.0,85.0,FALSE,no
+    sunny,80.0,90.0,TRUE,no
+    overcast,83.0,86.0,FALSE,yes
 
-  There are two instances in the arff file. Then We run the code::
+There are two instances in the arff file. Then We run the code::
   
       >>> f = open("test.arff");
       >>> decoder = ArffDecoder();
@@ -56,7 +56,7 @@ rustle1314/liac-arff
       >>> obj2    = decoder.iter_decode(f, obj = obj1, batch = 2);
   
   
-  The results are::
+The results are::
   
       >>> obj1
       {
@@ -88,34 +88,34 @@ rustle1314/liac-arff
           u'relation': u'weather'
       }
   
-  The obj1 contains the first two instances and the obj2 contains 
-  the last instance.
+The obj1 contains the first two instances and the obj2 contains 
+the last instance.
   
 ---------------------------------------------
 2. Chaning the ArffEncoder.iter_encode method.
 ---------------------------------------------
   
-  2.1 params
+2.1 params
 
-  Definition of the method is ArffEncoder.iter_encode(obj, is_first_call =
-  True). The params are listed as follows::
+Definition of the method is ArffEncoder.iter_encode(obj, is_first_call =
+True). The params are listed as follows::
   
     obj, the python representation of arff data.
     is_first_call, an indicator of the first call (default True).
   
-  2.2 usages and examples
+2.2 usages and examples
 
-  When is_first_call = True, the modified ArffEncoder.iter_encode is identical
-  to the original one, which will encode the whole objection include the arff
-  information. 
+When is_first_call = True, the modified ArffEncoder.iter_encode is identical
+to the original one, which will encode the whole objection include the arff
+information. 
   
-  When is_first_call = False, the method only encodes the data in the objection.
+When is_first_call = False, the method only encodes the data in the objection.
   
-  By using the modified method, you can write a part of  data into a file once
-  they are produced, instead of wait until all data are produced. It may be 
-  useful when the whole data are very large.
+By using the modified method, you can write a part of  data into a file once
+they are produced, instead of wait until all data are produced. It may be 
+useful when the whole data are very large.
   
-  Here is an example of usage of this modified method.
+Here is an example of usage of this modified method.
   
       >>> obj 
       {
@@ -133,7 +133,7 @@ rustle1314/liac-arff
           u'relation': u'weather'
       }
   
-  If we set is_first_call = True::
+If we set is_first_call = True::
   
       >>> encoder = ArffEncoder();
       >>> result = encoder.iter_encode(obj, is_first_call = True);
@@ -155,7 +155,7 @@ rustle1314/liac-arff
       %
       %
   
-  If we set is_first_call = False::   
+If we set is_first_call = False::   
   
       >>> encoder = ArffEncoder();
       >>> result = encoder.iter_encode(obj, is_first_call = False);
@@ -178,7 +178,9 @@ Contributors
 
 
 
-The readme of liac-arff is as follows:
+
+The original readme of liac-arff is as follows:
+-----------------------------------------------
 
 =========
 LIAC-ARFF
