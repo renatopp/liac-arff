@@ -58,6 +58,7 @@ rustle1314/liac-arff
   
   
   The results are::
+  
       >>> obj1
       {
           u'attributes': [
@@ -156,7 +157,8 @@ rustle1314/liac-arff
       %
       %
   
-  If we set is_first_call = False::    
+  If we set is_first_call = False::   
+  
       >>> encoder = ArffEncoder();
       >>> result = encoder.iter_encode(obj, is_first_call = False);
       >>> for i in result:
