@@ -35,18 +35,18 @@ with the arff file.
 
 Here is an example. Assume the content in the test.arff:
       
-    @RELATION weather
+      @RELATION weather
 
-    @ATTRIBUTE outlook {sunny, overcast, rainy}
-    @ATTRIBUTE temperature REAL
-    @ATTRIBUTE humidity REAL
-    @ATTRIBUTE windy {TRUE, FALSE}
-    @ATTRIBUTE play {yes, no}
+      @ATTRIBUTE outlook {sunny, overcast, rainy}
+      @ATTRIBUTE temperature REAL
+      @ATTRIBUTE humidity REAL
+      @ATTRIBUTE windy {TRUE, FALSE}
+      @ATTRIBUTE play {yes, no}
 
-    @DATA
-    sunny,85.0,85.0,FALSE,no
-    sunny,80.0,90.0,TRUE,no
-    overcast,83.0,86.0,FALSE,yes
+      @DATA
+      sunny,85.0,85.0,FALSE,no
+      sunny,80.0,90.0,TRUE,no
+      overcast,83.0,86.0,FALSE,yes
 
 There are two instances in the arff file. Then We run the code::
   
