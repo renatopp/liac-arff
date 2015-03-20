@@ -34,7 +34,7 @@ subsequent calls. At this time, the iter_decode will update the instances in obj
 with the arff file.
 
 Here is an example. Assume the content in the test.arff:
-      
+      >>> 
       @RELATION weather
 
       @ATTRIBUTE outlook {sunny, overcast, rainy}
