@@ -18,10 +18,10 @@ dump, dumps).
 ArffDecoder.iter_decode(self, file, encode_nominal = False, obj = None,
 batch = 20). The params are listed as follows::
   
-    file, the arff file to read and decode.
-    encode_nominal, I don't what the param is for (default false). 
-    obj,  python representation of a given ARFF file (default None).
-    batch,  the number of instances once (default 20).
+- file, the arff file to read and decode.
+- encode_nominal, I don't what the param is for. 囧. (default false). 
+- obj,  python representation of a given ARFF file (default None).
+- batch,  the number of instances once (default 20).
   
 1.2 usages and examples
   
@@ -100,8 +100,8 @@ the last instance.
 Definition of the method is ArffEncoder.iter_encode(obj, is_first_call =
 True). The params are listed as follows::
   
-    obj, the python representation of arff data.
-    is_first_call, an indicator of the first call (default True).
+- obj, the python representation of arff data.
+- is_first_call, an indicator of the first call (default True).
   
 2.2 usages and examples
 
