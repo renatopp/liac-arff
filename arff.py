@@ -157,8 +157,8 @@ _TK_ATTRIBUTE   = '@ATTRIBUTE'
 _TK_DATA        = '@DATA'
 _TK_VALUE       = ''
 
-_RE_RELATION     = re.compile(r'^(\".*\"|\'.*\'|\S*)$', re.UNICODE)
-_RE_ATTRIBUTE    = re.compile(r'^(\"[a-zA-Z].*\"|\'[a-zA-Z].*\'|[a-zA-Z]\S*)\s+(.+)$', re.UNICODE)
+_RE_RELATION     = re.compile(r'^([^\{\}%,\s]*|\".*\"|\'.*\')$', re.UNICODE)
+_RE_ATTRIBUTE    = re.compile(r'^(\".*\"|\'.*\'|[^\{\}%,\s]*)\s+(.+)$', re.UNICODE)
 _RE_TYPE_NOMINAL = re.compile(r'^\{\s*((\".*\"|\'.*\'|\S*)\s*,\s*)*(\".*\"|\'.*\'|\S*)\s*\}$', re.UNICODE)
 _RE_ESCAPE = re.compile(r'\\\'|\\\"|\\\%|[\\"\'%]')
 
@@ -584,8 +584,10 @@ class ArffEncoder(object):
         :param name: a string.
         :return: a string with the encoded relation declaration.
         '''
-        if ' ' in name:
-            name = '"%s"'%name
+        for char in ' %{},':
+            if char in name:
+                name = '"%s"'%name
+                break
 
         return u'%s %s'%(_TK_RELATION, name)
 
@@ -612,8 +614,10 @@ class ArffEncoder(object):
         :param type_: a string or a list of string.
         :return: a string with the encoded attribute declaration.
         '''
-        if ' ' in name:
-            name = '"%s"'%name
+        for char in ' %{},':
+            if char in name:
+                name = '"%s"'%name
+                break
 
         if isinstance(type_, (tuple, list)):
             type_ = [u'"%s"'%t if ' ' in t else u'%s'%t for t in type_]

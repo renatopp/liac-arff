@@ -1,7 +1,7 @@
 import unittest
 import arff
 
-class TestEncodeComment(unittest.TestCase):
+class TestEncodeAttribute(unittest.TestCase):
     def get_encoder(self):
         decoder = arff.ArffEncoder()
         return decoder
@@ -13,7 +13,20 @@ class TestEncodeComment(unittest.TestCase):
         result = encoder._encode_attribute(*fixture)
         expected = u'@ATTRIBUTE "attribute name" REAL'
 
-        self.assertEqual(result, expected)       
+        self.assertEqual(result, expected)   
+
+    def test_attribute_name_special(self):
+        encoder = self.get_encoder()
+
+        fixture = (u'%attributename', 'REAL')
+        result = encoder._encode_attribute(*fixture)
+        expected = u'@ATTRIBUTE "%attributename" REAL'
+        self.assertEqual(result, expected)
+
+        fixture = (u'attribute,name', 'REAL')
+        result = encoder._encode_attribute(*fixture)
+        expected = u'@ATTRIBUTE "attribute,name" REAL'
+        self.assertEqual(result, expected)
 
     def test_attribute_real(self):
         encoder = self.get_encoder()

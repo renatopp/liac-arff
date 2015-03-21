@@ -71,7 +71,7 @@ class TestLoads(unittest.TestCase):
         self.assertEqual(obj['relation'], u'software metric')
 
     def test_format_error_relation(self):
-        ARFF_FORMAT_ERROR_RELATION = '''\
+        fixture = '''\
         @relation software metric
 
         @attribute number_of_files numeric
@@ -81,14 +81,11 @@ class TestLoads(unittest.TestCase):
         @data 10,10,10
         '''
         loads = self.get_loads()
-
-        # The string must be quoted if the name includes spaces.
-        with self.assertRaisesRegexp(arff.BadRelationFormat, "Bad @RELATION format, at line 1\.$"):
-          obj = loads(ARFF_FORMAT_ERROR_RELATION)
-
+        fixture = u'@ATTRIBUTE {name NUMERIC'
+        self.assertRaises(arff.BadLayout, loads, fixture)
 
     def test_format_error_attribute(self):
-        ARFF_FORMAT_ERROR_ATTRIBUTE = '''\
+        fixture = '''\
         @relation "software metric"
 
         @attribute #_of_files numeric
@@ -99,10 +96,8 @@ class TestLoads(unittest.TestCase):
         '''
 
         loads = self.get_loads()
-
-        # the <attribute-name> must start with an alphabetic character.
-        with self.assertRaisesRegexp(arff.BadAttributeFormat, "Bad @ATTRIBUTE format, at line 3\.$"):
-          obj = loads(ARFF_FORMAT_ERROR_ATTRIBUTE)
+        fixture = u'@ATTRIBUTE {name NUMERIC'
+        self.assertRaises(arff.BadLayout, loads, fixture)
 
     def test_sparse_input(self):
         loads = self.get_loads()
