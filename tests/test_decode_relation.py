@@ -44,6 +44,24 @@ class TestDecodeRelation(unittest.TestCase):
 
         self.assertEqual(result, expected)
 
+    def test_quotes_and_special(self):
+        '''Quoted relation names and without space in the name.'''
+        decoder = self.get_decoder()
+
+        # double quoted
+        fixture = u'@RELATION "%relation name"'
+        result = decoder._decode_relation(fixture)
+        expected = u'%relation name'
+
+        self.assertEqual(result, expected)
+
+        # simple quoted
+        fixture = u"@RELATION 'relation {} name'"
+        result = decoder._decode_relation(fixture)
+        expected = u'relation {} name'
+
+        self.assertEqual(result, expected)
+
     def test_spaces(self):
         '''Quoted relation names with spaces in the name.'''
         decoder = self.get_decoder()
@@ -67,6 +85,24 @@ class TestDecodeRelation(unittest.TestCase):
         decoder = self.get_decoder()
 
         fixture = u'@RELATION bad relation name'
+        self.assertRaises(
+            arff.BadRelationFormat, 
+            decoder._decode_relation,
+            fixture
+        )
+
+    def test_invalid_characters(self):
+        '''Relation names with spaces and without quotes.'''
+        decoder = self.get_decoder()
+
+        fixture = u'@RELATION %relationname'
+        self.assertRaises(
+            arff.BadRelationFormat, 
+            decoder._decode_relation,
+            fixture
+        )
+
+        fixture = u'@RELATION relat,ionname'
         self.assertRaises(
             arff.BadRelationFormat, 
             decoder._decode_relation,

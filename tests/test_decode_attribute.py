@@ -39,6 +39,38 @@ class TestDecodeAttribute(unittest.TestCase):
         self.assertEqual(len(result), 2)
         self.assertEqual(result[0], expected)
 
+    def test_numeric_name(self):
+        '''Attributes with quoted name but without space.'''
+        decoder = self.get_decoder()
+
+        # Double Quote
+        fixture = u'@ATTRIBUTE 0 NUMERIC'
+        result = decoder._decode_attribute(fixture)
+        expected = u'0'
+
+        self.assertEqual(len(result), 2)
+        self.assertEqual(result[0], expected)
+
+    def test_quoted_special(self):
+        '''Attributes with quoted name but without space.'''
+        decoder = self.get_decoder()
+
+        # Double Quote
+        fixture = u'@ATTRIBUTE "%attribute-name" NUMERIC'
+        result = decoder._decode_attribute(fixture)
+        expected = u'%attribute-name'
+
+        self.assertEqual(len(result), 2)
+        self.assertEqual(result[0], expected)
+
+        # Simple Quote
+        fixture = u"@ATTRIBUTE ',attribute {} name' NUMERIC"
+        result = decoder._decode_attribute(fixture)
+        expected = u',attribute {} name'
+
+        self.assertEqual(len(result), 2)
+        self.assertEqual(result[0], expected)
+
     def test_quoted_space(self):
         '''Attributes with quoted name and space.'''
         decoder = self.get_decoder()
@@ -71,6 +103,31 @@ class TestDecodeAttribute(unittest.TestCase):
         )
 
         fixture = u'@ATTRIBUTE NUMERIC'
+        self.assertRaises(
+            arff.BadAttributeFormat, 
+            decoder._decode_attribute,
+            fixture
+        )
+
+    def test_invalid_characters(self):
+        '''Attributes with bad format.'''
+        decoder = self.get_decoder()
+
+        fixture = u'@ATTRIBUTE %badformat'
+        self.assertRaises(
+            arff.BadAttributeFormat, 
+            decoder._decode_attribute,
+            fixture
+        )
+
+        fixture = u'@ATTRIBUTE na,me NUMERIC'
+        self.assertRaises(
+            arff.BadAttributeFormat, 
+            decoder._decode_attribute,
+            fixture
+        )
+
+        fixture = u'@ATTRIBUTE {name NUMERIC'
         self.assertRaises(
             arff.BadAttributeFormat, 
             decoder._decode_attribute,

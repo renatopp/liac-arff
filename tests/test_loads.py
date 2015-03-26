@@ -28,6 +28,21 @@ ARFF_FORMAT_CORRECT = '''\
 @data 10,10,10
 '''
 
+SPARSE_ARFF = '''% XOR Dataset
+@RELATION XOR
+
+@ATTRIBUTE input1 REAL
+@ATTRIBUTE input2 REAL
+@ATTRIBUTE y REAL
+
+@DATA
+{0 0}
+{1 1.0, 2 1.0}
+{0 1.0, 2 1.0}
+{0 1.0, 1 1.0}
+'''
+
+
 class TestLoads(unittest.TestCase):
     def get_loads(self):
         load = arff.loads
@@ -56,7 +71,7 @@ class TestLoads(unittest.TestCase):
         self.assertEqual(obj['relation'], u'software metric')
 
     def test_format_error_relation(self):
-        ARFF_FORMAT_ERROR_RELATION = '''\
+        fixture = '''\
         @relation software metric
 
         @attribute number_of_files numeric
@@ -66,10 +81,8 @@ class TestLoads(unittest.TestCase):
         @data 10,10,10
         '''
         loads = self.get_loads()
-
-        # The string must be quoted if the name includes spaces.
-        with self.assertRaisesRegexp(arff.BadRelationFormat, "Bad @RELATION format, at line 1\.$"):
-          obj = loads(ARFF_FORMAT_ERROR_RELATION)
+        fixture = u'@ATTRIBUTE {name NUMERIC'
+        self.assertRaises(arff.BadLayout, loads, fixture)
 
     def test_format_error_attribute1(self):
         ARFF_FORMAT_ERROR_ATTRIBUTE = '''\
@@ -88,21 +101,20 @@ class TestLoads(unittest.TestCase):
             obj = loads(ARFF_FORMAT_ERROR_ATTRIBUTE)
 
     def test_format_error_attribute(self):
-        ARFF_FORMAT_ERROR_ATTRIBUTE = '''\
+        fixture = '''\
         @relation "software metric"
-    
-        @attribute _files numeric
-        @attribute 000    numeric
         @attribute #_of_files numeric
-        @attribute { numeric
         @attribute lines of code numeric
         @attribute defect density numeric
-
         @data 10,10,10
         '''
 
         loads = self.get_loads()
+        fixture = u'@ATTRIBUTE {name NUMERIC'
+        self.assertRaises(arff.BadLayout, loads, fixture)
 
-        with self.assertRaisesRegexp(arff.BadAttributeFormat, "Bad @ATTRIBUTE format, at line 6\.$"):
-            obj = loads(ARFF_FORMAT_ERROR_ATTRIBUTE)
-
+    def test_sparse_input(self):
+        loads = self.get_loads()
+        obj = loads(ARFF)
+        sparse_obj = loads(SPARSE_ARFF)
+        self.assertEqual(obj['data'], sparse_obj['data'])

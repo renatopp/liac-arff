@@ -1,15 +1,15 @@
 What's New on LIAC-ARFF
 =======================
-LIAC_ARFF 2.0.3 (DEV)
+
+LIAC-ARFF 2.0.3 (DEV)
 ---------------------
 
-- fix: attribute names are allowed to start with numbers (in fact any character except control characters and '{', '}', ',', or '%')
 
 
-LIAC-ARFF 2.0.2 (DEV)
----------------------
+LIAC-ARFF 2.0.2
+---------------
 
-- fix: attribute names now must start with alphabetic character.
+- fix: attribute and relation names now follow the new ARFF specification.
 - new: encoded nominal values.
 
 

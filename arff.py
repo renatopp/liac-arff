@@ -141,7 +141,7 @@ This module provides several features, including:
 '''
 __author__ = 'Renato de Pontes Pereira'
 __author_email__ = 'renato.ppontes@gmail.com'
-__version__ = '2.0.2'
+__version__ = '2.0.3dev'
 
 import re
 import csv
@@ -157,9 +157,8 @@ _TK_ATTRIBUTE   = '@ATTRIBUTE'
 _TK_DATA        = '@DATA'
 _TK_VALUE       = ''
 
-_RE_RELATION     = re.compile(r'^(\".*\"|\'.*\'|\S*)$', re.UNICODE)
-#_RE_ATTRIBUTE    = re.compile(r'^(\"[a-zA-Z].*\"|\'[a-zA-Z].*\'|[a-zA-Z]\S*)\s+(.+)$', re.UNICODE)
-_RE_ATTRIBUTE    = re.compile(r'^(\".*\"|\'.*\'|[^\{\},\%]\S*)\s+(.+)$', re.UNICODE)
+_RE_RELATION     = re.compile(r'^([^\{\}%,\s]*|\".*\"|\'.*\')$', re.UNICODE)
+_RE_ATTRIBUTE    = re.compile(r'^(\".*\"|\'.*\'|[^\{\}%,\s]*)\s+(.+)$', re.UNICODE)
 _RE_TYPE_NOMINAL = re.compile(r'^\{\s*((\".*\"|\'.*\'|\S*)\s*,\s*)*(\".*\"|\'.*\'|\S*)\s*\}$', re.UNICODE)
 _RE_ESCAPE = re.compile(r'\\\'|\\\"|\\\%|[\\"\'%]')
 
@@ -445,14 +444,16 @@ class ArffDecoder(object):
         '''
         values = next(csv.reader([s.strip(' ')]))
 
+        # Sparse lines start with a '{' and are converted into dense lists. not listed values are set to zero
         if values[0][0].strip(" ") == '{':
             vdict = dict(map(lambda x: (int(x[0]), x[1]),[i.strip("{").strip("}").strip(" ").split(' ') for i in values]))
-            values = [unicode(vdict[i]) if i in vdict else unicode(0) for i in xrange(len(self._conversors))]
-
-        if len(values) != len(self._conversors):
-            raise BadDataFormat()
-
+            values = [vdict[i] if i in vdict else unicode(0) for i in xrange(len(self._conversors))]
+	# dense lines are decoded one by one
+        else:
+            if len(values) != len(self._conversors):
+                raise BadDataFormat()
         values = [self._conversors[i](values[i]) for i in xrange(len(values))]
+
         return values
 
 
@@ -738,8 +739,10 @@ class ArffEncoder(object):
         :param name: a string.
         :return: a string with the encoded relation declaration.
         '''
-        if ' ' in name:
-            name = '"%s"'%name
+        for char in ' %{},':
+            if char in name:
+                name = '"%s"'%name
+                break
 
         return u'%s %s'%(_TK_RELATION, name)
 
@@ -766,8 +769,10 @@ class ArffEncoder(object):
         :param type_: a string or a list of string.
         :return: a string with the encoded attribute declaration.
         '''
-        if ' ' in name:
-            name = '"%s"'%name
+        for char in ' %{},':
+            if char in name:
+                name = '"%s"'%name
+                break
 
         if isinstance(type_, (tuple, list)):
             type_ = [u'"%s"'%t if ' ' in t else u'%s'%t for t in type_]
