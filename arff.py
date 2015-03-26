@@ -780,7 +780,7 @@ class ArffEncoder(object):
 
         return u'%s %s %s'%(_TK_ATTRIBUTE, name, type_)
 
-    def _encode_data(self, data):
+    def _encode_data(self, data, is_sparse = False):
         '''(INTERNAL) Encodes a line of data.
 
         Data instances follow the csv format, i.e, attribute values are 
@@ -789,6 +789,10 @@ class ArffEncoder(object):
         :param data: a list of values.
         :return: a string with the encoded data line.
         '''
+        if True == is_sparse:
+            new_data_idx = [];
+            new_data_val = []; 
+
         new_data = []
         for v in data:
             if v is None or v == u'':
