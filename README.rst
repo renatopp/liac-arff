@@ -2,6 +2,9 @@
 LIAC-ARFF
 =========
 
+.. image:: https://travis-ci.org/renatopp/liac-arff.svg
+    :target: https://travis-ci.org/renatopp/liac-arff
+
 The liac-arff module implements functions to read and write ARFF files in
 Python. It was created in the Connectionist Artificial Intelligence Laboratory
 (LIAC), which takes place at the Federal University of Rio Grande do Sul 
