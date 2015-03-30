@@ -175,13 +175,13 @@ _ESCAPE_DCT = {
 # =============================================================================
 
 # COMPATIBILITY WITH PYTHON 3.3 ===============================================
-if 'unicode' not in __builtins__:
+if not hasattr(__builtins__, 'unicode'):
     unicode = str
 
-if 'basestring' not in __builtins__:
+if not hasattr(__builtins__, 'basestring'):
     basestring = str
 
-if 'xrange' not in __builtins__:
+if not hasattr(__builtins__, 'xrange'):
     xrange = range
 # =============================================================================
 
