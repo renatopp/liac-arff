@@ -267,7 +267,7 @@ class Conversor(object):
             self._conversor = self._nominal
         elif type_ == 'ENCODED_NOMINAL':
             self._conversor = self._encoded_nominal
-            self._encoded_values = {value: i for i, value in enumerate(values)}
+            self._encoded_values = dict((value, i) for (i, value) in enumerate(values))
         else:
             raise BadAttributeType()
 
