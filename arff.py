@@ -174,14 +174,11 @@ _ESCAPE_DCT = {
 }
 # =============================================================================
 
-# COMPATIBILITY WITH PYTHON 3.3 ===============================================
-if not hasattr(__builtins__, 'unicode'):
+# COMPATIBILITY WITH PYTHON 3 ===============================================
+PY3 = sys.version_info[0] == 3
+if PY3:
     unicode = str
-
-if not hasattr(__builtins__, 'basestring'):
     basestring = str
-
-if not hasattr(__builtins__, 'xrange'):
     xrange = range
 # =============================================================================
 
