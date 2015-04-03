@@ -4,6 +4,8 @@ What's New on LIAC-ARFF
 LIAC-ARFF 2.0.3 (DEV)
 ---------------------
 
+- fix: working for 2.6+
+- fix: working for 3.3+
 
 
 LIAC-ARFF 2.0.2
