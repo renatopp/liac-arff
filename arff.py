@@ -174,14 +174,11 @@ _ESCAPE_DCT = {
 }
 # =============================================================================
 
-# COMPATIBILITY WITH PYTHON 3.3 ===============================================
-if 'unicode' not in __builtins__:
+# COMPATIBILITY WITH PYTHON 3 ===============================================
+PY3 = sys.version_info[0] == 3
+if PY3:
     unicode = str
-
-if 'basestring' not in __builtins__:
     basestring = str
-
-if 'xrange' not in __builtins__:
     xrange = range
 # =============================================================================
 
@@ -267,7 +264,7 @@ class Conversor(object):
             self._conversor = self._nominal
         elif type_ == 'ENCODED_NOMINAL':
             self._conversor = self._encoded_nominal
-            self._encoded_values = {value: i for i, value in enumerate(values)}
+            self._encoded_values = dict((value, i) for (i, value) in enumerate(values))
         else:
             raise BadAttributeType()
 
