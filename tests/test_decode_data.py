@@ -17,10 +17,10 @@ class TestDecodeData(unittest.TestCase):
     def test_conversor(self):
         '''Basic data instances.'''
         decoder = self.get_decoder([
-            ConversorStub(unicode),
+            ConversorStub(str if arff.PY3 else unicode),
             ConversorStub(float),
             ConversorStub(int),
-            ConversorStub(unicode),
+            ConversorStub(str if arff.PY3 else unicode),
         ])
 
         fixture = u'Iris,3.4,2,Setosa'
@@ -36,10 +36,10 @@ class TestDecodeData(unittest.TestCase):
     def test_sparse(self):
         '''Basic data instances.'''
         decoder = self.get_decoder([
-            ConversorStub(unicode),
+            ConversorStub(str if arff.PY3 else unicode),
             ConversorStub(float),
             ConversorStub(int),
-            ConversorStub(unicode),
+            ConversorStub(str if arff.PY3 else unicode),
             ConversorStub(float),
             ConversorStub(int),
         ])

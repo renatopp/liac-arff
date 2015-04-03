@@ -744,7 +744,7 @@ def dump(obj, fp):
     encoder = ArffEncoder()
     generator = encoder.iter_encode(obj)
 
-    last_row = generator.next()
+    last_row = next(generator)
     for row in generator:
         fp.write(last_row + u'\n')
         last_row = row

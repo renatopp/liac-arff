@@ -1,6 +1,9 @@
 import unittest
 import arff
-import StringIO
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 
 OBJ = {
     'description': 'XOR Dataset',
@@ -41,7 +44,7 @@ class TestDump(unittest.TestCase):
 
     def test_simple(self):
         dump = self.get_dump()
-        fp = StringIO.StringIO()
+        fp = StringIO()
 
         s = dump(OBJ, fp)
 

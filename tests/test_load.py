@@ -1,6 +1,9 @@
 import unittest
 import arff
-import StringIO
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 
 ARFF = '''% XOR Dataset
 @RELATION XOR
@@ -26,7 +29,7 @@ class TestLoad(unittest.TestCase):
     def test_simple(self):
         load = self.get_load()
 
-        file_ = StringIO.StringIO(ARFF)
+        file_ = StringIO(ARFF)
         obj = load(file_)
 
         self.assertEqual(obj['description'], u'XOR Dataset')
