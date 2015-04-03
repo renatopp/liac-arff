@@ -142,6 +142,7 @@ Contributors
 - `Zichen Wang (wangz10) <https://github.com/wangz10>`_
 - `Matthias Feurer (mfeurer) <https://github.com/mfeurer>`_
 - `Hongjoo Lee (midnightradio) <https://github.com/midnightradio>`_
+- `Calvin Jeong (calvin) <http://ty.pe.kr/>`
 
 Project Page
 ------------
