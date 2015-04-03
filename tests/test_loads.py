@@ -1,6 +1,10 @@
 import unittest
 import arff
-import StringIO
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
+
 
 ARFF = '''% XOR Dataset
 @RELATION XOR
