@@ -31,7 +31,7 @@ Features
 - Supports read and write the descriptions of files;
 - Supports missing values and names with spaces;
 - Supports unicode values and names;
-- Fully compatible with Python 2.6+ and Python 3.4+;
+- Fully compatible with Python 2.6+ and Python 3.3+;
 - Under `MIT License <http://opensource.org/licenses/MIT>`_
 
 --------------
@@ -142,7 +142,7 @@ Contributors
 - `Zichen Wang (wangz10) <https://github.com/wangz10>`_
 - `Matthias Feurer (mfeurer) <https://github.com/mfeurer>`_
 - `Hongjoo Lee (midnightradio) <https://github.com/midnightradio>`_
-- `Calvin Jeong (calvin) <http://ty.pe.kr/>`
+- `Calvin Jeong (calvin) <http://ty.pe.kr/>`_
 
 Project Page
 ------------
