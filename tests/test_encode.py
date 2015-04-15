@@ -32,6 +32,36 @@ rainy,71.0,91.0,TRUE,no
 % 
 % '''
 
+ARFF_SPARSE= '''% 
+% DESCRIPTION HERE
+% 
+@RELATION weather
+
+@ATTRIBUTE outlook {sunny, overcast, rainy}
+@ATTRIBUTE temperature REAL
+@ATTRIBUTE humidity REAL
+@ATTRIBUTE windy {TRUE, FALSE}
+@ATTRIBUTE play {yes, no}
+
+@DATA
+{0 sunny,2 9.0,3 FALSE,4 no}
+{0 sunny,2 1.0,3 TRUE,4 no}
+{0 overcast,2 86.0,3 FALSE,4 yes}
+{0 rainy,2 96.0,3 FALSE,4 yes}
+{0 rainy,2 80.0,3 FALSE,4 yes}
+{0 rainy,2 70.0,3 TRUE,4 no}
+{0 overcast,2 65.0,3 TRUE,4 yes}
+{0 sunny,2 1.0,3 FALSE,4 no}
+{0 sunny,2 2.0,3 FALSE,4 yes}
+{0 rainy,2 2.0,3 FALSE,4 yes}
+{0 sunny,2 1.0,3 TRUE,4 yes}
+{0 overcast,3 TRUE,4 yes}
+{0 overcast,2 75.0,3 FALSE,4 yes}
+{0 rainy,2 91.0,3 TRUE,4 no}
+% 
+% 
+% '''
+
 OBJ = {
     u'description':u'\nDESCRIPTION HERE\n',
     u'relation': u'weather',
@@ -61,6 +91,34 @@ OBJ = {
 }
 
 
+OBJ_SPARSE = {
+    u'description':u'\nDESCRIPTION HERE\n',
+    u'relation': u'weather',
+    u'attributes': [
+        (u'outlook', [u'sunny', u'overcast', u'rainy']),
+        (u'temperature', 'REAL'),
+        (u'humidity', 'REAL'),
+        (u'windy', [u'TRUE', u'FALSE']),
+        (u'play', [u'yes', u'no'])
+    ],
+    u'data': [
+        [u'sunny', 0.0, 9.0, u'FALSE', u'no'],
+        [u'sunny', 0.0, 1.0, u'TRUE', u'no'],
+        [u'overcast', 0.0, 86.0, u'FALSE', u'yes'],
+        [u'rainy', 0.0, 96.0, u'FALSE', u'yes'],
+        [u'rainy', 0.0, 80.0, u'FALSE', u'yes'],
+        [u'rainy', 0.0, 70.0, u'TRUE', u'no'],
+        [u'overcast', 0.0, 65.0, u'TRUE', u'yes'],
+        [u'sunny', 0.0, 1.0, u'FALSE', u'no'],
+        [u'sunny', 0.0, 2.0, u'FALSE', u'yes'],
+        [u'rainy', 0.0, 2.0, u'FALSE', u'yes'],
+        [u'sunny', 0.0, 1.0, u'TRUE', u'yes'],
+        [u'overcast', 0.0, 0.0, u'TRUE', u'yes'],
+        [u'overcast', 0.0, 75.0, u'FALSE', u'yes'],
+        [u'rainy', 0.0, 91.0, u'TRUE', u'no']
+    ]
+}
+
 class TestEncodeComment(unittest.TestCase):
     def get_encoder(self):
         encoder = arff.ArffEncoder()
@@ -83,7 +141,16 @@ class TestEncodeComment(unittest.TestCase):
         for r, e in zip(result, expected):
             self.assertEqual(r, e)
 
-    def test_iter_encode1(self):
+    def test_iter_encode_sparse(self):
+        encoder = self.get_encoder()
+        
+        result = encoder.iter_encode(OBJ_SPARSE, is_sparse = True)
+        expected = ARFF_SPARSE.split('\n')        
+        for r, e in zip(result, expected):
+            self.assertEqual(r,e)
+        
+
+    def test_iter_encode_iteration(self):
         encoder = self.get_encoder()
         expected = ARFF.split('\n');       
 

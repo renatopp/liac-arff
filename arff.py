@@ -146,6 +146,7 @@ __version__ = '2.0.3dev'
 import re
 import csv
 import sys
+import types
 
 # CONSTANTS ===================================================================
 _SIMPLE_TYPES = ['NUMERIC', 'REAL', 'INTEGER', 'STRING']
@@ -790,34 +791,51 @@ class ArffEncoder(object):
         :return: a string with the encoded data line.
         '''
         if True == is_sparse:
-            new_data_idx = [];
-            new_data_val = []; 
+            new_data = []
+            for i in xrange(len(data)):
+                v = data[i]
+                if v is None or v == u'':
+                    new_data.append('%d ?'%i);
+                elif (type(v) == types.IntType or type(v) == types.FloatType) \
+                    and abs(v) < 1e-9:
+                    lili_love_linliying = True 
+                    #here nothing to do. So show my love for linliying.
+                else:
+                    s = unicode(v)
+                    for escape_char in _ESCAPE_DCT:
+                        if escape_char in s:
+                            s = encode_string(s)
+                            break
+                    new_data.append('%d %s'%(i,s))
 
-        new_data = []
-        for v in data:
-            if v is None or v == u'':
-                s = '?'
-            else:
-                s = unicode(v)
-            for escape_char in _ESCAPE_DCT:
-                if escape_char in s:
-                    s = encode_string(s)
-                    break
-            new_data.append(s)
+            return '{%s}'%(','.join(new_data))            
 
-        return u','.join(new_data)
+        else:
+            new_data = []
+            for v in data:
+                if v is None or v == u'':
+                    s = '?'
+                else:
+                    s = unicode(v)
+                for escape_char in _ESCAPE_DCT:
+                    if escape_char in s:
+                        s = encode_string(s)
+                        break
+                new_data.append(s)
 
-    def encode(self, obj):
+            return u','.join(new_data)
+
+    def encode(self, obj, is_sparse = False):
         '''Encodes a given object to an ARFF file.
 
         :param obj: the object containing the ARFF information.
         :return: the ARFF file as an unicode string.
         '''
-        data = [row for row in self.iter_encode(obj)]
+        data = [row for row in self.iter_encode(obj, is_sparse = is_sparse)]
 
         return u'\n'.join(data)
 
-    def iter_encode(self, obj, is_first_call = True):
+    def iter_encode(self, obj, is_first_call = True, is_sparse = False):
 
         '''The iterative version of `arff.ArffEncoder.encode`.
 
@@ -874,7 +892,7 @@ class ArffEncoder(object):
                 raise BadObject('Data declaration not found.')
 
             for inst in obj['data']:
-                yield self._encode_data(inst)
+                yield self._encode_data(inst, is_sparse = is_sparse)
 
             # FILLER
             yield self._encode_comment()
@@ -889,7 +907,7 @@ class ArffEncoder(object):
                 raise BadObject('Data declaration not found.');
            
             for inst in obj['data']:
-                yield self._encode_data(inst)
+                yield self._encode_data(inst,is_sparse = is_sparse)
 
             # FILTER
             yield self._encode_comment()

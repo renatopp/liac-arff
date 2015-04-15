@@ -24,3 +24,12 @@ class TestEncodeData(unittest.TestCase):
 
         self.assertEqual(result, expected)
 
+    def test_sparse_value(self):
+        encoder = self.get_encoder()
+        fixture = [1,None,'li',0]
+        result = encoder._encode_data(fixture, is_sparse = True)
+
+        expected = u"{0 1,1 ?,2 li}"
+        self.assertEqual(result, expected)
+        
+
