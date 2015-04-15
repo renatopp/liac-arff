@@ -717,7 +717,7 @@ class ArffEncoder(object):
 # =============================================================================
 
 # BASIC INTERFACE =============================================================
-def load(fp):
+def load(fp, encode_nominal=False):
     '''Load a file-like object containing the ARFF document and convert it into
     a Python object. 
 
@@ -725,9 +725,9 @@ def load(fp):
     :return: a dictionary.
      '''
     decoder = ArffDecoder()
-    return decoder.decode(fp)
+    return decoder.decode(fp, encode_nominal=encode_nominal)
 
-def loads(s):
+def loads(s, encode_nominal=False):
     '''Convert a string instance containing the ARFF document into a Python
     object.
 
@@ -735,7 +735,7 @@ def loads(s):
     :return: a dictionary.
     '''
     decoder = ArffDecoder()
-    return decoder.decode(s)
+    return decoder.decode(s, encode_nominal=encode_nominal)
 
 def dump(obj, fp):
     '''Serialize an object representing the ARFF document to a given file-like 
