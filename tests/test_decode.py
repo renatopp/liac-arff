@@ -32,6 +32,38 @@ rainy,71.0,91.0,TRUE,no
 % 
 '''
 
+ARFF_SPARSE = '''% 
+% DESCRIPTION HERE
+% 
+@RELATION weather
+
+@ATTRIBUTE outlook {sunny, overcast, rainy}
+@ATTRIBUTE temperature REAL
+@ATTRIBUTE humidity REAL
+@ATTRIBUTE windy {TRUE, FALSE}
+@ATTRIBUTE play {yes, no}
+
+@DATA
+{0 sunny,2 9.0,3 FALSE,4 no}
+{0 sunny,2 1.0,3 TRUE,4 no}
+{0 overcast,2 86.0,3 FALSE,4 yes}
+{0 rainy,2 96.0,3 FALSE,4 yes}
+{0 rainy,2 80.0,3 FALSE,4 yes}
+{0 rainy,2 70.0,3 TRUE,4 no}
+{0 overcast,2 65.0,3 TRUE,4 yes}
+{0 sunny,2 1.0,3 FALSE,4 no}
+{0 sunny,2 2.0,3 FALSE,4 yes}
+{0 rainy,2 2.0,3 FALSE,4 yes}
+{0 sunny,2 1.0,3 TRUE,4 yes}
+{0 overcast,3 TRUE,4 yes}
+{0 overcast,2 75.0,3 FALSE,4 yes}
+{0 rainy,2 91.0,3 TRUE,4 no}
+% 
+% 
+% 
+'''
+
+
 description = u'\nDESCRIPTION HERE\n'
 relation = u'weather'
 attributes = [
@@ -144,6 +176,7 @@ class TestDecodeComment(unittest.TestCase):
         self.assertEqual(result['data'][0][3], expected['data'][0][3])
         self.assertEqual(result['data'][0][4], expected['data'][0][4])
 
+
     def test_invalid_layout(self):
         decoder = self.get_decoder()
 
@@ -209,3 +242,24 @@ class TestDecodeComment(unittest.TestCase):
             1
             '''
         )
+
+    def test_decode_sparse(self):
+        decoder = self.get_decoder()
+        obj = decoder.decode(ARFF_SPARSE)
+        result = obj
+        expected = OBJ
+
+        self.assertEqual(result['description'], expected['description'])
+        self.assertEqual(result['relation'], expected['relation'])
+
+        self.assertEqual(len(result['attributes']), len(expected['attributes']))
+        self.assertEqual(result['attributes'][0][0], expected['attributes'][0][0])
+        self.assertEqual(result['attributes'][0][1][0], expected['attributes'][0][1][0])
+        self.assertEqual(result['attributes'][0][1][1], expected['attributes'][0][1][1])
+        self.assertEqual(result['attributes'][0][1][2], expected['attributes'][0][1][2])
+
+        self.assertEqual(result['attributes'][1][1], expected['attributes'][1][1])
+
+        expected = [u'sunny', 0.0, 9.0, u'FALSE', u'no']
+        for r,e in zip(result["data"][0], expected):
+            self.assertEqual(r,e)

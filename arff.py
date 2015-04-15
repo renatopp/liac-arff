@@ -146,6 +146,7 @@ __version__ = '2.0.3dev'
 import re
 import csv
 import sys
+import types
 
 # CONSTANTS ===================================================================
 _SIMPLE_TYPES = ['NUMERIC', 'REAL', 'INTEGER', 'STRING']
@@ -321,8 +322,14 @@ class ArffDecoder(object):
 
     def __init__(self):
         '''Constructor.'''
-        self._conversors = []
+        self._conversors   = []
         self._current_line = 0
+
+        ''' 
+        The obj is build with some data when the iter_encode function first 
+        called. Then the second, third ... call of the iter_encode function 
+        will update the data in obj.
+        '''
 
     def _decode_comment(self, s):
         '''(INTERNAL) Decodes a comment line.
@@ -447,6 +454,130 @@ class ArffDecoder(object):
 
         return values
 
+
+    def _iter_decode(self, f, encode_nominal=False, batch = 20, obj = None):
+        '''Do the job the ``encode``.'''        
+        
+        '''A obj with batch data instances is built, when the iter_enode 
+        function first called. The subsequent calls of the iter_encode function 
+        will update the data in obj.
+        '''
+
+        #----------------------------------------------------------------
+        # NOT first call
+        #----------------------------------------------------------------
+        if None != obj:
+            obj["data"] = [];
+            NUM_DATA = 0;
+            for row in f:
+              
+                # Ignore empty lines
+                row = row.strip(' \r\n')
+                if not row or '{}' == row.replace(' ', ''):
+                    i -= 1;
+                    continue;
+                
+                u_row = row.upper();
+                if u_row.startswith(_TK_COMMENT):
+                    continue
+
+                obj['data'].append(self._decode_data(row)) 
+                NUM_DATA += 1
+                if NUM_DATA >= batch:   break;   
+         
+            return obj;
+
+
+        #-----------------------------------------------------------------
+        # first call
+        #-----------------------------------------------------------------
+        # Create the return object
+        obj = {
+            u'description': u'',
+            u'relation': u'',
+            u'attributes': [],
+            u'data': []
+        }
+
+        # Read all lines
+        NUM_DATA = 0
+        STATE = _TK_DESCRIPTION
+        for row in f:
+            self._current_line += 1
+            # Ignore empty lines
+            row = row.strip(' \r\n')
+            if not row: continue
+            # Ignore "empty" lines in sparse format
+            elif row.replace(' ', '') == '{}': continue
+
+            u_row = row.upper()
+
+            # DESCRIPTION -----------------------------------------------------
+            if u_row.startswith(_TK_DESCRIPTION) and STATE == _TK_DESCRIPTION:
+                obj['description'] += self._decode_comment(row) + '\n'
+            # -----------------------------------------------------------------
+
+            # RELATION --------------------------------------------------------
+            elif u_row.startswith(_TK_RELATION):
+                if STATE != _TK_DESCRIPTION:
+                    raise BadLayout()
+
+                STATE = _TK_RELATION
+                obj['relation'] = self._decode_relation(row)
+            # -----------------------------------------------------------------
+
+            # ATTRIBUTE -------------------------------------------------------
+            elif u_row.startswith(_TK_ATTRIBUTE):
+                if STATE != _TK_RELATION and STATE != _TK_ATTRIBUTE:
+                    raise BadLayout()
+
+                STATE = _TK_ATTRIBUTE
+
+                attr = self._decode_attribute(row)
+                obj['attributes'].append(attr)
+
+                if isinstance(attr[1], (list, tuple)):
+                    if encode_nominal:
+                        conversor = Conversor('ENCODED_NOMINAL', attr[1])
+                    else:
+                        conversor = Conversor('NOMINAL', attr[1])
+                else:
+                    conversor = Conversor(attr[1])
+
+                self._conversors.append(conversor)
+            # -----------------------------------------------------------------
+
+            # DATA ------------------------------------------------------------
+            elif u_row.startswith(_TK_DATA):
+                if STATE != _TK_ATTRIBUTE:
+                    raise BadLayout()
+
+                STATE = _TK_DATA
+            # -----------------------------------------------------------------
+
+            # COMMENT ---------------------------------------------------------
+            elif u_row.startswith(_TK_COMMENT):
+                pass
+            # -----------------------------------------------------------------
+
+            # DATA INSTANCES --------------------------------------------------
+            elif STATE == _TK_DATA:
+                obj['data'].append(self._decode_data(row))
+                NUM_DATA += 1
+                if NUM_DATA >= batch: break;
+            # -----------------------------------------------------------------
+
+            # UNKNOWN INFORMATION ---------------------------------------------
+            else:
+                raise BadLayout()
+            # -----------------------------------------------------------------
+
+        if obj['description'].endswith('\n'):
+            obj['description'] = obj['description'][:-1]
+
+        return obj
+        
+
     def _decode(self, s, encode_nominal=False):
         '''Do the job the ``encode``.'''
 
@@ -537,6 +668,30 @@ class ArffDecoder(object):
 
         return obj
 
+    def iter_decode(self, f, encode_nominal = False, obj = None, batch = 20):
+        '''Returns the Python representation of a given ARFF file.
+
+        Obj is passed as None and is built with some data, when the first call of this 
+        function. The subsequent calls of this method updates data in Obj.
+        
+        :param f: a ARFF file
+        :param encode_nominal: boolean, if True perform a label encoding while reading 
+            the .arff file.
+        :param obj: the Python representation
+        :param batch: the number of data instances in a batch
+        :return: the obj contains the arff information
+        '''
+
+        try:
+            return self._iter_decode( f, \
+                                      encode_nominal = encode_nominal, \
+                                      obj = obj, \
+                                      batch = batch );
+        except ArffException as e:
+            # print e
+            e.line = self._current_line
+            raise e;
+
     def decode(self, s, encode_nominal=False):
         '''Returns the Python representation of a given ARFF file.
 
@@ -550,13 +705,14 @@ class ArffDecoder(object):
         try:
             return self._decode(s, encode_nominal=encode_nominal)
         except ArffException as e:
-            # print e
+            #print e
             e.line = self._current_line
             raise e
 
 
 class ArffEncoder(object):
     '''An ARFF encoder.'''
+
 
     def _encode_comment(self, s=''):
         '''(INTERNAL) Encodes a comment line.
@@ -622,7 +778,7 @@ class ArffEncoder(object):
 
         return u'%s %s %s'%(_TK_ATTRIBUTE, name, type_)
 
-    def _encode_data(self, data):
+    def _encode_data(self, data, is_sparse = False):
         '''(INTERNAL) Encodes a line of data.
 
         Data instances follow the csv format, i.e, attribute values are 
@@ -631,31 +787,53 @@ class ArffEncoder(object):
         :param data: a list of values.
         :return: a string with the encoded data line.
         '''
-        new_data = []
-        for v in data:
-            if v is None or v == u'':
-                s = '?'
-            else:
-                s = unicode(v)
-            for escape_char in _ESCAPE_DCT:
-                if escape_char in s:
-                    s = encode_string(s)
-                    break
-            new_data.append(s)
+        if True == is_sparse:
+            new_data = []
+            for i in xrange(len(data)):
+                v = data[i]
+                if v is None or v == u'':
+                    new_data.append('%d ?'%i);
+                elif (type(v) == types.IntType or type(v) == types.FloatType) \
+                    and abs(v) < 1e-9:
+                    lili_love_linliying = True 
+                    #here nothing to do. So show my love for linliying.
+                else:
+                    s = unicode(v)
+                    for escape_char in _ESCAPE_DCT:
+                        if escape_char in s:
+                            s = encode_string(s)
+                            break
+                    new_data.append('%d %s'%(i,s))
 
-        return u','.join(new_data)
+            return '{%s}'%(','.join(new_data))            
 
-    def encode(self, obj):
+        else:
+            new_data = []
+            for v in data:
+                if v is None or v == u'':
+                    s = '?'
+                else:
+                    s = unicode(v)
+                for escape_char in _ESCAPE_DCT:
+                    if escape_char in s:
+                        s = encode_string(s)
+                        break
+                new_data.append(s)
+
+            return u','.join(new_data)
+
+    def encode(self, obj, is_sparse = False):
         '''Encodes a given object to an ARFF file.
 
         :param obj: the object containing the ARFF information.
         :return: the ARFF file as an unicode string.
         '''
-        data = [row for row in self.iter_encode(obj)]
+        data = [row for row in self.iter_encode(obj, is_sparse = is_sparse)]
 
         return u'\n'.join(data)
 
-    def iter_encode(self, obj):
+    def iter_encode(self, obj, is_first_call = True, is_sparse = False):
+
         '''The iterative version of `arff.ArffEncoder.encode`.
 
         This encodes iteratively a given object and return, one-by-one, the 
@@ -664,53 +842,75 @@ class ArffEncoder(object):
         :param obj: the object containing the ARFF information.
         :return: (yields) the ARFF file as unicode strings.
         '''
-        # DESCRIPTION
-        if obj.get('description', None):
-            for row in obj['description'].split('\n'):
-                yield self._encode_comment(row)
 
-        # RELATION
-        if not obj.get('relation'):
-            raise BadObject('Relation name not found or with invalid value.')
+        if True == is_first_call:
 
-        yield self._encode_relation(obj['relation'])
-        yield u''
+            # DESCRIPTION
+            if obj.get('description', None):
+                for row in obj['description'].split('\n'):
+                    yield self._encode_comment(row)
 
-        # ATTRIBUTES
-        if not obj.get('attributes'):
-            raise BadObject('Attributes not found.')
-            
-        for attr in obj['attributes']:
-            # Verify for bad object format
-            if not isinstance(attr, (tuple, list)) or \
-               len(attr) != 2 or \
-               not isinstance(attr[0], basestring):
-                raise BadObject('Invalid attribute declaration "%s"'%str(attr))
+            # RELATION
+            if not obj.get('relation'):
+                raise BadObject('Relation name not found or'
+                                ' with invalid value.')
 
-            if isinstance(attr[1], basestring):
-                # Verify for invalid types
-                if attr[1] not in _SIMPLE_TYPES:
+            yield self._encode_relation(obj['relation'])
+            yield u''
+
+            # ATTRIBUTES
+            if not obj.get('attributes'):
+                raise BadObject('Attributes not found.')
+                
+            for attr in obj['attributes']:
+                # Verify for bad object format
+                if not isinstance(attr, (tuple, list)) or \
+                   len(attr) != 2 or \
+                   not isinstance(attr[0], basestring):
+                    raise BadObject('Invalid attribute declaration'
+                                    ' "%s"'%str(attr))
+
+                if isinstance(attr[1], basestring):
+                    # Verify for invalid types
+                    if attr[1] not in _SIMPLE_TYPES:
+                        raise BadObject('Invalid attribute type'
+                                        ' "%s"'%str(attr))
+
+                # Verify for bad object format
+                elif not isinstance(attr[1], (tuple, list)):
                     raise BadObject('Invalid attribute type "%s"'%str(attr))
 
-            # Verify for bad object format
-            elif not isinstance(attr[1], (tuple, list)):
-                raise BadObject('Invalid attribute type "%s"'%str(attr))
+                yield self._encode_attribute(attr[0], attr[1])
+            yield u''
 
-            yield self._encode_attribute(attr[0], attr[1])
-        yield u''
+            # DATA
+            yield _TK_DATA
+            if not obj.get('data'):
+                raise BadObject('Data declaration not found.')
 
-        # DATA
-        yield _TK_DATA
-        if not obj.get('data'):
-            raise BadObject('Data declaration not found.')
+            for inst in obj['data']:
+                yield self._encode_data(inst, is_sparse = is_sparse)
 
-        for inst in obj['data']:
-            yield self._encode_data(inst)
+            # FILLER
+            yield self._encode_comment()
+            yield self._encode_comment()
+            yield self._encode_comment()
 
-        # FILLER
-        yield self._encode_comment()
-        yield self._encode_comment()
-        yield self._encode_comment()
+        ##not the first call of the iter_encode method, only encode data
+        else:
+            # DATA
+            # yield _TK_DATA
+            if ("data" not in obj) or (None == obj.get('data')):
+                raise BadObject('Data declaration not found.');
+           
+            for inst in obj['data']:
+                yield self._encode_data(inst,is_sparse = is_sparse)
+
+            # FILTER
+            yield self._encode_comment()
+            yield self._encode_comment()
+            yield self._encode_comment()
+
 # =============================================================================
 
 # BASIC INTERFACE =============================================================
