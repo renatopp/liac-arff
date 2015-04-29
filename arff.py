@@ -450,6 +450,9 @@ class ArffDecoder(object):
     def _decode(self, s, encode_nominal=False):
         '''Do the job the ``encode``.'''
 
+        # Make sure this method is idempotent
+        self._current_line = 0
+
         # If string, convert to a list of lines
         if isinstance(s, basestring):
             s = s.strip('\r\n ').replace('\r\n', '\n').split('\n')
