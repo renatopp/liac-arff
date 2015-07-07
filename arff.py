@@ -704,11 +704,9 @@ class ArffEncoder(object):
 
         # DATA
         yield _TK_DATA
-        if not obj.get('data'):
-            raise BadObject('Data declaration not found.')
-
-        for inst in obj['data']:
-            yield self._encode_data(inst)
+        if obj.get('data'):
+            for inst in obj['data']:
+                yield self._encode_data(inst)
 
         # FILLER
         yield self._encode_comment()

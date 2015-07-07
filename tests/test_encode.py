@@ -99,13 +99,6 @@ class TestEncodeComment(unittest.TestCase):
             fixture
         )
 
-        fixture = {'relation':'name', 'attributes':[('name','REAL')]}
-        self.assertRaises(
-            arff.BadObject,
-            encoder.encode,
-            fixture
-        )
-
     def test_invalid_object_attribute(self):
         encoder = self.get_encoder()
 
