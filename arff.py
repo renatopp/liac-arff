@@ -625,17 +625,22 @@ class ArffEncoder(object):
 
         return u'%s %s %s'%(_TK_ATTRIBUTE, name, type_)
 
-    def _encode_data(self, data):
+    def _encode_data(self, data, attributes):
         '''(INTERNAL) Encodes a line of data.
 
-        Data instances follow the csv format, i.e, attribute values are 
+        Data instances follow the csv format, i.e, attribute values are
         delimited by commas. After converted from csv.
 
         :param data: a list of values.
+        :param attributes: a list of attributes. Used to check if data is valid.
         :return: a string with the encoded data line.
         '''
+
+        if len(data) != len(attributes):
+            raise BadObject()
+
         new_data = []
-        for v in data:
+        for v, attr in zip(data, attributes):
             if v is None or v == u'':
                 s = '?'
             else:
@@ -701,12 +706,13 @@ class ArffEncoder(object):
 
             yield self._encode_attribute(attr[0], attr[1])
         yield u''
+        attributes = obj['attributes']
 
         # DATA
         yield _TK_DATA
         if obj.get('data'):
             for inst in obj['data']:
-                yield self._encode_data(inst)
+                yield self._encode_data(inst, attributes)
 
         # FILLER
         yield self._encode_comment()
