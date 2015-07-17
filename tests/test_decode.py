@@ -88,7 +88,37 @@ ENCODED_OBJ = {
     u'data': encoded_data
 }
 
+xor_dataset = '''% XOR Dataset
+@RELATION XOR
 
+@ATTRIBUTE input1 REAL
+@ATTRIBUTE input2 REAL
+@ATTRIBUTE y REAL
+
+@DATA
+{  }
+{ 1 1.0,2 1.0 }
+{ 0 1.0,2 1.0 }
+{ 0 1.0,1 1.0 }
+%
+%
+%
+'''
+
+xor_description = u'XOR Dataset'
+xor_relation = u'XOR'
+xor_attributes = [(u'input1', u'REAL'),
+                  (u'input2', u'REAL'),
+                  (u'y', u'REAL')]
+xor_data = ([1., 1., 1., 1., 1., 1.],
+            [1, 1, 2, 2, 3, 3],
+            [1, 2, 0, 2, 0, 1])
+xor_object = {
+    u'description': xor_description,
+    u'relation': xor_relation,
+    u'attributes': xor_attributes,
+    u'data': xor_data
+}
 
 
 class TestDecodeComment(unittest.TestCase):
@@ -143,6 +173,14 @@ class TestDecodeComment(unittest.TestCase):
         self.assertEqual(result['data'][0][2], expected['data'][0][2])
         self.assertEqual(result['data'][0][3], expected['data'][0][3])
         self.assertEqual(result['data'][0][4], expected['data'][0][4])
+
+    def test_decode_xor_sparse(self):
+        decoder = self.get_decoder()
+
+        result = decoder.decode(xor_dataset, return_type=arff.COO)
+        expected = xor_object
+
+        self.assertEqual(result, expected)
 
     def test_invalid_layout(self):
         decoder = self.get_decoder()

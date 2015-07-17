@@ -128,6 +128,9 @@ This module provides several features, including:
 
 - Read and write ARFF files using python built-in structures, such dictionaries
   and lists;
+- Supports `scipy.sparse.coo <http://docs.scipy
+  .org/doc/scipy/reference/generated/scipy.sparse.coo_matrix.html#scipy.sparse.coo_matrix>_`
+  and lists of dictionaries as used by SVMLight
 - Supports the following attribute types: NUMERIC, REAL, INTEGER, STRING, and
   NOMINAL;
 - Has an interface similar to other built-in modules such as ``json``, or 
@@ -172,6 +175,13 @@ _ESCAPE_DCT = {
     '\\"': '\\"',
     '\\%': '\\%',
 }
+
+DENSE = 0   # Constant value representing a dense matrix
+COO = 1     # Constant value representing a sparse matrix in coordinate format
+LOD = 2     # Constant value representing a sparse matrix in list of
+            # dictionaries format
+_SUPPORTED_DATA_STRUCTURES = [DENSE, COO, LOD]
+
 # =============================================================================
 
 # COMPATIBILITY WITH PYTHON 3 ===============================================
@@ -313,6 +323,185 @@ class Conversor(object):
             return None
 
         return self._conversor(value)
+
+class Data(object):
+    '''Internal helper class to allow for different matrix types without
+    making the code a huge collection of if statements.'''
+    def __init__(self):
+        self.data = []
+
+    def _decode_data(self, s, conversors):
+        values = next(csv.reader([s.strip(' ')]))
+
+        if values[0][0].strip(" ") == '{':
+            vdict = dict(map(lambda x: (int(x[0]), x[1]),
+                             [i.strip("{").strip("}").strip(" ").split(' ') for
+                              i in values]))
+            values = [vdict[i] if i in vdict else unicode(0) for i in
+                      xrange(len(conversors))]
+        # dense lines are decoded one by one
+        else:
+            if len(values) != len(conversors):
+                raise BadDataFormat()
+        values = [conversors[i](values[i]) for i in xrange(len(values))]
+
+        self.data.append(values)
+
+    def _encode_data(self, data, attributes):
+        '''(INTERNAL) Encodes a line of data.
+
+        Data instances follow the csv format, i.e, attribute values are
+        delimited by commas. After converted from csv.
+
+        :param data: a list of values.
+        :param attributes: a list of attributes. Used to check if data is valid.
+        :return: a string with the encoded data line.
+        '''
+        for inst in data:
+            if len(inst) != len(attributes):
+                raise BadObject()
+
+            new_data = []
+            for v, attr in zip(inst, attributes):
+                if v is None or v == u'':
+                    s = '?'
+                else:
+                    s = unicode(v)
+                for escape_char in _ESCAPE_DCT:
+                    if escape_char in s:
+                        s = encode_string(s)
+                        break
+                new_data.append(s)
+
+            yield u','.join(new_data)
+
+class COOData(Data):
+    def __init__(self):
+        self.data = ([], [], [])
+        self._current_num_data_points = 0
+
+    def _decode_data(self, s, conversors):
+        values = next(csv.reader([s.strip(' ')]))
+
+        if not values[0][0].strip(" ") == '{':
+            raise BadLayout()
+        elif s.replace(' ', '') == '{}':
+            self._current_num_data_points += 1
+            return
+
+
+        vdict = dict(map(lambda x: (int(x[0]), x[1]),
+                         [i.strip("{").strip("}").strip(" ").split(' ')
+                         for i in values]))
+        col = sorted(vdict)
+        values = [conversors[key](unicode(vdict[key]))
+                  for key in sorted(vdict)]
+        self.data[0].extend(values)
+        self.data[1].extend([self._current_num_data_points] * len(values))
+        self.data[2].extend(col)
+
+        self._current_num_data_points += 1
+
+    def _encode_data(self, data, attributes):
+        num_attributes = len(attributes)
+        new_data = []
+        current_row = 0
+
+        row = data.row
+        col = data.col
+        data = data.data
+
+        # Check if the columns and rows are sorted
+        if not all(row[i] <= row[i + 1] for i in xrange(len(row) - 1)):
+            raise ValueError("liac-arff can only output COO matrices with "
+                             "sorted rows.")
+
+        if not all(col[i] <= col[i + 1] for i in xrange(len(col) - 1)):
+            raise ValueError("liac-arff can only output COO matrices with "
+                             "sorted colmuns")
+
+        for v, col, row in zip(data, col, row):
+            if row > current_row:
+                # Add empty rows if necessary
+                while current_row < row:
+                    yield " ".join([u"{", u','.join(new_data), u"}"])
+                    new_data = []
+                    current_row += 1
+
+            if col >= num_attributes:
+                raise BadObject()
+
+            if v is None or v == u'' or v != v:
+                s = '?'
+            else:
+                s = unicode(v)
+            for escape_char in _ESCAPE_DCT:
+                if escape_char in s:
+                    s = encode_string(s)
+                    break
+            new_data.append("%d %s" % (col, s))
+
+        yield " ".join([u"{", u','.join(new_data), u"}"])
+
+class LODData(Data):
+    def __init__(self):
+        self.data = []
+
+    def _decode_data(self, s, conversors):
+        values = next(csv.reader([s.strip(' ')]))
+
+        if not values[0][0].strip(" ") == '{':
+            raise BadLayout()
+
+        vdict = dict(map(lambda x: (int(x[0]), x[1]),
+                         [i.strip("{").strip("}").strip(" ").split(' ')
+                          for i in values]))
+        for key in vdict:
+            vdict[key] = conversors[key](vdict[key])
+        self.data.append(vdict)
+
+    def _encode_data(self, data, attributes):
+        num_attributes = len(attributes)
+        for row in data:
+            new_data = []
+
+            if len(row) > 0 and max(row) >= num_attributes:
+                raise BadObject()
+
+            for col in sorted(row):
+                v = row[col]
+                if v is None or v == u'' or v != v:
+                    s = '?'
+                else:
+                    s = unicode(v)
+                for escape_char in _ESCAPE_DCT:
+                    if escape_char in s:
+                        s = encode_string(s)
+                        break
+                new_data.append("%d %s" % (col, s))
+
+            yield " ".join([u"{", u','.join(new_data), u"}"])
+
+def _get_data_object_for_decoding(matrix_type):
+    if matrix_type == DENSE:
+        return Data()
+    elif matrix_type == COO:
+        return COOData()
+    elif matrix_type == LOD:
+        return LOD()
+    else:
+        raise ValueError("Matrix type %s not supported." % str(matrix_type))
+
+def _get_data_object_for_encoding(matrix):
+    # Probably a scipy.sparse
+    if hasattr(matrix, 'format'):
+        if matrix.format == 'coo':
+            return COOData()
+    elif isinstance(matrix[0], dict):
+        return LODData()
+    else:
+        return Data()
+
 # =============================================================================
 
 # ADVANCED INTERFACE ==========================================================
@@ -419,35 +608,7 @@ class ArffDecoder(object):
 
         return (name, type_)
 
-    def _decode_data(self, s):
-        '''(INTERNAL) Decodes a line of data.
-
-        Data instances follow the csv format, i.e, attribute values are 
-        delimited by commas. After converted from csv, this method uses the 
-        ``_conversors`` list to convert each value. Obviously, the values must
-        follow the same order then their respective attributes.
-
-        This method must receive a normalized string, i.e., a string without
-        padding, including the "\r\n" characters. 
-
-        :param s: a normalized string.
-        :return: a list with values.
-        '''
-        values = next(csv.reader([s.strip(' ')]))
-
-        # Sparse lines start with a '{' and are converted into dense lists. not listed values are set to zero
-        if values[0][0].strip(" ") == '{':
-            vdict = dict(map(lambda x: (int(x[0]), x[1]),[i.strip("{").strip("}").strip(" ").split(' ') for i in values]))
-            values = [vdict[i] if i in vdict else unicode(0) for i in xrange(len(self._conversors))]
-	# dense lines are decoded one by one
-        else:
-            if len(values) != len(self._conversors):
-                raise BadDataFormat()
-        values = [self._conversors[i](values[i]) for i in xrange(len(values))]
-
-        return values
-
-    def _decode(self, s, encode_nominal=False):
+    def _decode(self, s, encode_nominal=False, matrix_type=DENSE):
         '''Do the job the ``encode``.'''
 
         # Make sure this method is idempotent
@@ -465,6 +626,9 @@ class ArffDecoder(object):
             u'data': []
         }
 
+        # Create the data helper object
+        data = _get_data_object_for_decoding(matrix_type)
+
         # Read all lines
         STATE = _TK_DESCRIPTION
         for row in s:
@@ -472,8 +636,6 @@ class ArffDecoder(object):
             # Ignore empty lines
             row = row.strip(' \r\n')
             if not row: continue
-            # Ignore "empty" lines in sparse format
-            elif row.replace(' ', '') == '{}': continue
 
             u_row = row.upper()
 
@@ -527,7 +689,7 @@ class ArffDecoder(object):
 
             # DATA INSTANCES --------------------------------------------------
             elif STATE == _TK_DATA:
-                obj['data'].append(self._decode_data(row))
+                data._decode_data(row, self._conversors)
             # -----------------------------------------------------------------
 
             # UNKNOWN INFORMATION ---------------------------------------------
@@ -535,12 +697,14 @@ class ArffDecoder(object):
                 raise BadLayout()
             # -----------------------------------------------------------------
 
+        # Alter the data object
+        obj['data'] = data.data
         if obj['description'].endswith('\n'):
             obj['description'] = obj['description'][:-1]
 
         return obj
 
-    def decode(self, s, encode_nominal=False):
+    def decode(self, s, encode_nominal=False, return_type=DENSE):
         '''Returns the Python representation of a given ARFF file.
 
         When a file object is passed as an argument, this method read lines 
@@ -549,9 +713,13 @@ class ArffDecoder(object):
         :param s: a string or file object with the ARFF file.
         :param encode_nominal: boolean, if True perform a label encoding
             while reading the .arff file.
+        :param return_type: determines the type of the data structure. Can be
+            of `arff.DENSE`, `arff.COO` and `arff.LOD`.
         '''
+
         try:
-            return self._decode(s, encode_nominal=encode_nominal)
+            return self._decode(s, encode_nominal=encode_nominal,
+                                matrix_type=return_type)
         except ArffException as e:
             # print e
             e.line = self._current_line
@@ -625,34 +793,6 @@ class ArffEncoder(object):
 
         return u'%s %s %s'%(_TK_ATTRIBUTE, name, type_)
 
-    def _encode_data(self, data, attributes):
-        '''(INTERNAL) Encodes a line of data.
-
-        Data instances follow the csv format, i.e, attribute values are
-        delimited by commas. After converted from csv.
-
-        :param data: a list of values.
-        :param attributes: a list of attributes. Used to check if data is valid.
-        :return: a string with the encoded data line.
-        '''
-
-        if len(data) != len(attributes):
-            raise BadObject()
-
-        new_data = []
-        for v, attr in zip(data, attributes):
-            if v is None or v == u'':
-                s = '?'
-            else:
-                s = unicode(v)
-            for escape_char in _ESCAPE_DCT:
-                if escape_char in s:
-                    s = encode_string(s)
-                    break
-            new_data.append(s)
-
-        return u','.join(new_data)
-
     def encode(self, obj):
         '''Encodes a given object to an ARFF file.
 
@@ -710,9 +850,10 @@ class ArffEncoder(object):
 
         # DATA
         yield _TK_DATA
-        if obj.get('data'):
-            for inst in obj['data']:
-                yield self._encode_data(inst, attributes)
+        if 'data' in obj:
+            data = _get_data_object_for_encoding(obj.get('data'))
+            for line in data._encode_data(obj.get('data'), attributes):
+                yield line
 
         # FILLER
         yield self._encode_comment()
@@ -721,25 +862,35 @@ class ArffEncoder(object):
 # =============================================================================
 
 # BASIC INTERFACE =============================================================
-def load(fp, encode_nominal=False):
+def load(fp, encode_nominal=False, return_type=DENSE):
     '''Load a file-like object containing the ARFF document and convert it into
     a Python object. 
 
     :param fp: a file-like object.
+    :param encode_nominal: boolean, if True perform a label encoding
+        while reading the .arff file.
+    :param return_type: determines the type of the data structure. Can be
+        of `arff.DENSE`, `arff.COO` and `arff.LOD`
     :return: a dictionary.
      '''
     decoder = ArffDecoder()
-    return decoder.decode(fp, encode_nominal=encode_nominal)
+    return decoder.decode(fp, encode_nominal=encode_nominal,
+                          return_type=return_type)
 
-def loads(s, encode_nominal=False):
+def loads(s, encode_nominal=False, return_type=DENSE):
     '''Convert a string instance containing the ARFF document into a Python
     object.
 
     :param s: a string object.
+    :param encode_nominal: boolean, if True perform a label encoding
+        while reading the .arff file.
+    :param return_type: determines the type of the data structure. Can be
+        of `arff.DENSE`, `arff.COO` and `arff.LOD`
     :return: a dictionary.
     '''
     decoder = ArffDecoder()
-    return decoder.decode(s, encode_nominal=encode_nominal)
+    return decoder.decode(s, encode_nominal=encode_nominal,
+                          return_type=return_type)
 
 def dump(obj, fp):
     '''Serialize an object representing the ARFF document to a given file-like 
