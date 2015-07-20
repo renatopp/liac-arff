@@ -330,7 +330,7 @@ class Data(object):
     def __init__(self):
         self.data = []
 
-    def _decode_data(self, s, conversors):
+    def decode_data(self, s, conversors):
         values = next(csv.reader([s.strip(' ')]))
 
         if values[0][0].strip(" ") == '{':
@@ -347,7 +347,7 @@ class Data(object):
 
         self.data.append(values)
 
-    def _encode_data(self, data, attributes):
+    def encode_data(self, data, attributes):
         '''(INTERNAL) Encodes a line of data.
 
         Data instances follow the csv format, i.e, attribute values are
@@ -362,11 +362,11 @@ class Data(object):
                 raise BadObject()
 
             new_data = []
-            for v, attr in zip(inst, attributes):
-                if v is None or v == u'':
+            for value in inst:
+                if value is None or value == u'' or value != value:
                     s = '?'
                 else:
-                    s = unicode(v)
+                    s = unicode(value)
                 for escape_char in _ESCAPE_DCT:
                     if escape_char in s:
                         s = encode_string(s)
@@ -380,7 +380,7 @@ class COOData(Data):
         self.data = ([], [], [])
         self._current_num_data_points = 0
 
-    def _decode_data(self, s, conversors):
+    def decode_data(self, s, conversors):
         values = next(csv.reader([s.strip(' ')]))
 
         if not values[0][0].strip(" ") == '{':
@@ -402,7 +402,7 @@ class COOData(Data):
 
         self._current_num_data_points += 1
 
-    def _encode_data(self, data, attributes):
+    def encode_data(self, data, attributes):
         num_attributes = len(attributes)
         new_data = []
         current_row = 0
@@ -411,14 +411,10 @@ class COOData(Data):
         col = data.col
         data = data.data
 
-        # Check if the columns and rows are sorted
+        # Check if the rows are sorted
         if not all(row[i] <= row[i + 1] for i in xrange(len(row) - 1)):
             raise ValueError("liac-arff can only output COO matrices with "
                              "sorted rows.")
-
-        if not all(col[i] <= col[i + 1] for i in xrange(len(col) - 1)):
-            raise ValueError("liac-arff can only output COO matrices with "
-                             "sorted colmuns")
 
         for v, col, row in zip(data, col, row):
             if row > current_row:
@@ -447,11 +443,14 @@ class LODData(Data):
     def __init__(self):
         self.data = []
 
-    def _decode_data(self, s, conversors):
+    def decode_data(self, s, conversors):
         values = next(csv.reader([s.strip(' ')]))
 
         if not values[0][0].strip(" ") == '{':
             raise BadLayout()
+        elif s.replace(' ', '') == '{}':
+            self.data.append({})
+            return
 
         vdict = dict(map(lambda x: (int(x[0]), x[1]),
                          [i.strip("{").strip("}").strip(" ").split(' ')
@@ -460,7 +459,7 @@ class LODData(Data):
             vdict[key] = conversors[key](vdict[key])
         self.data.append(vdict)
 
-    def _encode_data(self, data, attributes):
+    def encode_data(self, data, attributes):
         num_attributes = len(attributes)
         for row in data:
             new_data = []
@@ -488,7 +487,7 @@ def _get_data_object_for_decoding(matrix_type):
     elif matrix_type == COO:
         return COOData()
     elif matrix_type == LOD:
-        return LOD()
+        return LODData()
     else:
         raise ValueError("Matrix type %s not supported." % str(matrix_type))
 
@@ -689,7 +688,7 @@ class ArffDecoder(object):
 
             # DATA INSTANCES --------------------------------------------------
             elif STATE == _TK_DATA:
-                data._decode_data(row, self._conversors)
+                data.decode_data(row, self._conversors)
             # -----------------------------------------------------------------
 
             # UNKNOWN INFORMATION ---------------------------------------------
@@ -852,7 +851,7 @@ class ArffEncoder(object):
         yield _TK_DATA
         if 'data' in obj:
             data = _get_data_object_for_encoding(obj.get('data'))
-            for line in data._encode_data(obj.get('data'), attributes):
+            for line in data.encode_data(obj.get('data'), attributes):
                 yield line
 
         # FILLER

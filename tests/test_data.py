@@ -34,7 +34,7 @@ class TestData(unittest.TestCase):
                       ConversorStub(str if arff.PY3 else unicode)]
 
         fixture = u'Iris,3.4,2,Setosa'
-        self.data._decode_data(fixture, conversors)
+        self.data.decode_data(fixture, conversors)
         result = self.data.data[0]
         expected = [u'Iris', 3.4, 2, u'Setosa']
 
@@ -54,7 +54,7 @@ class TestData(unittest.TestCase):
                       ConversorStub(int)]
 
         fixture = u'{0 Iris,1 3.4, 2 2}'
-        self.data._decode_data(fixture, conversors)
+        self.data.decode_data(fixture, conversors)
         result = self.data.data[0]
         expected = [u'Iris', 3.4, 2, u'0', 0.0, 0]
 
@@ -66,7 +66,7 @@ class TestData(unittest.TestCase):
     # Tests for the encoding part
     def test_simple(self):
         fixture = [[1, 3, 'Renato', 'Name with spaces']]
-        result = self.data._encode_data(fixture, self.attributes)
+        result = self.data.encode_data(fixture, self.attributes)
         expected = u"1,3,Renato,'Name with spaces'"
 
         self.assertIsInstance(result, types.GeneratorType)
@@ -74,7 +74,7 @@ class TestData(unittest.TestCase):
 
     def test_null_value(self):
         fixture = [[1, None, 'Renato', '']]
-        result = self.data._encode_data(fixture, self.attributes)
+        result = self.data.encode_data(fixture, self.attributes)
         expected = u"1,?,Renato,?"
 
         self.assertIsInstance(result, types.GeneratorType)
@@ -82,7 +82,7 @@ class TestData(unittest.TestCase):
 
     def test_too_short(self):
         fixture = [[1, None]]
-        generator = self.data._encode_data(fixture, self.attributes)
+        generator = self.data.encode_data(fixture, self.attributes)
         self.assertRaises(arff.BadObject, generator.next)
 
 
@@ -103,7 +103,7 @@ class TestCOOData(unittest.TestCase):
                       ConversorStub(str if arff.PY3 else unicode)]
 
         fixture = u'{0 Iris,1 3.4,2 2,3 Setosa}'
-        self.data._decode_data(fixture, conversors)
+        self.data.decode_data(fixture, conversors)
         result = self.data.data[0]
         row = self.data.data[1]
         col = self.data.data[2]
@@ -127,7 +127,7 @@ class TestCOOData(unittest.TestCase):
                       ConversorStub(int)]
 
         fixture = u'{0 Iris,1 3.4, 2 2}'
-        self.data._decode_data(fixture, conversors)
+        self.data.decode_data(fixture, conversors)
         result = self.data.data[0]
         expected = {0: u'Iris', 1: 3.4, 2: 2}
 
@@ -141,7 +141,7 @@ class TestCOOData(unittest.TestCase):
         fixture = COOStub([1, None, 'Renato', 'Name with spaces'],
                           [0, 0, 0, 0],
                           [0, 1, 2, 3])
-        result = self.data._encode_data(fixture, self.attributes)
+        result = self.data.encode_data(fixture, self.attributes)
 
         self.assertIsInstance(result, types.GeneratorType)
         self.assertEqual(result.next(), u'{ 0 1,1 ?,2 Renato,3 \'Name with spaces\' }')
@@ -151,7 +151,7 @@ class TestCOOData(unittest.TestCase):
         fixture = COOStub([1, None, 'Renato', ''],
                           [0, 0, 0, 0],
                           [0, 1, 2, 3])
-        result = self.data._encode_data(fixture, self.attributes)
+        result = self.data.encode_data(fixture, self.attributes)
 
         self.assertIsInstance(result, types.GeneratorType)
         self.assertEqual(result.next(), u'{ 0 1,1 ?,2 Renato,3 ? }')
@@ -160,7 +160,7 @@ class TestCOOData(unittest.TestCase):
         fixture = COOStub([1, None, 'Renato', ''],
                           [0, 5, 17, 55],
                           [0, 1, 2, 3])
-        result = self.data._encode_data(fixture, self.attributes)
+        result = self.data.encode_data(fixture, self.attributes)
         self.assertIsInstance(result, types.GeneratorType)
         lines = [line for line in result]
         self.assertEqual(lines[0], '{ 0 1 }')
@@ -175,7 +175,7 @@ class TestCOOData(unittest.TestCase):
                 [0, 0, 1, 3, 1, 0, 0],
                 [0, 2, 1, 3, 1, 0, 0])
 
-        generator = self.data._encode_data(fixture, attributes)
+        generator = self.data.encode_data(fixture, attributes)
         self.assertRaises(ValueError, generator.next)
 
 
@@ -196,7 +196,7 @@ class TestLODData(unittest.TestCase):
                       ConversorStub(str if arff.PY3 else unicode)]
 
         fixture = u'{0 Iris,1 3.4,2 2,3 Setosa}'
-        self.data._decode_data(fixture, conversors)
+        self.data.decode_data(fixture, conversors)
         result = self.data.data[0]
         expected = {0: u'Iris', 1: 3.4, 2: 2, 3: u'Setosa'}
 
@@ -216,7 +216,7 @@ class TestLODData(unittest.TestCase):
                       ConversorStub(int)]
 
         fixture = u'{0 Iris,1 3.4, 2 2}'
-        self.data._decode_data(fixture, conversors)
+        self.data.decode_data(fixture, conversors)
         result = self.data.data[0]
         expected = [u'Iris', 3.4, 2]
 
@@ -228,7 +228,7 @@ class TestLODData(unittest.TestCase):
     # Tests for the encoding part
     def test_simple(self):
         fixture = [{0: 1, 1: None, 2: 'Renato', 3: 'Name with spaces'}]
-        result = self.data._encode_data(fixture, self.attributes)
+        result = self.data.encode_data(fixture, self.attributes)
 
         self.assertIsInstance(result, types.GeneratorType)
         self.assertEqual(result.next(),
@@ -237,7 +237,7 @@ class TestLODData(unittest.TestCase):
 
     def test_null_value(self):
         fixture = [{0: 1, 1: None, 2: 'Renato', 3: ''}]
-        result = self.data._encode_data(fixture, self.attributes)
+        result = self.data.encode_data(fixture, self.attributes)
 
         self.assertIsInstance(result, types.GeneratorType)
         self.assertEqual(result.next(), u'{ 0 1,1 ?,2 Renato,3 ? }')
@@ -251,7 +251,7 @@ class TestLODData(unittest.TestCase):
         fixture.extend([{}] * 37)
         fixture.append({3: ''})
 
-        result = self.data._encode_data(fixture, self.attributes)
+        result = self.data.encode_data(fixture, self.attributes)
         self.assertIsInstance(result, types.GeneratorType)
         lines = [line for line in result]
 

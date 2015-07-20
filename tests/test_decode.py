@@ -110,14 +110,25 @@ xor_relation = u'XOR'
 xor_attributes = [(u'input1', u'REAL'),
                   (u'input2', u'REAL'),
                   (u'y', u'REAL')]
-xor_data = ([1., 1., 1., 1., 1., 1.],
+xor_data_coo = ([1., 1., 1., 1., 1., 1.],
             [1, 1, 2, 2, 3, 3],
             [1, 2, 0, 2, 0, 1])
-xor_object = {
+xor_data_lod = [{},
+                {1: 1., 2: 1.},
+                {0: 1., 2: 1.},
+                {0: 1., 1: 1.}]
+xor_object_coo = {
     u'description': xor_description,
     u'relation': xor_relation,
     u'attributes': xor_attributes,
-    u'data': xor_data
+    u'data': xor_data_coo
+}
+
+xor_object_lod = {
+    u'description': xor_description,
+    u'relation': xor_relation,
+    u'attributes': xor_attributes,
+    u'data': xor_data_lod
 }
 
 
@@ -174,11 +185,19 @@ class TestDecodeComment(unittest.TestCase):
         self.assertEqual(result['data'][0][3], expected['data'][0][3])
         self.assertEqual(result['data'][0][4], expected['data'][0][4])
 
-    def test_decode_xor_sparse(self):
+    def test_decode_xor_sparse_coo(self):
         decoder = self.get_decoder()
 
         result = decoder.decode(xor_dataset, return_type=arff.COO)
-        expected = xor_object
+        expected = xor_object_coo
+
+        self.assertEqual(result, expected)
+
+    def test_decode_xor_sparse_lod(self):
+        decoder = self.get_decoder()
+
+        result = decoder.decode(xor_dataset, return_type=arff.LOD)
+        expected = xor_object_lod
 
         self.assertEqual(result, expected)
 
