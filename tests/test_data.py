@@ -69,21 +69,21 @@ class TestData(unittest.TestCase):
         result = self.data.encode_data(fixture, self.attributes)
         expected = u"1,3,Renato,'Name with spaces'"
 
-        self.assertIsInstance(result, types.GeneratorType)
-        self.assertEqual(result.next(), expected)
+        self.assertTrue(isinstance(result, types.GeneratorType))
+        self.assertEqual(next(result), expected)
 
     def test_null_value(self):
         fixture = [[1, None, 'Renato', '']]
         result = self.data.encode_data(fixture, self.attributes)
         expected = u"1,?,Renato,?"
 
-        self.assertIsInstance(result, types.GeneratorType)
-        self.assertEqual(result.next(), expected)
+        self.assertTrue(isinstance(result, types.GeneratorType))
+        self.assertEqual(next(result), expected)
 
     def test_too_short(self):
         fixture = [[1, None]]
         generator = self.data.encode_data(fixture, self.attributes)
-        self.assertRaises(arff.BadObject, generator.next)
+        self.assertRaises(arff.BadObject, next, generator)
 
 
 class TestCOOData(unittest.TestCase):
@@ -143,8 +143,9 @@ class TestCOOData(unittest.TestCase):
                           [0, 1, 2, 3])
         result = self.data.encode_data(fixture, self.attributes)
 
-        self.assertIsInstance(result, types.GeneratorType)
-        self.assertEqual(result.next(), u'{ 0 1,1 ?,2 Renato,3 \'Name with spaces\' }')
+        self.assertTrue(isinstance(result, types.GeneratorType))
+        self.assertEqual(next(result),
+                         u'{ 0 1,1 ?,2 Renato,3 \'Name with spaces\' }')
 
 
     def test_null_value(self):
@@ -153,15 +154,15 @@ class TestCOOData(unittest.TestCase):
                           [0, 1, 2, 3])
         result = self.data.encode_data(fixture, self.attributes)
 
-        self.assertIsInstance(result, types.GeneratorType)
-        self.assertEqual(result.next(), u'{ 0 1,1 ?,2 Renato,3 ? }')
+        self.assertTrue(isinstance(result, types.GeneratorType))
+        self.assertEqual(next(result), u'{ 0 1,1 ?,2 Renato,3 ? }')
 
     def test_sparse_matrix(self):
         fixture = COOStub([1, None, 'Renato', ''],
                           [0, 5, 17, 55],
                           [0, 1, 2, 3])
         result = self.data.encode_data(fixture, self.attributes)
-        self.assertIsInstance(result, types.GeneratorType)
+        self.assertTrue(isinstance(result, types.GeneratorType))
         lines = [line for line in result]
         self.assertEqual(lines[0], '{ 0 1 }')
         self.assertEqual(lines[1], '{  }')
@@ -176,7 +177,7 @@ class TestCOOData(unittest.TestCase):
                 [0, 2, 1, 3, 1, 0, 0])
 
         generator = self.data.encode_data(fixture, attributes)
-        self.assertRaises(ValueError, generator.next)
+        self.assertRaises(ValueError, next, generator)
 
 
 class TestLODData(unittest.TestCase):
@@ -230,8 +231,8 @@ class TestLODData(unittest.TestCase):
         fixture = [{0: 1, 1: None, 2: 'Renato', 3: 'Name with spaces'}]
         result = self.data.encode_data(fixture, self.attributes)
 
-        self.assertIsInstance(result, types.GeneratorType)
-        self.assertEqual(result.next(),
+        self.assertTrue(isinstance(result, types.GeneratorType))
+        self.assertEqual(next(result),
                          u'{ 0 1,1 ?,2 Renato,3 \'Name with spaces\' }')
 
 
@@ -239,8 +240,8 @@ class TestLODData(unittest.TestCase):
         fixture = [{0: 1, 1: None, 2: 'Renato', 3: ''}]
         result = self.data.encode_data(fixture, self.attributes)
 
-        self.assertIsInstance(result, types.GeneratorType)
-        self.assertEqual(result.next(), u'{ 0 1,1 ?,2 Renato,3 ? }')
+        self.assertTrue(isinstance(result, types.GeneratorType))
+        self.assertEqual(next(result), u'{ 0 1,1 ?,2 Renato,3 ? }')
 
     def test_sparse_matrix(self):
         fixture = [{0: 1}]
@@ -252,7 +253,7 @@ class TestLODData(unittest.TestCase):
         fixture.append({3: ''})
 
         result = self.data.encode_data(fixture, self.attributes)
-        self.assertIsInstance(result, types.GeneratorType)
+        self.assertTrue(isinstance(result, types.GeneratorType))
         lines = [line for line in result]
 
         self.assertEqual(lines[0], '{ 0 1 }')
