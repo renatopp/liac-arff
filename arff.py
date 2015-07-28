@@ -144,7 +144,7 @@ This module provides several features, including:
 '''
 __author__ = 'Renato de Pontes Pereira'
 __author_email__ = 'renato.ppontes@gmail.com'
-__version__ = '2.1.0'
+__version__ = '2.1.1dev'
 
 import re
 import csv
