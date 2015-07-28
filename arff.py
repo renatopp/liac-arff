@@ -129,7 +129,7 @@ This module provides several features, including:
 - Read and write ARFF files using python built-in structures, such dictionaries
   and lists;
 - Supports `scipy.sparse.coo <http://docs.scipy
-  .org/doc/scipy/reference/generated/scipy.sparse.coo_matrix.html#scipy.sparse.coo_matrix>_`
+  .org/doc/scipy/reference/generated/scipy.sparse.coo_matrix.html#scipy.sparse.coo_matrix>`_
   and lists of dictionaries as used by SVMLight
 - Supports the following attribute types: NUMERIC, REAL, INTEGER, STRING, and
   NOMINAL;
@@ -706,14 +706,15 @@ class ArffDecoder(object):
     def decode(self, s, encode_nominal=False, return_type=DENSE):
         '''Returns the Python representation of a given ARFF file.
 
-        When a file object is passed as an argument, this method read lines 
+        When a file object is passed as an argument, this method reads lines
         iteratively, avoiding to load unnecessary information to the memory.
 
         :param s: a string or file object with the ARFF file.
         :param encode_nominal: boolean, if True perform a label encoding
             while reading the .arff file.
-        :param return_type: determines the type of the data structure. Can be
-            of `arff.DENSE`, `arff.COO` and `arff.LOD`.
+        :param return_type: determines the data structure used to store the
+            dataset. Can be one of `arff.DENSE`, `arff.COO` and `arff.LOD`.
+            Consult the section on `working with sparse data`_
         '''
 
         try:
@@ -868,8 +869,9 @@ def load(fp, encode_nominal=False, return_type=DENSE):
     :param fp: a file-like object.
     :param encode_nominal: boolean, if True perform a label encoding
         while reading the .arff file.
-    :param return_type: determines the type of the data structure. Can be
-        of `arff.DENSE`, `arff.COO` and `arff.LOD`
+    :param return_type: determines the data structure used to store the
+        dataset. Can be one of `arff.DENSE`, `arff.COO` and `arff.LOD`.
+        Consult the section on `working with sparse data`_
     :return: a dictionary.
      '''
     decoder = ArffDecoder()
@@ -883,8 +885,9 @@ def loads(s, encode_nominal=False, return_type=DENSE):
     :param s: a string object.
     :param encode_nominal: boolean, if True perform a label encoding
         while reading the .arff file.
-    :param return_type: determines the type of the data structure. Can be
-        of `arff.DENSE`, `arff.COO` and `arff.LOD`
+    :param return_type: determines the data structure used to store the
+        dataset. Can be one of `arff.DENSE`, `arff.COO` and `arff.LOD`.
+        Consult the section on `working with sparse data`_
     :return: a dictionary.
     '''
     decoder = ArffDecoder()

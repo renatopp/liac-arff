@@ -12,13 +12,13 @@ Introduction
 
 .. automodule:: arff
 
-
+~~~~~~~~~~~~~~~~~~~~
 How to Get LIAC-ARFF
 ~~~~~~~~~~~~~~~~~~~~
 
 See https://github.com/renatopp/liac-arff
 
-
+~~~~~~~~~~~~~~
 How To Install
 ~~~~~~~~~~~~~~
 
@@ -104,6 +104,7 @@ specifying its codification::
 Examples
 --------
 
+~~~~~~~~~~~~~~~~~
 Dumping An Object
 ~~~~~~~~~~~~~~~~~
 
@@ -171,6 +172,7 @@ resulting in::
     % 
 
 
+~~~~~~~~~~~~~~~~~
 Loading An Object
 ~~~~~~~~~~~~~~~~~
 
@@ -233,6 +235,7 @@ resulting in::
      u'relation': u'weather'}
 
 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Loading An Object with encoded labels
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -318,14 +321,17 @@ Using this dataset in `scikit-learn <scikit-learn.org>`_::
     clf = svm.SVC()
     clf.fit(encoded_data[:,0:4], encoded_data[:,4])
 
-Work with sparse data
-~~~~~~~~~~~~~~~~~~~~~
+.. _sparse:
+
+~~~~~~~~~~~~~~~~~~~~~~~~
+Working with sparse data
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 Sparse data is data in which most of the elements are zero. By saving only
 non-zero elements, one can potentially save a lot of space on either the
 harddrive or in RAM. liac-arff supports two sparse data structures:
 
-* `scipy.sparse.coo <http://docs.scipy.org/doc/scipy/reference/sparse.html>_`
+* `scipy.sparse.coo <http://docs.scipy.org/doc/scipy/reference/sparse.html>`_
   is intended for easy construction of sparse matrices inside a python program.
 * list of dictionaries in the form
 
@@ -334,8 +340,14 @@ harddrive or in RAM. liac-arff supports two sparse data structures:
       [{column: value, column: value},
        {column: value, column: value}]
 
-Both can be used as the value for `data` in the arff object. Let's look again
-at the XOR example, this time with the data encoded as a list of dictionaries:
+
+Dumping sparse data
+~~~~~~~~~~~~~~~~~~~
+
+Both `scipy.sparse.coo <http://docs.scipy.org/doc/scipy/reference/sparse.html>`_
+matrices and lists of dictionaries can be used as the value for `data` in the
+arff object. Let's look again at the XOR example, this time with the data
+encoded as a list of dictionaries:
 
 .. code:: python
 
@@ -357,7 +369,7 @@ at the XOR example, this time with the data encoded as a list of dictionaries:
 
     print arff.dumps(xor_dataset)
 
-resulting in
+resulting in::
 
     % XOR Dataset
     @RELATION XOR
@@ -375,15 +387,17 @@ resulting in
     %
     %
 
+Loading sparse data
+~~~~~~~~~~~~~~~~~~~
+
 When reading a sparse dataset, the user can choose a target data structure.
-These are represented by the constants `arff.DENSE`,
-`arff.COO` and `arff.LOD`::
+These are represented by the constants `arff.DENSE`, `arff.COO` and `arff.LOD`::
 
     decoder = arff.ArffDecoder()
     d = decoder.decode(file_, encode_nominal=True, return_type=arff.LOD)
     pprint.pprint(d)
 
-resulting in:
+resulting in::
 
     {
         'description': 'XOR Dataset',
