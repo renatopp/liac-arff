@@ -59,7 +59,7 @@ Documentation
 
 For a complete description of the module, consult the official documentation at
 http://packages.python.org/liac-arff/ with mirror in
-http://inf.ufrgs.br/~rppereira/arff/index.html
+http://inf.ufrgs.br/~rppereira/docs/liac-arff/index.html
 
 
 -----
