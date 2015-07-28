@@ -1,5 +1,5 @@
 ==============
-LIAC-ARFF v2.0
+LIAC-ARFF v2.1
 ==============
 
 .. contents:: Table of Contents

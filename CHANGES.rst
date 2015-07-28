@@ -1,11 +1,13 @@
 What's New on LIAC-ARFF
 =======================
 
-LIAC-ARFF 2.0.3 (DEV)
----------------------
+LIAC-ARFF 2.1.0
+---------------
 
 - fix: working for 2.6+
 - fix: working for 3.3+
+- new: encoder checks if data has all attributes
+- new: sparse data support
 
 
 LIAC-ARFF 2.0.2

@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
-__author__ = 'Renato de Pontes Pereira'
-__author_email__ = 'renato.ppontes@gmail.com'
-__version__ = '2.0.3dev'
-__date__ = '2012 07 25'
+__author__ = 'Renato de Pontes Pereira, Matthias Feurer'
+__author_email__ = 'renato.ppontes@gmail.com, feurerm@informatik.uni-freiburg.de'
+__version__ = '2.1.0'
+__date__ = '2015 07 18'
 
 try:
     import setuptools
