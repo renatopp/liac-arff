@@ -28,7 +28,7 @@ setup(
     license='MIT License',
     description = 'A module for read and write ARFF files in Python.',
     long_description=long_description,
-    url = 'http://inf.ufrgs.br/~rppereira/arff',
+    url = 'https://github.com/renatopp/liac-arff',
     download_url = 'https://github.com/renatopp/liac-arff',
     classifiers=[
         'Development Status :: 5 - Production/Stable',
