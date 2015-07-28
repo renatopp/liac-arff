@@ -24,8 +24,7 @@ Features
 
 - Read and write ARFF files using python built-in structures, such dictionaries
   and lists;
-- Supports `scipy.sparse.coo <http://docs.scipy
-  .org/doc/scipy/reference/generated/scipy.sparse.coo_matrix.html#scipy.sparse.coo_matrix>_`
+- Supports `scipy.sparse.coo <http://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.coo_matrix.html#scipy.sparse.coo_matrix>`_
   and lists of dictionaries as used by SVMLight
 - Supports the following attribute types: NUMERIC, REAL, INTEGER, STRING, and
   NOMINAL;
