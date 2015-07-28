@@ -240,16 +240,16 @@ Loading An Object with encoded labels
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In some cases it is practical to have categorical data represented by
-integers, rather than strings. In `scikit-learn <http://scikit-learn.org>`_ for
+integers, rather than strings. In `scikit-learn <http://scikit-learn.org>`__ for
 example, integer data can be directly converted in a continuous
 representation with the `One-Hot Encoder
-<http://scikit-learn.org/stable/modules/preprocessing.html#encoding-categorical-features>`_,
+<http://scikit-learn.org/stable/modules/preprocessing.html#encoding-categorical-features>`__,
 which is necessary for most machine learning algorithms, e.g.
-`Support Vector Machines <http://en.wikipedia.org/wiki/Support_vector_machine>`_.
+`Support Vector Machines <http://en.wikipedia.org/wiki/Support_vector_machine>`__.
 The values ``[u'sunny', u'overcast', u'rainy']`` of the attribute
 ``u'outlook'`` would be represented by ``[0, 1, 2]``. This representation can
 be directly used the  `One-Hot Encoder
-<http://scikit-learn.org/stable/modules/preprocessing.html#encoding-categorical-features>`_.
+<http://scikit-learn.org/stable/modules/preprocessing.html#encoding-categorical-features>`__.
 
 Encoding categorical data while reading it from a file saves at least one
 memory copy and can be invoked like in this example::
@@ -312,7 +312,7 @@ resulting in::
      u'relation': u'weather'}
 
 
-Using this dataset in `scikit-learn <scikit-learn.org>`_::
+Using this dataset in `scikit-learn <scikit-learn.org>`__::
 
     from sklearn import preprocessing, svm
     enc = preprocessing.OneHotEncoder(categorical_features=[0, 3, 4])
@@ -331,7 +331,7 @@ Sparse data is data in which most of the elements are zero. By saving only
 non-zero elements, one can potentially save a lot of space on either the
 harddrive or in RAM. liac-arff supports two sparse data structures:
 
-* `scipy.sparse.coo <http://docs.scipy.org/doc/scipy/reference/sparse.html>`_
+* `scipy.sparse.coo <http://docs.scipy.org/doc/scipy/reference/sparse.html>`__
   is intended for easy construction of sparse matrices inside a python program.
 * list of dictionaries in the form
 
@@ -344,7 +344,7 @@ harddrive or in RAM. liac-arff supports two sparse data structures:
 Dumping sparse data
 ~~~~~~~~~~~~~~~~~~~
 
-Both `scipy.sparse.coo <http://docs.scipy.org/doc/scipy/reference/sparse.html>`_
+Both `scipy.sparse.coo <http://docs.scipy.org/doc/scipy/reference/sparse.html>`__
 matrices and lists of dictionaries can be used as the value for `data` in the
 arff object. Let's look again at the XOR example, this time with the data
 encoded as a list of dictionaries:
