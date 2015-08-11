@@ -146,8 +146,8 @@ __author__ = 'Renato de Pontes Pereira'
 __author_email__ = 'renato.ppontes@gmail.com'
 __version__ = '2.1.1dev'
 
-import re
 import csv
+import re
 import sys
 
 # CONSTANTS ===================================================================
@@ -184,13 +184,17 @@ _SUPPORTED_DATA_STRUCTURES = [DENSE, COO, LOD]
 
 # =============================================================================
 
-# COMPATIBILITY WITH PYTHON 3 ===============================================
+# COMPATIBILITY WITH PYTHON 3 =================================================
 PY3 = sys.version_info[0] == 3
 if PY3:
     unicode = str
     basestring = str
     xrange = range
+# COMPABILITY WITH PYTHON 2 ===================================================
 # =============================================================================
+PY2 = sys.version_info[0] == 2
+if PY2:
+    from itertools import izip as zip
 
 # EXCEPTIONS ==================================================================
 class ArffException(Exception):
