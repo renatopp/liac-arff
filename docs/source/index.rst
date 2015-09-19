@@ -96,7 +96,7 @@ specifying its codification::
     import codecs
     import arff
 
-    file_ = codecs.load('/path/to/file.arff', 'rb', 'utf-8')
+    file_ = codecs.open('/path/to/file.arff', 'rb', 'utf-8')
     arff.load(file_)
 
 
