@@ -602,7 +602,7 @@ class ArffDecoder(object):
         # Extracts the final type
         if _RE_TYPE_NOMINAL.match(type_):
             # If follows the nominal structure, parse with csv reader.
-            values = next(csv.reader([type_.strip('{} ')]))
+            values = next(csv.reader([type_.strip('{} ')],quotechar="'",escapechar="\\"))
             values = [unicode(v_.strip(' ').strip('"\'')) for v_ in values]
             type_ = values
 
