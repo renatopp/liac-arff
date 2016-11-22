@@ -337,6 +337,7 @@ class Data(object):
     def decode_data(self, s, conversors):
         values = next(csv.reader([s.strip(' ')],quotechar="'",escapechar="\\"))
 
+
         if values[0][0].strip(" ") == '{':
             vdict = dict(map(lambda x: (int(x[0]), x[1]),
                              [i.strip("{").strip("}").strip(" ").split(' ') for
@@ -385,7 +386,8 @@ class COOData(Data):
         self._current_num_data_points = 0
 
     def decode_data(self, s, conversors):
-        values = next(csv.reader([s.strip(' ')]))
+        values = next(csv.reader([s.strip(' ')],quotechar="'",escapechar="\\"))
+
 
         if not values[0][0].strip(" ") == '{':
             raise BadLayout()
@@ -448,7 +450,8 @@ class LODData(Data):
         self.data = []
 
     def decode_data(self, s, conversors):
-        values = next(csv.reader([s.strip(' ')]))
+        values = next(csv.reader([s.strip(' ')],quotechar="'",escapechar="\\"))
+
 
         if not values[0][0].strip(" ") == '{':
             raise BadLayout()
