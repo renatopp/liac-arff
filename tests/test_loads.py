@@ -108,3 +108,22 @@ class TestLoads(unittest.TestCase):
         obj = loads(ARFF)
         sparse_obj = loads(SPARSE_ARFF)
         self.assertEqual(obj['data'], sparse_obj['data'])
+
+    def test_quoted_null(self):
+        ARFF_WITH_NULL = '''% XOR Dataset
+@RELATION XOR
+
+@attribute 'bc' {'?','Y'}
+
+@DATA
+'Y'
+'?'
+'Y'
+'?'
+%
+%
+% '''
+
+        loads = self.get_loads()
+        obj = loads(ARFF_WITH_NULL)
+        self.assertEqual(obj['data'], [['Y'], ['?'], ['Y'], ['?']])

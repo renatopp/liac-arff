@@ -321,10 +321,12 @@ class Conversor(object):
         This function also verify if the value is an empty string or a missing
         value, either cases, it returns None.
         '''
-        value = value.strip(' ').strip('\"\'')
+        value = value.strip(' ')
 
         if value == u'?' or value == u'':
             return None
+
+        value = value.strip('\"\'')
 
         return self._conversor(value)
 
