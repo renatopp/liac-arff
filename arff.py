@@ -174,6 +174,7 @@ _ESCAPE_DCT = {
     '\\\'': '\\\'',
     '\\"': '\\"',
     '\\%': '\\%',
+    ',': ',', # identical, but trigger quoting
 }
 
 DENSE = 0   # Constant value representing a dense matrix
