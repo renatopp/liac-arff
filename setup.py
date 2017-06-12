@@ -2,8 +2,8 @@
 
 __author__ = 'Renato de Pontes Pereira, Matthias Feurer'
 __author_email__ = 'renato.ppontes@gmail.com, feurerm@informatik.uni-freiburg.de'
-__version__ = '2.1.1dev'
-__date__ = '2015 07 18'
+__version__ = '2.1.1'
+__date__ = '2017 06 12'
 
 try:
     import setuptools
