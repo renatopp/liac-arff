@@ -4,6 +4,18 @@ What's New on LIAC-ARFF
 LIAC-ARFF NEXT
 --------------
 
+- fix: do not treat quoted questionmarks as missing values (issue #50)
+- fix: compability issue using zip with python2.7
+- new: test for python3.5 and python3.6 as well
+
+
+LIAC-ARFF 2.1.1
+---------------
+
+- fix: working for 2.6+
+- fix: working for 3.3+
+- new: encoder checks if data has all attributes
+- new: sparse data support
 
 
 LIAC-ARFF 2.1.0
