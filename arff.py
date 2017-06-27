@@ -365,7 +365,9 @@ class Data(object):
         '''
         for inst in data:
             if len(inst) != len(attributes):
-                raise BadObject()
+                raise BadObject('len(inst) = {} != len(attributes) {}'.format(
+                     len(inst), len(attributes),
+                ))
 
             new_data = []
             for value in inst:
