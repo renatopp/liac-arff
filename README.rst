@@ -33,7 +33,7 @@ Features
 - Supports read and write the descriptions of files;
 - Supports missing values and names with spaces;
 - Supports unicode values and names;
-- Fully compatible with Python 2.6+ and Python 3.3+;
+- Fully compatible with Python 2.7+ and Python 3.3+;
 - Under `MIT License <http://opensource.org/licenses/MIT>`_
 
 --------------

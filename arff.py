@@ -138,7 +138,7 @@ This module provides several features, including:
 - Supports read and write the descriptions of files;
 - Supports missing values and names with spaces;
 - Supports unicode values and names;
-- Fully compatible with Python 2.6+ and Python 3.4+;
+- Fully compatible with Python 2.7+ and Python 3.4+;
 - Under `MIT License <http://opensource.org/licenses/MIT>`_
 
 '''
@@ -278,7 +278,7 @@ class Conversor(object):
             self._conversor = self._nominal
         elif type_ == 'ENCODED_NOMINAL':
             self._conversor = self._encoded_nominal
-            self._encoded_values = dict((value, i) for (i, value) in enumerate(values))
+            self._encoded_values = {value: i for (i, value) in enumerate(values)}
         else:
             raise BadAttributeType()
 
