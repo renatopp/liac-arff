@@ -89,7 +89,7 @@ Exceptions
 Unicode
 -------
 
-LIAC-ARFF works with unicode (for python 2.6+, in python 3.x this is default),
+LIAC-ARFF works with unicode (for python 2.7+, in python 3.x this is default),
 and to take advantage of it, you need to load the arff file using ``codecs``,
 specifying its codification::
 
