@@ -337,7 +337,7 @@ class Data(object):
         self.data = []
 
     def decode_data(self, s, conversors):
-        values = next(csv.reader([s.strip(' ')]))
+        values = next(csv.reader([s.strip(' ')], quotechar="'", escapechar="\\"))
 
         if values[0][0].strip(" ") == '{':
             vdict = dict(map(lambda x: (int(x[0]), x[1]),
