@@ -142,6 +142,7 @@ This module provides several features, including:
 - Under `MIT License <http://opensource.org/licenses/MIT>`_
 
 '''
+
 __author__ = 'Renato de Pontes Pereira'
 __author_email__ = 'renato.ppontes@gmail.com'
 __version__ = '2.1.1dev'
@@ -149,6 +150,7 @@ __version__ = '2.1.1dev'
 import csv
 import re
 import sys
+from collections import namedtuple
 
 # CONSTANTS ===================================================================
 _SIMPLE_TYPES = ['NUMERIC', 'REAL', 'INTEGER', 'STRING']
@@ -181,6 +183,8 @@ COO = 1     # Constant value representing a sparse matrix in coordinate format
 LOD = 2     # Constant value representing a sparse matrix in list of
             # dictionaries format
 _SUPPORTED_DATA_STRUCTURES = [DENSE, COO, LOD]
+
+Attribute = namedtuple("Attribute", "name, type")
 
 # =============================================================================
 
@@ -613,7 +617,7 @@ class ArffDecoder(object):
             if type_ not in ['NUMERIC', 'REAL', 'INTEGER', 'STRING']:
                 raise BadAttributeType()
 
-        return (name, type_)
+        return Attribute(name, type_)
 
     def _decode(self, s, encode_nominal=False, matrix_type=DENSE):
         '''Do the job the ``encode``.'''
