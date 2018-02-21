@@ -6,6 +6,7 @@ import arff
 class ConversorStub(object):
     def __init__(self, r_value):
         self.r_value = r_value
+        self.values = None
 
     def __call__(self, value):
         return self.r_value(value)
