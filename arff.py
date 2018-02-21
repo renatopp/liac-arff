@@ -343,8 +343,8 @@ class Data(object):
             vdict = dict(map(lambda x: (int(x[0]), x[1]),
                              [i.strip("{").strip("}").strip(" ").split(' ') for
                               i in values]))
-            values = [vdict[i] if i in vdict else unicode(0) for i in
-                      xrange(len(conversors))]
+            values = [vdict[i] if i in vdict else (conversor.values[0] if conversor.values else unicode(0) )
+                      for i, conversor in enumerate(conversors)]
         # dense lines are decoded one by one
         else:
             if len(values) != len(conversors):
