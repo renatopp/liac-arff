@@ -27,9 +27,7 @@ sunny,75.0,70.0,TRUE,yes
 overcast,72.0,90.0,TRUE,yes
 overcast,81.0,75.0,FALSE,yes
 rainy,71.0,91.0,TRUE,no
-%
-%
-%'''
+'''
 
 OBJ = {
     u'description':u'\nDESCRIPTION HERE\n',
@@ -170,9 +168,7 @@ class TestEncodeComment(unittest.TestCase):
 @DATA
 'a,b,c'
 'a,b,c '
-%
-%
-%"""
+"""
         my_arff = {
             "attributes": [["attr", "STRING"]],
             "data": [["a,b,c"], ["a,b,c "]],

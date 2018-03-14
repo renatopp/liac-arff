@@ -28,9 +28,7 @@ lorem,b,'this is a valid statement with an \\% symbol'
 lorem2,d,'this is a valid statement'
 lorem3,c,'this is a valid statement with double quotes included \\"\\"\\"\\"\\"\\"\\"! '
 lorem4,a,'this is a valid statement with singlequotes included \\\' lol \\\'! '
-%
-%
-%'''
+'''
 
 
 class TestDumpEscape(unittest.TestCase):

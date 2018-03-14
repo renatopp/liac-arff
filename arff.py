@@ -867,10 +867,8 @@ class ArffEncoder(object):
             for line in data.encode_data(obj.get('data'), attributes):
                 yield line
 
-        # FILLER
-        yield self._encode_comment()
-        yield self._encode_comment()
-        yield self._encode_comment()
+        yield u''
+
 # =============================================================================
 
 # BASIC INTERFACE =============================================================
