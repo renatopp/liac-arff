@@ -21,10 +21,10 @@ OBJ = {
     ]
 }
 
-ARFF = '''% 
+ARFF = '''%
 % XOR Dataset
-% 
-% 
+%
+%
 @RELATION XOR
 
 @ATTRIBUTE input1 REAL
@@ -36,9 +36,9 @@ ARFF = '''%
 0.0,1.0,1.0
 1.0,0.0,1.0
 1.0,1.0,0.0
-% 
-% 
-% '''
+%
+%
+%'''
 
 class TestLoadDump(unittest.TestCase):
     def get_dumps(self):

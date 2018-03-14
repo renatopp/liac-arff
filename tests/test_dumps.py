@@ -33,9 +33,9 @@ ARFF = '''% XOR Dataset
 0.0,1.0,1.0
 1.0,0.0,1.0
 1.0,1.0,0.0
-% 
-% 
-% '''
+%
+%
+%'''
 
 class TestDumps(unittest.TestCase):
     def get_dumps(self):

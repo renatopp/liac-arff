@@ -166,6 +166,7 @@ _RE_TYPE_NOMINAL = re.compile(r'^\{\s*((\".*\"|\'.*\'|\S*)\s*,\s*)*(\".*\"|\'.*\
 _RE_ESCAPE = re.compile(r'\\\'|\\\"|\\\%|[\\"\'%]')
 
 _ESCAPE_DCT = {
+    ',': ',',
     ' ': ' ',
     "'": "\\'",
     '"': '\\"',
@@ -749,7 +750,10 @@ class ArffEncoder(object):
         :param s: (OPTIONAL) string.
         :return: a string with the encoded comment line.
         '''
-        return u'%s %s'%(_TK_COMMENT, s)
+        if s:
+            return u'%s %s'%(_TK_COMMENT, s)
+        else:
+            return u'%s' % _TK_COMMENT
 
     def _encode_relation(self, name):
         '''(INTERNAL) Decodes a relation line.
