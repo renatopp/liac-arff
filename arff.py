@@ -164,6 +164,7 @@ _RE_RELATION     = re.compile(r'^([^\{\}%,\s]*|\".*\"|\'.*\')$', re.UNICODE)
 _RE_ATTRIBUTE    = re.compile(r'^(\".*\"|\'.*\'|[^\{\}%,\s]*)\s+(.+)$', re.UNICODE)
 _RE_TYPE_NOMINAL = re.compile(r'^\{\s*((\".*\"|\'.*\'|\S*)\s*,\s*)*(\".*\"|\'.*\'|\S*)\s*\}$', re.UNICODE)
 _RE_ESCAPE = re.compile(r'\\\'|\\\"|\\\%|[\\"\'%]')
+_RE_QUOTATION_MARKS = re.compile(r'\'\"')
 
 _ESCAPE_DCT = {
     ',': ',',
@@ -338,7 +339,7 @@ class Data(object):
         self.data = []
 
     def decode_data(self, s, conversors):
-        values = next(csv.reader([s.strip(' ')]))
+        values = self._get_values(s)
 
         if values[0][0].strip(" ") == '{':
             vdict = dict(map(lambda x: (int(x[0]), x[1]),
@@ -353,6 +354,13 @@ class Data(object):
         values = [conversors[i](values[i]) for i in xrange(len(values))]
 
         self.data.append(values)
+
+    def _get_values(self, s):
+        '''(INTERNAL) Split a line into a list of values'''
+        if _RE_QUOTATION_MARKS.search(s):
+            return _read_csv(s.strip(' '))
+        else:
+            return next(csv.reader([s.strip(' ')]))
 
     def encode_data(self, data, attributes):
         '''(INTERNAL) Encodes a line of data.
@@ -390,14 +398,13 @@ class COOData(Data):
         self._current_num_data_points = 0
 
     def decode_data(self, s, conversors):
-        values = next(csv.reader([s.strip(' ')]))
+        values = self._get_values(s)
 
         if not values[0][0].strip(" ") == '{':
             raise BadLayout()
         elif s.replace(' ', '') == '{}':
             self._current_num_data_points += 1
             return
-
 
         vdict = dict(map(lambda x: (int(x[0]), x[1]),
                          [i.strip("{").strip("}").strip(" ").split(' ')
@@ -453,7 +460,7 @@ class LODData(Data):
         self.data = []
 
     def decode_data(self, s, conversors):
-        values = next(csv.reader([s.strip(' ')]))
+        values = self._get_values(s)
 
         if not values[0][0].strip(" ") == '{':
             raise BadLayout()
@@ -509,6 +516,76 @@ def _get_data_object_for_encoding(matrix):
         return LODData()
     else:
         return Data()
+
+def _read_csv(line):
+    # TODO document
+    # TODO add unit tests
+    # * mixed single quotes and double quotes
+    # * escaped characters!
+    # * does it behave like the regular csv reader?
+    values = []
+    escaped = False
+    i = 0
+    token = ''
+    quote_token = False
+    comma_expected = False
+    only_whitespace = True
+
+    while i < len(line):
+        if line[i] == ',':
+            if quote_token:
+                values.append(u"'%s'" % token)
+            else:
+                values.append(token)
+            token = ''
+            i += 1
+            quote_token = False
+            only_whitespace = True
+            comma_expected = False
+        elif comma_expected:
+            if line[i] in (' ', '\t', '\n', '\r'):
+                i += 1
+            else:
+                raise ValueError(
+                    'Expected comma in line "%s", not %s!' % str(line[i])
+                )
+        # Escape character
+        elif line[i] == '\\':
+            if len(line) == i+1:
+                raise ValueError('Line ends with escape character!')
+            token += line[i: i+2]
+            i += 2
+        # Quoting
+        elif line[i] in ("'", "'"):
+            if only_whitespace is False:
+                raise ValueError('Only whitespace allowed before quoting '
+                                 'character in line: %s' % line)
+            if escaped is False:
+                token = ''
+                escaped = line[i]
+                quote_token = True
+            elif escaped == line[i]:
+                escaped = False
+                comma_expected = True
+            else:
+                raise ValueError(
+                    'Inconsistent use of single quotes and double quotes for '
+                    'line: %s' % line
+                )
+            i += 1
+        elif escaped:
+            token += line[i]
+            i += 1
+        else:
+            if line[i] not in (' ', '\t', '\n', '\r'):
+                only_whitespace = False
+            token += line[i]
+            i += 1
+    if quote_token:
+        values.append(u"'%s'" % token)
+    else:
+        values.append(token)
+    return values
 
 # =============================================================================
 
@@ -603,8 +680,7 @@ class ArffDecoder(object):
 
         # Extracts the final type
         if _RE_TYPE_NOMINAL.match(type_):
-            # If follows the nominal structure, parse with csv reader.
-            values = next(csv.reader([type_.strip('{} ')]))
+            values = _read_csv(type_.strip('{} '))
             values = [unicode(v_.strip(' ').strip('"\'')) for v_ in values]
             type_ = values
 
