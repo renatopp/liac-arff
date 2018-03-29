@@ -2,7 +2,7 @@
 
 __author__ = 'Renato de Pontes Pereira, Matthias Feurer'
 __author_email__ = 'renato.ppontes@gmail.com, feurerm@informatik.uni-freiburg.de'
-__version__ = '2.2.0'
+__version__ = '2.2.1'
 __date__ = '2018 03 14'
 
 try:

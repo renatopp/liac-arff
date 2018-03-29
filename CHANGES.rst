@@ -1,6 +1,12 @@
 What's New on LIAC-ARFF
 =======================
 
+LIAC-ARFF 2.2.1
+---------------
+
+- fix: better support for string features and nominals containing commas
+  (issue # 64)
+
 LIAC-ARFF 2.2
 -------------
 
