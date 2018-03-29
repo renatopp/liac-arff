@@ -26,7 +26,7 @@ class TestReadCSV(unittest.TestCase):
 
     def test_open_quotation_marks(self):
         fixture = """ 'A """
-        self.assertRaisesRegex(
+        self.assertRaisesRegexp(
             ValueError,
             """Quote not closed for line:  'A""",
             arff._read_csv,
