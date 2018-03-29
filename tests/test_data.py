@@ -2,6 +2,11 @@ import types
 import unittest
 import arff
 
+if arff.PY2:
+    import mock
+else:
+    import unittest.mock as mock
+
 
 class ConversorStub(object):
     def __init__(self, r_value):
@@ -85,6 +90,22 @@ class TestData(unittest.TestCase):
         generator = self.data.encode_data(fixture, self.attributes)
         self.assertRaises(arff.BadObject, next, generator)
 
+    @mock.patch('arff._read_csv')
+    def test_detect_quotation_marks(self, patch):
+        fixture = """'ENACT.NOGOPMAJ,2017'"""
+        self.data._get_values(fixture)
+        self.assertEqual(patch.call_count, 1)
+        self.assertEqual(patch.call_args[0][0], fixture)
+
+        fixture_2 = '''"ENACT.NOGOPMAJ,2017"'''
+        self.data._get_values(fixture_2)
+        self.assertEqual(patch.call_count, 2)
+        self.assertEqual(patch.call_args[0][0], fixture_2)
+
+        fixture_3 = ''' 'A','B','"' '''
+        self.data._get_values(fixture_3)
+        self.assertEqual(patch.call_count, 3)
+        self.assertEqual(patch.call_args[0][0], fixture_3.strip(' '))
 
 class TestCOOData(unittest.TestCase):
     def setUp(self):

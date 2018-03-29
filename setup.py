@@ -30,6 +30,7 @@ setup(
     long_description=long_description,
     url = 'https://github.com/renatopp/liac-arff',
     download_url = 'https://github.com/renatopp/liac-arff',
+    tests_require = ['mock'],
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Environment :: MacOS X',

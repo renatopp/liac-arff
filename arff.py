@@ -164,7 +164,7 @@ _RE_RELATION     = re.compile(r'^([^\{\}%,\s]*|\".*\"|\'.*\')$', re.UNICODE)
 _RE_ATTRIBUTE    = re.compile(r'^(\".*\"|\'.*\'|[^\{\}%,\s]*)\s+(.+)$', re.UNICODE)
 _RE_TYPE_NOMINAL = re.compile(r'^\{\s*((\".*\"|\'.*\'|\S*)\s*,\s*)*(\".*\"|\'.*\'|\S*)\s*\}$', re.UNICODE)
 _RE_ESCAPE = re.compile(r'\\\'|\\\"|\\\%|[\\"\'%]')
-_RE_QUOTATION_MARKS = re.compile(r'\'\"')
+_RE_QUOTATION_MARKS = re.compile(r''''|"''', re.UNICODE)
 
 _ESCAPE_DCT = {
     ',': ',',
@@ -524,7 +524,7 @@ def _read_csv(line):
     # * escaped characters!
     # * does it behave like the regular csv reader?
     values = []
-    escaped = False
+    quoted = False
     i = 0
     token = ''
     quote_token = False
@@ -532,7 +532,7 @@ def _read_csv(line):
     only_whitespace = True
 
     while i < len(line):
-        if line[i] == ',':
+        if line[i] == ',' and not quoted:
             if quote_token:
                 values.append(u"'%s'" % token)
             else:
@@ -556,24 +556,25 @@ def _read_csv(line):
             token += line[i: i+2]
             i += 2
         # Quoting
-        elif line[i] in ("'", "'"):
+        elif line[i] in ("'", '"') and (not quoted or line[i] == quoted):
             if only_whitespace is False:
-                raise ValueError('Only whitespace allowed before quoting '
-                                 'character in line: %s' % line)
-            if escaped is False:
+                raise ValueError(
+                    'Only whitespace allowed before quoting character at '
+                    'index %d in line: %s' % (i, line))
+            if quoted is False:
                 token = ''
-                escaped = line[i]
+                quoted = line[i]
                 quote_token = True
-            elif escaped == line[i]:
-                escaped = False
+            elif quoted == line[i]:
+                quoted = False
                 comma_expected = True
             else:
                 raise ValueError(
                     'Inconsistent use of single quotes and double quotes for '
-                    'line: %s' % line
+                    'line at character %d: %s' % (i, line)
                 )
             i += 1
-        elif escaped:
+        elif quoted:
             token += line[i]
             i += 1
         else:
@@ -581,6 +582,8 @@ def _read_csv(line):
                 only_whitespace = False
             token += line[i]
             i += 1
+    if quoted:
+        raise ValueError('Quote not closed for line: %s' % line)
     if quote_token:
         values.append(u"'%s'" % token)
     else:
