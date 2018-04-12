@@ -625,9 +625,9 @@ class ArffDecoder(object):
         else:
             # If not nominal, verify the type name
             type_ = unicode(type_).upper()
-            if ' ' in type_:
+            if 'DATE' in type_ and ' ' in type_:
                 try:
-                    type_, format = type_.split(' ')
+                    type_, format = type_[:type_.find(' ')], type_[type_.find(' ') + 1:]
                     return (name, type_, format)
                 except ValueError:
                     raise BadAttributeType()
