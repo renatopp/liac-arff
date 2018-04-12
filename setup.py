@@ -49,4 +49,5 @@ setup(
     py_modules=['arff'],
     package_data={'':['README.rst', 'CHANGES.rst', 'LICENSE']},
     test_suite='tests',
+    install_requires = ['python-dateutil'],
 )
