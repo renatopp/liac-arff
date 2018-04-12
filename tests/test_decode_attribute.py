@@ -51,6 +51,21 @@ class TestDecodeAttribute(unittest.TestCase):
         self.assertEqual(len(result), 2)
         self.assertEqual(result[0], expected)
 
+    def test_date_name(self):
+        '''Attributes with quoted name but without space.'''
+        decoder = self.get_decoder()
+
+        # Double Quote
+        fixture = u'@ATTRIBUTE 0 DATE "Y-M-D"'
+        result = decoder._decode_attribute(fixture)
+        expected = u'0'
+
+        self.assertEqual(len(result), 3)
+        self.assertEqual(result[0], expected)
+        name, type_, format = result
+        self.assertEqual(format, u'"Y-M-D"')
+
+
     def test_quoted_special(self):
         '''Attributes with quoted name but without space.'''
         decoder = self.get_decoder()

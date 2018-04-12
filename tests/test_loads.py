@@ -1,5 +1,6 @@
 import unittest
 import arff
+import datetime
 try:
     from StringIO import StringIO
 except ImportError:
@@ -127,3 +128,40 @@ class TestLoads(unittest.TestCase):
         loads = self.get_loads()
         obj = loads(ARFF_WITH_NULL)
         self.assertEqual(obj['data'], [['Y'], ['?'], ['Y'], ['?']])
+
+    def test_date(self):
+        '''Test the date conversion; by coercion.'''
+        ARFF_WITH_DATE = '''% XOR Dataset
+@RELATION event_date
+
+@attribute occurs DATE
+
+@DATA
+'2011-01-11'
+'2010-10-01'
+%
+%
+% '''
+
+        loads = self.get_loads()
+        obj = loads(ARFF_WITH_DATE)
+        self.assertEqual(obj['data'], [
+            [datetime.datetime(2011, 1, 11, 0, 0)], [datetime.datetime(2010, 10, 1, 0, 0)]])
+
+
+    def test_date_formatting(self):
+        '''Test the date conversion using a supplied formatting string.'''
+        ARFF_WITH_DATE = '''% XOR Dataset
+@RELATION event_date
+
+@attribute occurs DATE "%m/%d/%Y"
+
+@DATA
+"07/27/2012"
+%
+%
+% '''
+
+        loads = self.get_loads()
+        obj = loads(ARFF_WITH_DATE)
+        self.assertEqual(obj['data'], [[datetime.datetime(2012, 7, 27, 0, 0)]])

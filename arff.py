@@ -147,6 +147,8 @@ __author_email__ = 'renato.ppontes@gmail.com, feurerm@informatik.uni-freiburg.de
 __version__ = '2.2.0'
 
 import csv
+import datetime
+from dateutil.parser import parse as dateparse
 import re
 import sys
 
@@ -268,6 +270,7 @@ class Conversor(object):
         '''Contructor.'''
 
         self.values = values
+        self._date_format = None
 
         if type_ == 'NUMERIC' or type_ == 'REAL':
             self._conversor = self._float
@@ -280,6 +283,10 @@ class Conversor(object):
         elif type_ == 'ENCODED_NOMINAL':
             self._conversor = self._encoded_nominal
             self._encoded_values = {value: i for (i, value) in enumerate(values)}
+        elif type_ == 'DATE':
+            self._conversor = self._date
+            if values:
+                self._date_format = values[0]
         else:
             raise BadAttributeType()
 
@@ -300,6 +307,12 @@ class Conversor(object):
     def _string(self, value):
         '''Convert the value to string.'''
         return unicode(value)
+
+    def _date (self, value, format=None):
+        '''Convert the value and format to date.'''
+        if self._date_format:
+            return datetime.strptime(value, self._date_format)
+        return dateparse(value)
 
     def _nominal(self, value):
         '''Verify the value of nominal attribute and convert it to string.'''
@@ -566,14 +579,14 @@ class ArffDecoder(object):
         The attribute is the most complex declaration in an arff file. All 
         attributes must follow the template::
 
-             @attribute <attribute-name> <datatype>
+             @attribute <attribute-name> <datatype> [date format]
 
         where ``attribute-name`` is a string, quoted if the name contains any 
         whitespace, and ``datatype`` can be:
 
         - Numerical attributes as ``NUMERIC``, ``INTEGER`` or ``REAL``.
         - Strings as ``STRING``.
-        - Dates (NOT IMPLEMENTED).
+        - Dates as ``DATE`` followed by a string date format.
         - Nominal attributes with format:
 
             {<nominal-name1>, <nominal-name2>, <nominal-name3>, ...} 
@@ -585,8 +598,9 @@ class ArffDecoder(object):
         padding, including the "\r\n" characters. 
 
         :param s: a normalized string.
-        :return: a tuple (ATTRIBUTE_NAME, TYPE_OR_VALUES).
+        :return: a tuple (ATTRIBUTE_NAME, TYPE_OR_VALUES, format).
         '''
+        format = None
         _, v = s.split(' ', 1)
         v = v.strip()
 
@@ -611,7 +625,13 @@ class ArffDecoder(object):
         else:
             # If not nominal, verify the type name
             type_ = unicode(type_).upper()
-            if type_ not in ['NUMERIC', 'REAL', 'INTEGER', 'STRING']:
+            if ' ' in type_:
+                try:
+                    type_, format = type_.split(' ')
+                    return (name, type_, format)
+                except ValueError:
+                    raise BadAttributeType()
+            if type_ not in ['NUMERIC', 'REAL', 'INTEGER', 'STRING', 'DATE']:
                 raise BadAttributeType()
 
         return (name, type_)
@@ -782,7 +802,7 @@ class ArffEncoder(object):
 
         - Numerical attributes as ``NUMERIC``, ``INTEGER`` or ``REAL``.
         - Strings as ``STRING``.
-        - Dates (NOT IMPLEMENTED).
+        - Dates as ``DATE`` followed by a format string.
         - Nominal attributes with format:
 
             {<nominal-name1>, <nominal-name2>, <nominal-name3>, ...} 
