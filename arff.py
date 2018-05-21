@@ -153,18 +153,19 @@ import re
 import sys
 
 # CONSTANTS ===================================================================
-_SIMPLE_TYPES = ['NUMERIC', 'REAL', 'INTEGER', 'STRING']
+_SIMPLE_TYPES = ['NUMERIC', 'REAL', 'INTEGER', 'STRING', 'DATE']
 
 _TK_DESCRIPTION = '%'
-_TK_COMMENT     = '%'
-_TK_RELATION    = '@RELATION'
-_TK_ATTRIBUTE   = '@ATTRIBUTE'
-_TK_DATA        = '@DATA'
-_TK_VALUE       = ''
+_TK_COMMENT = '%'
+_TK_RELATION = '@RELATION'
+_TK_ATTRIBUTE = '@ATTRIBUTE'
+_TK_DATA = '@DATA'
+_TK_VALUE = ''
 
-_RE_RELATION     = re.compile(r'^([^\{\}%,\s]*|\".*\"|\'.*\')$', re.UNICODE)
-_RE_ATTRIBUTE    = re.compile(r'^(\".*\"|\'.*\'|[^\{\}%,\s]*)\s+(.+)$', re.UNICODE)
-_RE_TYPE_NOMINAL = re.compile(r'^\{\s*((\".*\"|\'.*\'|\S*)\s*,\s*)*(\".*\"|\'.*\'|\S*)\s*\}$', re.UNICODE)
+_RE_RELATION = re.compile(r'^([^\{\}%,\s]*|\".*\"|\'.*\')$', re.UNICODE)
+_RE_ATTRIBUTE = re.compile(r'^(\".*\"|\'.*\'|[^\{\}%,\s]*)\s+(.+)$', re.UNICODE)
+_RE_TYPE_NOMINAL = re.compile(r'^\{\s*((\".*\"|\'.*\'|\S*)\s*,\s*)*(\".*\"|\'.*\'|\S*)\s*\}$',
+                              re.UNICODE)
 _RE_ESCAPE = re.compile(r'\\\'|\\\"|\\\%|[\\"\'%]')
 
 _ESCAPE_DCT = {
@@ -179,10 +180,10 @@ _ESCAPE_DCT = {
     '\\%': '\\%',
 }
 
-DENSE = 0   # Constant value representing a dense matrix
-COO = 1     # Constant value representing a sparse matrix in coordinate format
-LOD = 2     # Constant value representing a sparse matrix in list of
-            # dictionaries format
+DENSE = 0  # Constant value representing a dense matrix
+COO = 1  # Constant value representing a sparse matrix in coordinate format
+LOD = 2  # Constant value representing a sparse matrix in list of
+# dictionaries format
 _SUPPORTED_DATA_STRUCTURES = [DENSE, COO, LOD]
 
 # =============================================================================
@@ -199,6 +200,7 @@ PY2 = sys.version_info[0] == 2
 if PY2:
     from itertools import izip as zip
 
+
 # EXCEPTIONS ==================================================================
 class ArffException(Exception):
     message = None
@@ -207,7 +209,7 @@ class ArffException(Exception):
         self.line = -1
 
     def __str__(self):
-        return self.message%self.line
+        return self.message % self.line
 
 class BadRelationFormat(ArffException):
     '''Error raised when the relation declaration is in an invalid format.'''
@@ -254,7 +256,7 @@ class BadObject(ArffException):
         self.msg = msg
 
     def __str__(self):
-        return '%s'%self.msg
+        return '%s' % self.msg
 # =============================================================================
 
 # INTERNAL ====================================================================
@@ -286,7 +288,7 @@ class Conversor(object):
         elif type_ == 'DATE':
             self._conversor = self._date
             if values:
-                self._date_format = values[0]
+                self._date_format = values
         else:
             raise BadAttributeType()
 
@@ -308,10 +310,10 @@ class Conversor(object):
         '''Convert the value to string.'''
         return unicode(value)
 
-    def _date (self, value, format=None):
+    def _date(self, value, format=None):
         '''Convert the value and format to date.'''
         if self._date_format:
-            return datetime.strptime(value, self._date_format)
+            return datetime.datetime.strptime(value, self._date_format)
         return dateparse(value)
 
     def _nominal(self, value):
@@ -380,11 +382,11 @@ class Data(object):
         for inst in data:
             if len(inst) != len(attributes):
                 raise BadObject('len(inst) = {} != len(attributes) {}'.format(
-                     len(inst), len(attributes),
+                    len(inst), len(attributes),
                 ))
 
             new_data = []
-            for value in inst:
+            for idx, value in enumerate(inst):
                 if value is None or value == u'' or value != value:
                     s = '?'
                 else:
@@ -393,9 +395,17 @@ class Data(object):
                     if escape_char in s:
                         s = encode_string(s)
                         break
-                new_data.append(s)
+                if isinstance(value, datetime.datetime):
+                    if len(attributes[idx]) == 3:
+                        new_val = value.strftime(attributes[idx][2])
+                        new_data.append(new_val)
+                    else:
+                        new_data.append(value.isoformat())
+                else:
+                    new_data.append(s)
 
             yield u','.join(new_data)
+
 
 class COOData(Data):
     def __init__(self):
@@ -411,10 +421,9 @@ class COOData(Data):
             self._current_num_data_points += 1
             return
 
-
         vdict = dict(map(lambda x: (int(x[0]), x[1]),
                          [i.strip("{").strip("}").strip(" ").split(' ')
-                         for i in values]))
+                          for i in values]))
         col = sorted(vdict)
         values = [conversors[key](unicode(vdict[key]))
                   for key in sorted(vdict)]
@@ -624,17 +633,20 @@ class ArffDecoder(object):
 
         else:
             # If not nominal, verify the type name
-            type_ = unicode(type_).upper()
+            utype_ = unicode(type_).upper()  # if type DATE, we don't want to upper() any format str
             if 'DATE' in type_ and ' ' in type_:
                 try:
-                    type_, format = type_[:type_.find(' ')], type_[type_.find(' ') + 1:]
-                    return (name, type_, format)
+                    utype_, format = utype_[:type_.find(' ')], type_[type_.find(' ') + 1:]
+                    format = re.sub("'", '', format)
+                    return (name, utype_, format)
                 except ValueError:
                     raise BadAttributeType()
-            if type_ not in ['NUMERIC', 'REAL', 'INTEGER', 'STRING', 'DATE']:
+            if utype_ not in ['NUMERIC', 'REAL', 'INTEGER', 'STRING', 'DATE']:
                 raise BadAttributeType()
-
-        return (name, type_)
+        if isinstance(type_, list):
+            return (name, type_)
+        else:
+            return (name, unicode(type_).upper())
 
     def _decode(self, s, encode_nominal=False, matrix_type=DENSE):
         '''Do the job the ``encode``.'''
@@ -771,27 +783,27 @@ class ArffEncoder(object):
         :return: a string with the encoded comment line.
         '''
         if s:
-            return u'%s %s'%(_TK_COMMENT, s)
+            return u'%s %s' % (_TK_COMMENT, s)
         else:
             return u'%s' % _TK_COMMENT
 
     def _encode_relation(self, name):
         '''(INTERNAL) Decodes a relation line.
 
-        The relation declaration is a line with the format ``@RELATION 
-        <relation-name>``, where ``relation-name`` is a string. 
+        The relation declaration is a line with the format ``@RELATION
+        <relation-name>``, where ``relation-name`` is a string.
 
         :param name: a string.
         :return: a string with the encoded relation declaration.
         '''
         for char in ' %{},':
             if char in name:
-                name = '"%s"'%name
+                name = '"%s"' % name
                 break
 
-        return u'%s %s'%(_TK_RELATION, name)
+        return u'%s %s' % (_TK_RELATION, name)
 
-    def _encode_attribute(self, name, type_):
+    def _encode_attribute(self, name, type_, format=None):
         '''(INTERNAL) Encodes an attribute line.
 
         The attribute follow the template::
@@ -805,25 +817,29 @@ class ArffEncoder(object):
         - Dates as ``DATE`` followed by a format string.
         - Nominal attributes with format:
 
-            {<nominal-name1>, <nominal-name2>, <nominal-name3>, ...} 
+            {<nominal-name1>, <nominal-name2>, <nominal-name3>, ...}
 
         This method must receive a the name of the attribute and its type, if
         the attribute type is nominal, ``type`` must be a list of values.
 
         :param name: a string.
         :param type_: a string or a list of string.
+        :param format: an optional format string, used by the DATE datatype
         :return: a string with the encoded attribute declaration.
         '''
         for char in ' %{},':
             if char in name:
-                name = '"%s"'%name
+                name = '"%s"' % name
                 break
+        if isinstance(type_, basestring):  # or  not isinstance(type, (tuple, list)):
+            if type_.upper() == "DATE" and format:
+                return u'%s %s %s %s' % (_TK_ATTRIBUTE, name, type_, format)
 
         if isinstance(type_, (tuple, list)):
-            type_ = [u'"%s"'%t if ' ' in t else u'%s'%t for t in type_]
-            type_ = u'{%s}'%(u', '.join(type_))
+            type_ = [u'"%s"' % t if ' ' in t else u'%s' % t for t in type_]
+            type_ = u'{%s}' % (u', '.join(type_))
 
-        return u'%s %s %s'%(_TK_ATTRIBUTE, name, type_)
+        return u'%s %s %s' % (_TK_ATTRIBUTE, name, type_)
 
     def encode(self, obj):
         '''Encodes a given object to an ARFF file.
@@ -838,7 +854,7 @@ class ArffEncoder(object):
     def iter_encode(self, obj):
         '''The iterative version of `arff.ArffEncoder.encode`.
 
-        This encodes iteratively a given object and return, one-by-one, the 
+        This encodes iteratively a given object and return, one-by-one, the
         lines of the ARFF file.
 
         :param obj: the object containing the ARFF information.
@@ -859,24 +875,28 @@ class ArffEncoder(object):
         # ATTRIBUTES
         if not obj.get('attributes'):
             raise BadObject('Attributes not found.')
-            
+
         for attr in obj['attributes']:
             # Verify for bad object format
+            if not isinstance(attr, tuple):
+                if not isinstance(attr, list):
+                    raise BadObject('Invalid attribute')
+            # Verify for invalid types
+            if not isinstance(attr[1], list) and attr[1] not in _SIMPLE_TYPES:
+                raise BadObject('Invalid attribute type "%s"' % str(attr))
+
             if not isinstance(attr, (tuple, list)) or \
-               len(attr) != 2 or \
-               not isinstance(attr[0], basestring):
-                raise BadObject('Invalid attribute declaration "%s"'%str(attr))
+                    not isinstance(attr[0], basestring):
+                raise BadObject('Invalid attribute declaration "%s"' % str(attr))
 
-            if isinstance(attr[1], basestring):
-                # Verify for invalid types
-                if attr[1] not in _SIMPLE_TYPES:
-                    raise BadObject('Invalid attribute type "%s"'%str(attr))
-
+            if isinstance(attr[1], basestring) and attr[1].upper() == "DATE" and len(attr) == 3:
+                yield self._encode_attribute(attr[0], attr[1], attr[2])
             # Verify for bad object format
-            elif not isinstance(attr[1], (tuple, list)):
-                raise BadObject('Invalid attribute type "%s"'%str(attr))
+            if len(attr) == 3 and attr[1] not in ['DATE']:  # custom isinstance(attr,  tuple):
+                raise BadObject('Invalid attribute type "%s"' % str(attr))
 
-            yield self._encode_attribute(attr[0], attr[1])
+            if len(attr) == 2:
+                yield self._encode_attribute(attr[0], attr[1])
         yield u''
         attributes = obj['attributes']
 

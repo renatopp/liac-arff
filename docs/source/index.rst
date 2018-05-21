@@ -425,3 +425,59 @@ constructor::
     row = d['data'][1]
     col = d['data'][2]
     matrix = sparse.coo_matrix((data, (row, col)), shape=(max(row)+1, max(col)+1))
+
+
+Working with Date objects
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Date data can be encoded into an arff file as an attribute and an optional format
+specification can be made.
+The recommended format is: ISO 8601 format, YYYY-MM-DDTHH:MM:SS.mmmmmm; however,
+any level of precision is acceptable. The format string must contain the proper
+percent sign escaped formatting characters, e.g.: '%Y/%m/%dT%H:%M:%S'. Because date
+values may contain a space, their data representations should be quoted.
+
+If no format specification is given, the date format will be guessed using the
+dateutil library; the closer the data is in the format of ISO 8601, the greater the
+chance of a successful conversion.
+Serializing an arff data structure will use the ISO 8601 formatting.
+
+Here is an example::
+
+   import arff
+   import pprint
+
+   file_ = '''@RELATION employee
+   @ATTRIBUTE Name STRING
+   @ATTRIBUTE start_date DATE
+   @ATTRIBUTE end_date DATE '%Y/%m/%dT%H:%M:%S'
+   @ATTRIBUTE simple_date DATE '%Y/%m/%d'
+   @DATA
+   Lulu,'2011-05-20T12:34:56','2014/06/21T12:34:56','2018/03/04'
+   Daisy,'2012-09-30T12:34:56','2015/11/21T12:34:56','2018/03/04'
+   Brie,'2013-05-01T12:34:56','2016/12/21T12:34:56','2018/03/04'
+   '''
+   decoder = arff.ArffDecoder()
+   d = decoder.decode(file_, encode_nominal=True)
+   pprint.pprint(d)
+
+resulting in::
+
+   {'attributes': [('Name', 'STRING'),
+                    ('start_date', 'DATE'),
+                    ('end_date', 'DATE', "'%Y/%m/%dT%H:%M:%S'"),
+                    ('simple_date', 'DATE', "'%Y/%m/%d'")],
+    'data': [['Lulu',
+               datetime.datetime(2011, 5, 20, 12, 34, 56),
+               datetime.datetime(2014, 6, 21, 12, 34, 56),
+               datetime.datetime(2018, 3, 4, 0, 0)],
+              ['Daisy',
+               datetime.datetime(2012, 9, 30, 12, 34, 56),
+               datetime.datetime(2015, 11, 21, 12, 34, 56),
+               datetime.datetime(2018, 3, 4, 0, 0)],
+              ['Brie',
+               datetime.datetime(2013, 5, 1, 12, 34, 56),
+               datetime.datetime(2016, 12, 21, 12, 34, 56),
+               datetime.datetime(2018, 3, 4, 0, 0)]],
+    'description': '',
+    'relation': 'employee'}

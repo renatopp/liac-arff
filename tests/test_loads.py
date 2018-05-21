@@ -112,18 +112,18 @@ class TestLoads(unittest.TestCase):
 
     def test_quoted_null(self):
         ARFF_WITH_NULL = '''% XOR Dataset
-@RELATION XOR
-
-@attribute 'bc' {'?','Y'}
-
-@DATA
-'Y'
-'?'
-'Y'
-'?'
-%
-%
-% '''
+        @RELATION XOR
+        
+        @attribute 'bc' {'?','Y'}
+        
+        @DATA
+        'Y'
+        '?'
+        'Y'
+        '?'
+        %
+        %
+        % '''
 
         loads = self.get_loads()
         obj = loads(ARFF_WITH_NULL)
@@ -132,16 +132,16 @@ class TestLoads(unittest.TestCase):
     def test_date(self):
         '''Test the date conversion; by coercion.'''
         ARFF_WITH_DATE = '''% XOR Dataset
-@RELATION event_date
-
-@attribute occurs DATE
-
-@DATA
-'2011-01-11'
-'2010-10-01'
-%
-%
-% '''
+        @RELATION event_date
+        
+        @attribute occurs DATE
+        
+        @DATA
+        '2011-01-11'
+        '2010-10-01'
+        %
+        %
+        % '''
 
         loads = self.get_loads()
         obj = loads(ARFF_WITH_DATE)
@@ -152,15 +152,15 @@ class TestLoads(unittest.TestCase):
     def test_date_formatting(self):
         '''Test the date conversion using a supplied formatting string.'''
         ARFF_WITH_DATE = '''% XOR Dataset
-@RELATION event_date
-
-@attribute occurs DATE "%m/%d/%Y"
-
-@DATA
-"07/27/2012"
-%
-%
-% '''
+        @RELATION event_date
+        
+        @attribute occurs DATE "%m/%d/%Y"
+        
+        @DATA
+        "07/27/2012"
+        %
+        %
+        % '''
 
         loads = self.get_loads()
         obj = loads(ARFF_WITH_DATE)
@@ -169,15 +169,15 @@ class TestLoads(unittest.TestCase):
     def test_date_formatting_complex(self):
         '''Test the date conversion using a supplied complex formatting string.'''
         ARFF_WITH_DATE = '''% XOR Dataset
-@RELATION event_date
-
-@attribute occurs DATE "%m/%d/%Y HH:mm"
-
-@DATA
-"07/27/2012 12:34"
-%
-%
-% '''
+        @RELATION event_date
+        
+        @attribute occurs DATE "%m/%d/%Y %H:%m"
+        
+        @DATA
+        "07/27/2012 12:34"
+        %
+        %
+        % '''
 
         loads = self.get_loads()
         obj = loads(ARFF_WITH_DATE)
