@@ -165,6 +165,8 @@ _RE_ATTRIBUTE    = re.compile(r'^(\".*\"|\'.*\'|[^\{\}%,\s]*)\s+(.+)$', re.UNICO
 _RE_TYPE_NOMINAL = re.compile(r'^\{\s*((\".*\"|\'.*\'|\S*)\s*,\s*)*(\".*\"|\'.*\'|\S*)\s*\}$', re.UNICODE)
 _RE_ESCAPE = re.compile(r'\\\'|\\\"|\\\%|[\\"\'%]')
 _RE_QUOTATION_MARKS = re.compile(r''''|"''', re.UNICODE)
+_RE_REPLACE_FIRST_QUOTATION_MARK = re.compile(r'^(\'|\")')
+_RE_REPLACE_LAST_QUOTATION_MARK = re.compile(r'(\'|\")$')
 
 _ESCAPE_DCT = {
     ',': ',',
@@ -228,7 +230,10 @@ class BadAttributeType(ArffException):
 class BadNominalValue(ArffException):
     '''Error raised when a value in used in some data instance but is not 
     declared into it respective attribute declaration.'''
-    message = 'Data value not found in nominal declaration, at line %d.'
+
+    def __init__(self, value):
+        super(BadNominalValue, self).__init__()
+        self.message = ('Data value %s not found in nominal declaration, ' % value) + 'at line %d.'
 
 class BadNumericalValue(ArffException):
     '''Error raised when and invalid numerical value is used in some data 
@@ -305,7 +310,7 @@ class Conversor(object):
     def _nominal(self, value):
         '''Verify the value of nominal attribute and convert it to string.'''
         if value not in self.values:
-            raise BadNominalValue()
+            raise BadNominalValue(value)
 
         return self._string(value)
 
@@ -313,7 +318,7 @@ class Conversor(object):
         '''Perform label encoding (convert labels to integers) while reading
         the .arff file.'''
         if value not in self.values:
-            raise BadNominalValue()
+            raise BadNominalValue(value)
 
         return self._encoded_values[value]
 
@@ -328,7 +333,8 @@ class Conversor(object):
         if value == u'?' or value == u'':
             return None
 
-        value = value.strip('\"\'')
+        value = re.sub(_RE_REPLACE_FIRST_QUOTATION_MARK, '', value)
+        value = re.sub(_RE_REPLACE_LAST_QUOTATION_MARK, '', value)
 
         return self._conversor(value)
 
@@ -532,7 +538,8 @@ def _read_csv(line):
     only_whitespace = True
 
     while i < len(line):
-        if line[i] == ',' and not quoted:
+        line_i = line[i]
+        if line_i == ',' and not quoted:
             if quote_token:
                 values.append(u"'%s'" % token)
             else:
@@ -543,29 +550,27 @@ def _read_csv(line):
             only_whitespace = True
             comma_expected = False
         elif comma_expected:
-            if line[i] in (' ', '\t', '\n', '\r'):
+            if line_i in (' ', '\t', '\n', '\r'):
                 i += 1
             else:
-                raise ValueError(
-                    'Expected comma in line "%s", not %s!' % str(line[i])
-                )
+                raise BadLayout()
         # Escape character
-        elif line[i] == '\\':
+        elif line_i == '\\':
             if len(line) == i+1:
-                raise ValueError('Line ends with escape character!')
-            token += line[i: i+2]
+                raise BadLayout()
+            token += line[i+1: i+2]
             i += 2
         # Quoting
-        elif line[i] in ("'", '"') and (not quoted or line[i] == quoted):
+        elif line_i in ("'", '"') and (not quoted or line_i == quoted):
             if only_whitespace is False:
                 raise ValueError(
                     'Only whitespace allowed before quoting character at '
                     'index %d in line: %s' % (i, line))
             if quoted is False:
                 token = ''
-                quoted = line[i]
+                quoted = line_i
                 quote_token = True
-            elif quoted == line[i]:
+            elif quoted == line_i:
                 quoted = False
                 comma_expected = True
             else:
@@ -575,12 +580,12 @@ def _read_csv(line):
                 )
             i += 1
         elif quoted:
-            token += line[i]
+            token += line_i
             i += 1
         else:
-            if line[i] not in (' ', '\t', '\n', '\r'):
+            if line_i not in (' ', '\t', '\n', '\r'):
                 only_whitespace = False
-            token += line[i]
+            token += line_i
             i += 1
     if quoted:
         raise ValueError('Quote not closed for line: %s' % line)
@@ -684,7 +689,14 @@ class ArffDecoder(object):
         # Extracts the final type
         if _RE_TYPE_NOMINAL.match(type_):
             values = _read_csv(type_.strip('{} '))
-            values = [unicode(v_.strip(' ').strip('"\'')) for v_ in values]
+            values = [
+                unicode(
+                    re.sub(_RE_REPLACE_LAST_QUOTATION_MARK, '',
+                        re.sub(_RE_REPLACE_FIRST_QUOTATION_MARK, '', v_.strip(' '))
+                    )
+                )
+                for v_ in values
+            ]
             type_ = values
 
         else:
@@ -879,8 +891,15 @@ class ArffEncoder(object):
                 break
 
         if isinstance(type_, (tuple, list)):
-            type_ = [u'"%s"'%t if ' ' in t else u'%s'%t for t in type_]
-            type_ = u'{%s}'%(u', '.join(type_))
+            type_tmp = []
+            for i in range(len(type_)):
+                type_i = type_[i]
+                for escape_char in _ESCAPE_DCT:
+                    if escape_char in type_[i]:
+                        type_i = encode_string(type_[i])
+                        break
+                type_tmp.append(u'%s' % type_i)
+            type_ = u'{%s}'%(u', '.join(type_tmp))
 
         return u'%s %s %s'%(_TK_ATTRIBUTE, name, type_)
 
