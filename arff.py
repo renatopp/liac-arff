@@ -310,7 +310,7 @@ class Conversor(object):
         '''Convert the value to string.'''
         return unicode(value)
 
-    def _date(self, value, format=None):
+    def _date(self, value, date_format=None):
         '''Convert the value and format to date.'''
         if self._date_format:
             return datetime.datetime.strptime(value, self._date_format)
@@ -595,7 +595,8 @@ class ArffDecoder(object):
 
         - Numerical attributes as ``NUMERIC``, ``INTEGER`` or ``REAL``.
         - Strings as ``STRING``.
-        - Dates as ``DATE`` followed by a string date format.
+        - Dates as ``DATE`` followed by an optional string date format in accordance with
+          https://docs.python.org/2/library/datetime.html#strftime-and-strptime-behavior.
         - Nominal attributes with format:
 
             {<nominal-name1>, <nominal-name2>, <nominal-name3>, ...} 
@@ -607,9 +608,9 @@ class ArffDecoder(object):
         padding, including the "\r\n" characters. 
 
         :param s: a normalized string.
-        :return: a tuple (ATTRIBUTE_NAME, TYPE_OR_VALUES, format).
+        :return: a tuple (ATTRIBUTE_NAME, TYPE_OR_VALUES, FORMAT).
         '''
-        format = None
+        date_format = None
         _, v = s.split(' ', 1)
         v = v.strip()
 
@@ -636,9 +637,9 @@ class ArffDecoder(object):
             utype_ = unicode(type_).upper()  # if type DATE, we don't want to upper() any format str
             if 'DATE' in type_ and ' ' in type_:
                 try:
-                    utype_, format = utype_[:type_.find(' ')], type_[type_.find(' ') + 1:]
-                    format = re.sub("'", '', format)
-                    return (name, utype_, format)
+                    utype_, date_format = utype_[:type_.find(' ')], type_[type_.find(' ') + 1:]
+                    date_format = re.sub("'", '', date_format)
+                    return (name, utype_, date_format)
                 except ValueError:
                     raise BadAttributeType()
             if utype_ not in ['NUMERIC', 'REAL', 'INTEGER', 'STRING', 'DATE']:
@@ -803,7 +804,7 @@ class ArffEncoder(object):
 
         return u'%s %s' % (_TK_RELATION, name)
 
-    def _encode_attribute(self, name, type_, format=None):
+    def _encode_attribute(self, name, type_, date_format=None):
         '''(INTERNAL) Encodes an attribute line.
 
         The attribute follow the template::
@@ -814,7 +815,7 @@ class ArffEncoder(object):
 
         - Numerical attributes as ``NUMERIC``, ``INTEGER`` or ``REAL``.
         - Strings as ``STRING``.
-        - Dates as ``DATE`` followed by a format string.
+        - Dates as ``DATE`` followed by a date_format string.
         - Nominal attributes with format:
 
             {<nominal-name1>, <nominal-name2>, <nominal-name3>, ...}
@@ -824,7 +825,7 @@ class ArffEncoder(object):
 
         :param name: a string.
         :param type_: a string or a list of string.
-        :param format: an optional format string, used by the DATE datatype
+        :param date_format: an optional format string, used by the DATE datatype
         :return: a string with the encoded attribute declaration.
         '''
         for char in ' %{},':
@@ -832,8 +833,8 @@ class ArffEncoder(object):
                 name = '"%s"' % name
                 break
         if isinstance(type_, basestring):  # or  not isinstance(type, (tuple, list)):
-            if type_.upper() == "DATE" and format:
-                return u'%s %s %s %s' % (_TK_ATTRIBUTE, name, type_, format)
+            if type_.upper() == "DATE" and date_format:
+                return u'%s %s %s %s' % (_TK_ATTRIBUTE, name, type_, date_format)
 
         if isinstance(type_, (tuple, list)):
             type_ = [u'"%s"' % t if ' ' in t else u'%s' % t for t in type_]
