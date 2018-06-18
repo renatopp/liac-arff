@@ -1,3 +1,4 @@
+import os
 import unittest
 import arff
 try:
@@ -52,7 +53,6 @@ class TestLoadDump(unittest.TestCase):
         loads = self.get_loads()
 
         arff = ARFF
-        obj = None
 
         count = 0
         while count < 10:
@@ -62,3 +62,16 @@ class TestLoadDump(unittest.TestCase):
             arff = dumps(obj)
             self.assertEqual(arff, ARFF)
 
+    def test_issue_69(self):
+        # https://github.com/renatopp/liac-arff/issues/69
+        example_arff_file = os.path.join(os.path.dirname(__file__), 'examples', 'issue69.arff')
+        with open(example_arff_file) as fh:
+            string = fh.read()
+
+        obj = self.get_loads()(string)
+
+        for i in range(10):
+            tmp_obj = self.get_loads()(string)
+            tmp_string = self.get_dumps()(tmp_obj)
+            new_obj = self.get_loads()(tmp_string)
+            self.assertEqual(new_obj, obj)

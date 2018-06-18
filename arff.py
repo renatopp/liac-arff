@@ -558,7 +558,11 @@ def _read_csv(line):
         elif line_i == '\\':
             if len(line) == i+1:
                 raise BadLayout()
-            token += line[i+1: i+2]
+            if len(line) > i+2 and line[i+1] == '\\':
+                # Do not trim the escape character for escaping the escape character
+                token += line[i: i + 2]
+            else:
+                token += line[i+1: i+2]
             i += 2
         # Quoting
         elif line_i in ("'", '"') and (not quoted or line_i == quoted):

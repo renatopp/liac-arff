@@ -1,0 +1,16 @@
+% Dummy Dataset
+%
+%
+%
+@RELATION Dummy
+
+@ATTRIBUTE input1 {'"mean"', '"median"', "most_frequent"}
+@ATTRIBUTE input2 {'\\"mean\\"', '\\"median\\"', '\\"most_frequent\\"'}
+@ATTRIBUTE input3 STRING
+@ATTRIBUTE y REAL
+
+@DATA
+'"mean"','\\"mean\\"','"mean"',0.0
+'"median"','\\"median\\"','"median"',1.0
+"most_frequent",'\\"most_frequent\\"','"most_frequent"',1.0
+'"mean"','\\"mean\\"','"mean"',0.0
