@@ -541,7 +541,7 @@ def _read_csv(line):
         line_i = line[i]
         if line_i == ',' and not quoted:
             if quote_token:
-                values.append(u"'%s'" % token)
+                values.append(u"%s%s%s" % (quote_token, token, quote_token))
             else:
                 values.append(token)
             token = ''
@@ -553,6 +553,7 @@ def _read_csv(line):
             if line_i in (' ', '\t', '\n', '\r'):
                 i += 1
             else:
+                print(line_i, i, line)
                 raise BadLayout()
         # Escape character
         elif line_i == '\\':
@@ -573,7 +574,7 @@ def _read_csv(line):
             if quoted is False:
                 token = ''
                 quoted = line_i
-                quote_token = True
+                quote_token = line_i
             elif quoted == line_i:
                 quoted = False
                 comma_expected = True
@@ -594,7 +595,7 @@ def _read_csv(line):
     if quoted:
         raise ValueError('Quote not closed for line: %s' % line)
     if quote_token:
-        values.append(u"'%s'" % token)
+        values.append(u"%s%s%s" % (quote_token, token, quote_token))
     else:
         values.append(token)
     return values
