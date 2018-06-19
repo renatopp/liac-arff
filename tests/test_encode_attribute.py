@@ -78,6 +78,6 @@ class TestEncodeAttribute(unittest.TestCase):
 
         fixture = (u'attribute-name', ['with space', 'b', 'c'])
         result = encoder._encode_attribute(*fixture)
-        expected = u'@ATTRIBUTE attribute-name {"with space", b, c}'
+        expected = u'@ATTRIBUTE attribute-name {\'with space\', b, c}'
 
         self.assertEqual(result, expected)

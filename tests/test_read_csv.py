@@ -10,7 +10,7 @@ class TestReadCSV(unittest.TestCase):
         self.assertEqual(v, expected)
 
         fixture_2 = '''"A,B"'''
-        expected_2 = ["""'A,B'"""]
+        expected_2 = ['''"A,B"''']
         v = arff._read_csv(fixture_2)
         self.assertEqual(v, expected_2)
 
@@ -36,6 +36,19 @@ class TestReadCSV(unittest.TestCase):
     def test_regular_csv(self):
         fixture = 'sunny,85.0,85.0,FALSE,no'
         expected = ['sunny', '85.0', '85.0', 'FALSE', 'no']
+
+        v = arff._read_csv(fixture)
+        self.assertEqual(v, expected)
+
+    def test_escape_characters(self):
+        fixture = """\"\\\\\""""
+        expected = ["""\"\\\\\""""]
+
+        v = arff._read_csv(fixture)
+        self.assertEqual(v, expected)
+
+        fixture = """\"\\\\,\",\",\\\\\""""
+        expected = ["""\"\\\\,\"""", """\",\\\\\""""]
 
         v = arff._read_csv(fixture)
         self.assertEqual(v, expected)
