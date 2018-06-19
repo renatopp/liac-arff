@@ -1,6 +1,11 @@
 What's New on LIAC-ARFF
 =======================
 
+LIAC-ARFF 2.2.2
+
+- fix: better support for string and nominal features containing escape
+  characters (issue #69).
+
 LIAC-ARFF 2.2.1
 ---------------
 

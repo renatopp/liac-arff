@@ -144,7 +144,7 @@ This module provides several features, including:
 '''
 __author__ = 'Renato de Pontes Pereira, Matthias Feurer'
 __author_email__ = 'renato.ppontes@gmail.com, feurerm@informatik.uni-freiburg.de'
-__version__ = '2.2.0'
+__version__ = '2.2.2'
 
 import csv
 import re
