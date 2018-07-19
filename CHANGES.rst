@@ -1,6 +1,10 @@
 What's New on LIAC-ARFF
 =======================
 
+LIAC-ARFF 2.2.3
+
+- new: test for python3.7 and pypy3
+
 LIAC-ARFF 2.2.2
 
 - fix: better support for string and nominal features containing escape
