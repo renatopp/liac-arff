@@ -8,7 +8,6 @@ matrix:
       - "3.5"
       - "3.6"
       - "3.7"
-        dist: xenial
       - "pypy"
       - "pypy3"
 install: python setup.py install
