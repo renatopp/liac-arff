@@ -7,13 +7,14 @@ ARFF_SOURCE = '''%
 @ATTRIBUTE a STRING
 @ATTRIBUTE b {a, b, c, d}
 @ATTRIBUTE c STRING
+@ATTRIBUTE d {'"a"', '"b"', '"c"', '"d"'}
 
 @DATA
-lorem, b, thisisavalidstatement
-lorem, b, 'this is a valid statement with an % symbol'
-lorem2, d, 'this is a valid statement'
-lorem3, c, 'this is a valid statement with double quotes included """""""! '
-lorem4, a, 'this is a valid statement with singlequotes included \\\' lol \\\'! '
+lorem, b, thisisavalidstatement,'"b"'
+lorem, b, 'this is a valid statement with an % symbol','"b"'
+lorem2, d, 'this is a valid statement','"d"'
+lorem3, c, 'this is a valid statement with double quotes included """""""! ','"c"'
+lorem4, a, 'this is a valid statement with singlequotes included \\\' lol \\\'! ','"a"'
 '''
 
 ARFF_DESTINY = '''@RELATION teste
@@ -21,13 +22,14 @@ ARFF_DESTINY = '''@RELATION teste
 @ATTRIBUTE a STRING
 @ATTRIBUTE b {a, b, c, d}
 @ATTRIBUTE c STRING
+@ATTRIBUTE d {\'\\"a\\"\', \'\\"b\\"\', \'\\"c\\"\', \'\\"d\\"\'}
 
 @DATA
-lorem,b,thisisavalidstatement
-lorem,b,'this is a valid statement with an \\% symbol'
-lorem2,d,'this is a valid statement'
-lorem3,c,'this is a valid statement with double quotes included \\"\\"\\"\\"\\"\\"\\"! '
-lorem4,a,'this is a valid statement with singlequotes included \\\' lol \\\'! '
+lorem,b,thisisavalidstatement,\'\\"b\\"\'
+lorem,b,'this is a valid statement with an \\% symbol',\'\\"b\\"\'
+lorem2,d,'this is a valid statement',\'\\"d\\"\'
+lorem3,c,'this is a valid statement with double quotes included \\"\\"\\"\\"\\"\\"\\"! ',\'\\"c\\"\'
+lorem4,a,'this is a valid statement with singlequotes included \\\' lol \\\'! ',\'\\"a\\"\'
 '''
 
 

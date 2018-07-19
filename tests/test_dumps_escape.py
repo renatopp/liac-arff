@@ -48,5 +48,12 @@ class TestDumps(unittest.TestCase):
     def test_simple(self):
         dumps = self.get_dumps()
         s = dumps(OBJ)
-
         self.assertEqual(s, ARFF)
+
+        count = 0
+        while count < 10:
+            count += 1
+
+            obj = arff.loads(s)
+            src = arff.dumps(obj)
+            self.assertEqual(src, ARFF)
