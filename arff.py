@@ -309,16 +309,22 @@ class Data(object):
             if len(values) != len(conversors):
                 raise BadDataFormat()
 
-        # XXX: putting the cleaning of each value into a separate function
-        # makes it much slower
+        self.data.append(self._decode_values(values, conversors))
+
+    @staticmethod
+    def _decode_values(values, conversors):
         values = [value.strip(' ') for value in values]
-        values = [None if value in ('?', '')
-                  else conversor(value[1:-1]
-                                 if value[0] in ('"', '\'')
-                                 else value)
-                  for conversor, value
-                  in zip(conversors, values)]
-        self.data.append(values)
+        try:
+            values = [None if value in ('?', '')
+                      else conversor(value[1:-1]
+                                     if value[0] in ('"', '\'')
+                                     else value)
+                      for conversor, value
+                      in zip(conversors, values)]
+        except ValueError as exc:
+            if 'float: ' in str(exc):
+                raise BadNumericalValue()
+        return values
 
     def _get_values(self, s):
         '''(INTERNAL) Split a line into a list of values'''
