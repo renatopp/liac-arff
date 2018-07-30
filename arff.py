@@ -333,8 +333,12 @@ class Conversor(object):
         if value == u'?' or value == u'':
             return None
 
-        value = re.sub(_RE_REPLACE_FIRST_QUOTATION_MARK, '', value)
-        value = re.sub(_RE_REPLACE_LAST_QUOTATION_MARK, '', value)
+        if value[:1] == '"':
+            assert value[-1:] == '"'
+            value = value[1:-1]
+        elif value[:1] == "'":
+            assert value[-1:] == "'"
+            value = value[1:-1]
 
         return self._conversor(value)
 
