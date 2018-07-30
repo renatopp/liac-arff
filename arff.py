@@ -267,68 +267,27 @@ def encode_string(s):
         return _ESCAPE_DCT[match.group(0)]
     return u"'" + _RE_ESCAPE.sub(replace, s) + u"'"
 
-class Conversor(object):
-    '''Conversor is a helper used for converting ARFF types to Python types.'''
 
-    def __init__(self, type_, values=None):
-        '''Contructor.'''
-
+class NominalConversor(object):
+    def __init__(self, values):
         self.values = values
 
-        if type_ == 'NUMERIC' or type_ == 'REAL':
-            self._conversor = self._float
-        elif type_ == 'STRING':
-            self._conversor = self._string
-        elif type_ == 'INTEGER':
-            self._conversor = self._integer
-        elif type_ == 'NOMINAL':
-            self._conversor = self._nominal
-        elif type_ == 'ENCODED_NOMINAL':
-            self._conversor = self._encoded_nominal
-            self._encoded_values = {value: i for (i, value) in enumerate(values)}
-        else:
-            raise BadAttributeType()
-
-    def _float(self, value):
-        '''Convert the value to float.'''
-        try:
-            return float(value)
-        except ValueError as e:
-            raise BadNumericalValue()
-
-    def _integer(self, value):
-        '''Convert the value to integer.'''
-        try:
-            return int(float(value))
-        except ValueError as e:
-            raise BadNumericalValue()
-
-    def _string(self, value):
-        '''Convert the value to string.'''
+    def __call__(self, value):
+        if value not in self.values:
+            raise BadNominalValue(value)
         return unicode(value)
 
-    def _nominal(self, value):
-        '''Verify the value of nominal attribute and convert it to string.'''
-        if value not in self.values:
-            raise BadNominalValue(value)
 
-        return self._string(value)
-
-    def _encoded_nominal(self, value):
-        '''Perform label encoding (convert labels to integers) while reading
-        the .arff file.'''
-        if value not in self.values:
-            raise BadNominalValue(value)
-
-        return self._encoded_values[value]
+class EncodedNominalConversor(object):
+    def __init__(self, values):
+        self.values = {v: i for i, v in enumerate(values)}
 
     def __call__(self, value):
-        '''Convert a ``value`` to a given type. 
+        try:
+            return self.values[value]
+        except KeyError:
+            raise BadNominalValue(value)
 
-        This function also verify if the value is an empty string or a missing
-        value, either cases, it returns None.
-        '''
-        return self._conversor(value)
 
 class Data(object):
     '''Internal helper class to allow for different matrix types without
@@ -339,7 +298,7 @@ class Data(object):
     def decode_data(self, s, conversors):
         values = self._get_values(s)
 
-        if values[0][0].strip(" ") == '{':
+        if values[0].lstrip(' ')[:1] == '{':
             vdict = dict(map(lambda x: (int(x[0]), x[1]),
                              [i.strip("{").strip("}").strip(" ").split(' ') for
                               i in values]))
@@ -350,8 +309,10 @@ class Data(object):
             if len(values) != len(conversors):
                 raise BadDataFormat()
         values = [value.strip(' ') for value in values]
-        values = [None if value == '?' or value == ''
-                  else conversor(value[1:-1] if value[:1] in '"\'' else value)
+        values = [None if value in ('?', '')
+                  else conversor(value[1:-1]
+                                 if value[0] in ('"', '\'')
+                                 else value)
                   for conversor, value
                   in zip(conversors, values)]
         self.data.append(values)
@@ -764,9 +725,9 @@ class ArffDecoder(object):
 
                 if isinstance(attr[1], (list, tuple)):
                     if encode_nominal:
-                        conversor = Conversor('ENCODED_NOMINAL', attr[1])
+                        conversor = EncodedNominalConversor(attr[1])
                     else:
-                        conversor = Conversor('NOMINAL', attr[1])
+                        conversor = NominalConversor(attr[1])
                 else:
                     CONVERSOR_MAP = {'STRING': unicode,
                                      'INTEGER': lambda x: int(float(x)),

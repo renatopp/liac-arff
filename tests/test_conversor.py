@@ -1,9 +1,27 @@
 import unittest
+import textwrap
 import arff
 
 class TestDecodeConversor(unittest.TestCase):
-    def get_conversor(self, *args, **kwargs):
-        conversor = arff.Conversor(*args, **kwargs)
+    def get_conversor(self, type_, values=None):
+        encode_nominal = type_ == 'ENCODED_NOMINAL'
+        if values is not None:
+            type_ = u'{' + u','.join(values) + u'}'
+
+        def conversor(value):
+            txt = u'''
+            @RELATION testing
+
+            @ATTRIBUTE name {type_}
+            @ATTRIBUTE dummy REAL
+
+            @DATA
+            {value},0
+            '''.format(value=value, type_=type_)
+            print(txt)
+            out = arff.load(textwrap.dedent(txt),
+                            encode_nominal=encode_nominal)
+            return out['data'][0][0]
         return conversor
 
     def test_real(self):
@@ -144,14 +162,6 @@ class TestDecodeConversor(unittest.TestCase):
         self.assertEqual(type(result), float)
         self.assertEqual(result, expected)
 
-
-    def test_invalid_type(self):
-        '''Invalid type_ parameter.'''
-        self.assertRaises(
-            arff.BadAttributeType,
-            self.get_conversor,
-            'ABACATE'
-        )
 
     def test_invalid_nominal_value(self):
         '''Invalid nominal value.'''
