@@ -349,15 +349,12 @@ class Data(object):
         else:
             if len(values) != len(conversors):
                 raise BadDataFormat()
-        out_values = []
-        for conversor, value in zip(conversors, values):
-            value = value.strip(' ')
-            if value == '?' or value == '':
-                value = None
-            else:
-                value = conversor(value[1:-1] if value[:1] in '"\'' else value)
-            out_values.append(value)
-        self.data.append(out_values)
+        values = [value.strip(' ') for value in values]
+        values = [None if value == '?' or value == ''
+                  else conversor(value[1:-1] if value[:1] in '"\'' else value)
+                  for conversor, value
+                  in zip(conversors, values)]
+        self.data.append(values)
 
     def _get_values(self, s):
         '''(INTERNAL) Split a line into a list of values'''
