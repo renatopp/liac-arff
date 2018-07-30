@@ -308,6 +308,9 @@ class Data(object):
         else:
             if len(values) != len(conversors):
                 raise BadDataFormat()
+
+        # XXX: putting the cleaning of each value into a separate function
+        # makes it much slower
         values = [value.strip(' ') for value in values]
         values = [None if value in ('?', '')
                   else conversor(value[1:-1]
