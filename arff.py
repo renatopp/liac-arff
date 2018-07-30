@@ -328,18 +328,6 @@ class Conversor(object):
         This function also verify if the value is an empty string or a missing
         value, either cases, it returns None.
         '''
-        value = value.strip(' ')
-
-        if value == u'?' or value == u'':
-            return None
-
-        if value[:1] == '"':
-            assert value[-1:] == '"'
-            value = value[1:-1]
-        elif value[:1] == "'":
-            assert value[-1:] == "'"
-            value = value[1:-1]
-
         return self._conversor(value)
 
 class Data(object):
@@ -361,9 +349,15 @@ class Data(object):
         else:
             if len(values) != len(conversors):
                 raise BadDataFormat()
-        values = [conversors[i](values[i]) for i in xrange(len(values))]
-
-        self.data.append(values)
+        out_values = []
+        for conversor, value in zip(conversors, values):
+            value = value.strip(' ')
+            if value == '?' or value == '':
+                value = None
+            else:
+                value = conversor(value[1:-1] if value[:1] in '"\'' else value)
+            out_values.append(value)
+        self.data.append(out_values)
 
     def _get_values(self, s):
         '''(INTERNAL) Split a line into a list of values'''
@@ -777,7 +771,11 @@ class ArffDecoder(object):
                     else:
                         conversor = Conversor('NOMINAL', attr[1])
                 else:
-                    conversor = Conversor(attr[1])
+                    CONVERSOR_MAP = {'STRING': unicode,
+                                     'INTEGER': lambda x: int(float(x)),
+                                     'NUMERIC': float,
+                                     'REAL': float}
+                    conversor = CONVERSOR_MAP[attr[1]]
 
                 self._conversors.append(conversor)
             # -----------------------------------------------------------------
