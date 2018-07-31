@@ -170,11 +170,33 @@ _RE_REPLACE_LAST_QUOTATION_MARK = re.compile(r'(\'|\")$')
 
 
 def _build_re_sparse():
-    quoted_re = r'"(?:(?<!\\)\\"|[^"])+"'
-    value_re = r'(?:%s|%s|[^,\s}]+)' % (quoted_re,
-                                        quoted_re.replace('"', "'"))
-    return re.compile(r'''(?:^\s*\{|,)\s*(\d+)\s+(%(value_re)s)'''
+    quoted_re = r'''(?x)
+                    "      # open quote followed by zero or more of:
+                    (?:
+                        (?<!\\)
+                        \\"       # escaped quote (if backslash is not escaped)
+                    |
+                        [^"]      # non-quote char
+                    )*
+                    "      # close quote
+                    '''
+    # a value is surrounded by " or by ' or contains no quotables
+    value_re = r'''(?x)(?:
+        %s|          # a value may be surrounded by "
+        %s|          # or by '
+        [^,\s"'}]+   # or may contain no characters requiring quoting
+        )''' % (quoted_re,
+                quoted_re.replace('"', "'"))
+    return re.compile(r'''(?x)
+                      (?:^\s*\{|,)   # may follow ',', or '{' at line start
+                      \s*
+                      (\d+)          # attribute key
+                      \s+
+                      (%(value_re)s  # value
+                      )
+                      '''
                       % {'value_re': value_re})
+
 
 _RE_SPARSE_KEY_VALUES = _build_re_sparse()
 
