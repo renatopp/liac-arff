@@ -237,3 +237,18 @@ class TestDecodeConversorCOO(BaseTestDecodeConversor, unittest.TestCase):
             assert col == [0]
             return data[0]
         return conversor
+
+
+class TestDecodeConversorLOD(BaseTestDecodeConversor, unittest.TestCase):
+    use_sparse = True
+
+    def get_conversor(self, type_, values=None):
+        load = self._get_arff_loader(arff.LOD, type_, values)
+
+        def conversor(value):
+            data = load(value)['data']
+            assert len(data) == 1
+            assert isinstance(data[0], dict)
+            assert len(data[0]) == 1
+            return data[0][0]
+        return conversor
