@@ -361,18 +361,16 @@ class TestInvalidValues(unittest.TestCase):
     def test_sparse(self):
 
         fixture = self.my_arff.format(data="{0 a',1 'c d'}")
-        with self.assertRaisesRegexp(ValueError,
-                                     "Expected comma or whitespace at position"
-                                     " 9, not c for line {0 a',1 'c d'}."):
+        with self.assertRaisesRegexp(arff.ArffException,
+                                     ".*',1 'c d'}."):
             arff.load(fixture)
 
         fixture = self.my_arff.format(data="{0 a b,1 'c d'}")
-        with self.assertRaisesRegexp(arff.BadStringValue,
-                                     "Invalid string value at line 8."):
+        with self.assertRaisesRegexp(arff.ArffException,
+                                     ".*b,1 'c d'"):
             print(arff.load(fixture))
 
         fixture = self.my_arff.format(data="{0 'a b', 1 c d}")
-        with self.assertRaisesRegexp(arff.BadNominalFormatting,
-                                     'Nominal data value "c d" not properly '
-                                     'quoted in line 8'):
+        with self.assertRaisesRegexp(arff.ArffException,
+                                     r'.*d\}'):
             print(arff.load(fixture))

@@ -169,6 +169,42 @@ _RE_REPLACE_FIRST_QUOTATION_MARK = re.compile(r'^(\'|\")')
 _RE_REPLACE_LAST_QUOTATION_MARK = re.compile(r'(\'|\")$')
 _RE_SPACE = re.compile(r'\s+')
 
+
+def _build_re_sparse():
+    quoted_re = r'''(?x)
+                    "      # open quote followed by zero or more of:
+                    (?:
+                        (?<!\\)    # no additional backslash
+                        (?:\\\\)*  # maybe escaped backslashes
+                        \\"        # escaped quote
+                    |
+                        [^"]       # non-quote char
+                    )*
+                    "      # close quote
+                    '''
+    # a value is surrounded by " or by ' or contains no quotables
+    value_re = r'''(?x)(?:
+        %s|          # a value may be surrounded by "
+        %s|          # or by '
+        [^,\s"'}]+   # or may contain no characters requiring quoting
+        )''' % (quoted_re,
+                quoted_re.replace('"', "'"))
+    return re.compile(r'''(?x)
+                      (?:^\s*\{|,)   # may follow ',', or '{' at line start
+                      \s*
+                      (\d+)          # attribute key
+                      \s+
+                      (%(value_re)s) # value
+                      |
+                      (?!}\s*$)      # not an error if it's }$
+                      (?!^\s*{\s*}\s*$)  # not an error if it's ^{}$
+                      \S.*           # error
+                      '''
+                      % {'value_re': value_re})
+
+
+_RE_SPARSE_KEY_VALUES = _build_re_sparse()
+
 _ESCAPE_DCT = {
     ',': ',',
     ' ': ' ',
@@ -277,6 +313,11 @@ class BadStringValue(ArffException):
 class BadLayout(ArffException):
     '''Error raised when the layout of the ARFF file has something wrong.'''
     message = 'Invalid layout of the ARFF file, at line %d.'
+
+    def __init__(self, msg=''):
+        super(BadLayout, self).__init__()
+        if msg:
+            self.message = BadLayout.message + ' ' + msg.replace('%', '%%')
 
 class BadObject(ArffException):
     '''Error raised when the object representing the ARFF file has something 
@@ -400,16 +441,11 @@ class Data(object):
     def decode_data(self, s, conversors):
         values = self._get_values(s)
 
-        if values[0][0].strip(" ") == '{':
-            vdict = dict(map(self._tuplify_sparse_data,
-                             [i.strip("{").strip("}").strip(" ").split(' ', 1)
-                              for i in values]))
-            for key in vdict:
-                if key >= len(conversors):
-                    raise BadDataFormat(s)
-            values = [vdict[i] if i in vdict else unicode(0) for i in
+        if isinstance(values, dict):
+            if max(values) >= len(conversors):
+                raise BadDataFormat(s)
+            values = [values[i] if i in values else unicode(0) for i in
                       xrange(len(conversors))]
-        # dense lines are decoded one by one
         else:
             if len(values) != len(conversors):
                 raise BadDataFormat(s)
@@ -419,8 +455,17 @@ class Data(object):
 
     def _get_values(self, s):
         '''(INTERNAL) Split a line into a list of values'''
+        if s.rstrip().endswith('}'):
+            try:
+                return {int(k): v for k, v in _RE_SPARSE_KEY_VALUES.findall(s)}
+            except ValueError as exc:
+                for match in _RE_SPARSE_KEY_VALUES.finditer(s):
+                    if not match.group(1):
+                        raise BadLayout('Error parsing %r' % match.group())
+                raise
+
         if _RE_QUOTATION_MARKS.search(s):
-            return _read_csv(s.strip(' '))
+                return _read_csv(s.strip(' '))
         else:
             return next(csv.reader([s.strip(' ')]))
 
@@ -471,19 +516,18 @@ class COOData(Data):
     def decode_data(self, s, conversors):
         values = self._get_values(s)
 
-        if not values[0][0].strip(" ") == '{':
+        if not isinstance(values, dict):
             raise BadLayout()
-        elif s.replace(' ', '') == '{}':
+        if not values:
             self._current_num_data_points += 1
             return
-
-        vdict = dict(map(self._tuplify_sparse_data,
-                         [i.strip("{").strip("}").strip(" ").split(' ')
-                         for i in values]))
-        col = list(sorted(vdict))
-        if col[-1] >= len(conversors):
+        col, values = zip(*sorted(values.items()))
+        try:
+            values = [conversors[key](value)
+                      for key, value in zip(col, values)]
+        except IndexError:
+            # conversor out of range
             raise BadDataFormat(s)
-        values = [conversors[key](unicode(vdict[key])) for key in col]
         self.data[0].extend(values)
         self.data[1].extend([self._current_num_data_points] * len(values))
         self.data[2].extend(col)
@@ -538,20 +582,14 @@ class LODData(Data):
         values = self._get_values(s)
         n_conversors = len(conversors)
 
-        if not values[0][0].strip(" ") == '{':
+        if not isinstance(values, dict):
             raise BadLayout()
-        elif s.replace(' ', '') == '{}':
-            self.data.append({})
-            return
-
-        vdict = dict(map(self._tuplify_sparse_data,
-                         [i.strip("{").strip("}").strip(" ").split(' ')
-                          for i in values]))
-        for key in vdict:
-            if key >= n_conversors:
-                raise BadDataFormat(s)
-            vdict[key] = conversors[key](vdict[key])
-        self.data.append(vdict)
+        try:
+            self.data.append({key: conversors[key](value)
+                              for key, value in values.items()})
+        except IndexError:
+            # conversor out of range
+            raise BadDataFormat(s)
 
     def encode_data(self, data, attributes):
         current_row = 0
