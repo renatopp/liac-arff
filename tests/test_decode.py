@@ -1,3 +1,4 @@
+import textwrap
 import unittest
 import arff
 
@@ -266,3 +267,112 @@ class TestDecodeComment(unittest.TestCase):
             1
             '''
         )
+
+
+too_many_attributes = '''
+@RELATION PR78
+
+@ATTRIBUTE attr1 STRING
+@ATTRIBUTE attr2 STRING
+
+@DATA
+
+{0 a}
+{1 a}
+{2 a}
+'''
+
+
+class TestTooManyAttributes(unittest.TestCase):
+    def test_dense(self):
+        decoder = arff.ArffDecoder()
+        with self.assertRaisesRegexp(arff.BadDataFormat,
+                                     'Bad @DATA instance format in line 10: '
+                                     '\{2 a\}'):
+            decoder.decode(too_many_attributes, return_type=arff.DENSE)
+
+    def test_coo(self):
+        decoder = arff.ArffDecoder()
+        with self.assertRaisesRegexp(arff.BadDataFormat,
+                                     'Bad @DATA instance format in line 10: '
+                                     '\{2 a\}'):
+            decoder.decode(too_many_attributes, return_type=arff.COO)
+
+    def test_lod(self):
+        decoder = arff.ArffDecoder()
+        with self.assertRaisesRegexp(arff.BadDataFormat,
+                                     'Bad @DATA instance format in line 10: '
+                                     '\{2 a\}'):
+            decoder.decode(too_many_attributes, return_type=arff.LOD)
+
+
+duplicate_attribute = '''@RELATION test
+
+@ATTRIBUTE attr1 INTEGER
+@ATTRIBUTE attr1 INTEGER
+
+@DATA
+1, 2
+'''
+
+
+class TestDuplicateAttributeName(unittest.TestCase):
+    def test_decode(self):
+        decoder = arff.ArffDecoder()
+        with self.assertRaisesRegexp(arff.BadAttributeName,
+                                     'Bad @ATTRIBUTE name attr1 at line 4, '
+                                     'this name is already in use in line 3.'):
+            decoder.decode(duplicate_attribute)
+
+
+class TestInvalidValues(unittest.TestCase):
+    def setUp(self):
+        self.my_arff = textwrap.dedent(u'''
+        @RELATION testing
+        
+        @ATTRIBUTE attr1 STRING
+        @ATTRIBUTE attr2 {{'a b', 'c d'}}
+        
+        @DATA
+        
+        {data}
+        ''')
+
+    def test_dense(self):
+
+
+        fixture = self.my_arff.format(data="a','c d'")
+        with self.assertRaisesRegexp(ValueError,
+                                     "Expected comma or whitespace at position "
+                                     "4, not c for line a','c d'."):
+            arff.load(fixture)
+
+        fixture = self.my_arff.format(data="a b, 'c d'")
+        with self.assertRaisesRegexp(arff.BadStringValue,
+                                     "Invalid string value at line 8."):
+            print(arff.load(fixture))
+
+        fixture = self.my_arff.format(data="'a b', c d")
+        with self.assertRaisesRegexp(arff.BadNominalFormatting,
+                                     'Nominal data value "c d" not properly '
+                                     'quoted in line 8'):
+            print(arff.load(fixture))
+
+    def test_sparse(self):
+
+        fixture = self.my_arff.format(data="{0 a',1 'c d'}")
+        with self.assertRaisesRegexp(ValueError,
+                                     "Expected comma or whitespace at position"
+                                     " 9, not c for line {0 a',1 'c d'}."):
+            arff.load(fixture)
+
+        fixture = self.my_arff.format(data="{0 a b,1 'c d'}")
+        with self.assertRaisesRegexp(arff.BadStringValue,
+                                     "Invalid string value at line 8."):
+            print(arff.load(fixture))
+
+        fixture = self.my_arff.format(data="{0 'a b', 1 c d}")
+        with self.assertRaisesRegexp(arff.BadNominalFormatting,
+                                     'Nominal data value "c d" not properly '
+                                     'quoted in line 8'):
+            print(arff.load(fixture))

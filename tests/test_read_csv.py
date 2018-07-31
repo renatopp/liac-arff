@@ -15,12 +15,12 @@ class TestReadCSV(unittest.TestCase):
         self.assertEqual(v, expected_2)
 
         fixture_3 = ''' 'A','B','A,B' '''
-        expected_3 = ["""'A'""", """'B'""", """'A,B'"""]
+        expected_3 = [""" 'A'""", """'B'""", """'A,B' """]
         v = arff._read_csv(fixture_3)
         self.assertEqual(v, expected_3)
 
         fixture_4 = ''' '"' '''
-        expected_4 = ["""'"'"""]
+        expected_4 = [""" '"' """]
         v = arff._read_csv(fixture_4)
         self.assertEqual(v, expected_4)
 
@@ -52,3 +52,10 @@ class TestReadCSV(unittest.TestCase):
 
         v = arff._read_csv(fixture)
         self.assertEqual(v, expected)
+
+    def test_ill_quoted(self):
+        fixture = "a'"
+
+        with self.assertRaisesRegexp(ValueError,
+                                     "Quote not closed for line: a'"):
+            arff._read_csv(fixture)
