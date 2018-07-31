@@ -173,10 +173,11 @@ def _build_re_sparse():
     quoted_re = r'''(?x)
                     "      # open quote followed by zero or more of:
                     (?:
-                        (?<!\\)
-                        \\"       # escaped quote (if backslash is not escaped)
+                        (?<!\\)    # no additional backslash
+                        (?:\\\\)*  # maybe escaped backslashes
+                        \\"        # escaped quote
                     |
-                        [^"]      # non-quote char
+                        [^"]       # non-quote char
                     )*
                     "      # close quote
                     '''
