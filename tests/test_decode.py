@@ -266,3 +266,56 @@ class TestDecodeComment(unittest.TestCase):
             1
             '''
         )
+
+
+too_many_attributes = '''
+@RELATION PR78
+
+@ATTRIBUTE attr1 STRING
+@ATTRIBUTE attr2 STRING
+
+@DATA
+
+{0 a}
+{1 a}
+{2 a}
+'''
+
+
+class TestTooManyAttributes(unittest.TestCase):
+    def test_dense(self):
+        decoder = arff.ArffDecoder()
+        with self.assertRaisesRegex(arff.BadDataFormat,
+                                    'Bad @DATA instance format, at line 10'):
+            decoder.decode(too_many_attributes, return_type=arff.DENSE)
+
+    def test_coo(self):
+        decoder = arff.ArffDecoder()
+        with self.assertRaisesRegex(arff.BadDataFormat,
+                                    'Bad @DATA instance format, at line 10'):
+            decoder.decode(too_many_attributes, return_type=arff.COO)
+
+    def test_lod(self):
+        decoder = arff.ArffDecoder()
+        with self.assertRaisesRegex(arff.BadDataFormat,
+                                    'Bad @DATA instance format, at line 10'):
+            decoder.decode(too_many_attributes, return_type=arff.LOD)
+
+
+duplicate_attribute = '''@RELATION test
+
+@ATTRIBUTE attr1 INTEGER
+@ATTRIBUTE attr1 INTEGER
+
+@DATA
+1, 2
+'''
+
+
+class TestDuplicateAttributeName(unittest.TestCase):
+    def test_decode(self):
+        decoder = arff.ArffDecoder()
+        with self.assertRaisesRegex(arff.BadAttributeName,
+                                    'Bad @ATTRIBUTE name attr1 at line 4, '
+                                    'this name is already in use in line 3.'):
+            decoder.decode(duplicate_attribute)

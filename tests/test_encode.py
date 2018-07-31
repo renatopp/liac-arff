@@ -158,6 +158,19 @@ class TestEncodeComment(unittest.TestCase):
             fixture
         )
 
+    def test_encode_duplicate_attribute_name(self):
+        encoder = self.get_encoder()
+
+        fixture = {
+            'relation': 'name',
+            'attributes': [('name', 'INTEGER'), ('name', 'INTEGER')],
+            'data': [[0], [1]],
+        }
+        with self.assertRaisesRegex(arff.BadObject,
+                                    'Trying to use attribute name "name" '
+                                    'for the second time.'):
+            encoder.encode(fixture)
+
     def test_encode_string(self):
         encoder = self.get_encoder()
 

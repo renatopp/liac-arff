@@ -227,6 +227,18 @@ class BadAttributeType(ArffException):
     declaration.'''
     message = 'Bad @ATTRIBUTE type, at line %d.'
 
+class BadAttributeName(ArffException):
+    '''Error raised when an attribute name is provided twice the attribute
+    declaration.'''
+
+    def __init__(self, value, value2):
+        super(BadAttributeName, self).__init__()
+        self.message = (
+            ('Bad @ATTRIBUTE name %s at line' % value) +
+            ' %d, this name is already in use in line' +
+            (' %d.' % value2)
+        )
+
 class BadNominalValue(ArffException):
     '''Error raised when a value in used in some data instance but is not 
     declared into it respective attribute declaration.'''
@@ -355,6 +367,9 @@ class Data(object):
             vdict = dict(map(lambda x: (int(x[0]), x[1]),
                              [i.strip("{").strip("}").strip(" ").split(' ') for
                               i in values]))
+            for key in vdict:
+                if key >= len(conversors):
+                    raise BadDataFormat()
             values = [vdict[i] if i in vdict else unicode(0) for i in
                       xrange(len(conversors))]
         # dense lines are decoded one by one
@@ -382,11 +397,14 @@ class Data(object):
         :param attributes: a list of attributes. Used to check if data is valid.
         :return: a string with the encoded data line.
         '''
+        current_row = 0
+
         for inst in data:
             if len(inst) != len(attributes):
-                raise BadObject('len(inst) = {} != len(attributes) {}'.format(
-                     len(inst), len(attributes),
-                ))
+                raise BadObject(
+                    'Instance %d has %d attributes, expected %d' %
+                     (current_row, len(inst), len(attributes))
+                )
 
             new_data = []
             for value in inst:
@@ -400,6 +418,7 @@ class Data(object):
                         break
                 new_data.append(s)
 
+            current_row += 1
             yield u','.join(new_data)
 
 class COOData(Data):
@@ -419,9 +438,10 @@ class COOData(Data):
         vdict = dict(map(lambda x: (int(x[0]), x[1]),
                          [i.strip("{").strip("}").strip(" ").split(' ')
                          for i in values]))
-        col = sorted(vdict)
-        values = [conversors[key](unicode(vdict[key]))
-                  for key in sorted(vdict)]
+        col = list(sorted(vdict))
+        if col[-1] >= len(conversors):
+            raise BadDataFormat
+        values = [conversors[key](unicode(vdict[key])) for key in col]
         self.data[0].extend(values)
         self.data[1].extend([self._current_num_data_points] * len(values))
         self.data[2].extend(col)
@@ -451,7 +471,10 @@ class COOData(Data):
                     current_row += 1
 
             if col >= num_attributes:
-                raise BadObject()
+                raise BadObject(
+                    'Instance %d has at least %d attributes, expected %d' %
+                    (current_row, col + 1, num_attributes)
+                )
 
             if v is None or v == u'' or v != v:
                 s = '?'
@@ -471,6 +494,7 @@ class LODData(Data):
 
     def decode_data(self, s, conversors):
         values = self._get_values(s)
+        n_conversors = len(conversors)
 
         if not values[0][0].strip(" ") == '{':
             raise BadLayout()
@@ -482,16 +506,23 @@ class LODData(Data):
                          [i.strip("{").strip("}").strip(" ").split(' ')
                           for i in values]))
         for key in vdict:
+            if key >= n_conversors:
+                raise BadDataFormat
             vdict[key] = conversors[key](vdict[key])
         self.data.append(vdict)
 
     def encode_data(self, data, attributes):
+        current_row = 0
+
         num_attributes = len(attributes)
         for row in data:
             new_data = []
 
             if len(row) > 0 and max(row) >= num_attributes:
-                raise BadObject()
+                raise BadObject(
+                    'Instance %d has %d attributes, expected %d' %
+                    (current_row, max(row) + 1, num_attributes)
+                )
 
             for col in sorted(row):
                 v = row[col]
@@ -505,6 +536,7 @@ class LODData(Data):
                         break
                 new_data.append("%d %s" % (col, s))
 
+            current_row += 1
             yield " ".join([u"{", u','.join(new_data), u"}"])
 
 def _get_data_object_for_decoding(matrix_type):
@@ -522,6 +554,8 @@ def _get_data_object_for_encoding(matrix):
     if hasattr(matrix, 'format'):
         if matrix.format == 'coo':
             return COOData()
+        else:
+            raise ValueError('Cannot guess matrix format!')
     elif isinstance(matrix[0], dict):
         return LODData()
     else:
@@ -733,6 +767,7 @@ class ArffDecoder(object):
             u'attributes': [],
             u'data': []
         }
+        attribute_names = {}
 
         # Create the data helper object
         data = _get_data_object_for_decoding(matrix_type)
@@ -769,6 +804,10 @@ class ArffDecoder(object):
                 STATE = _TK_ATTRIBUTE
 
                 attr = self._decode_attribute(row)
+                if attr[0] in attribute_names:
+                    raise BadAttributeName(attr[0], attribute_names[attr[0]])
+                else:
+                    attribute_names[attr[0]] = self._current_line
                 obj['attributes'].append(attr)
 
                 if isinstance(attr[1], (list, tuple)):
@@ -946,7 +985,8 @@ class ArffEncoder(object):
         # ATTRIBUTES
         if not obj.get('attributes'):
             raise BadObject('Attributes not found.')
-            
+
+        attribute_names = set()
         for attr in obj['attributes']:
             # Verify for bad object format
             if not isinstance(attr, (tuple, list)) or \
@@ -962,6 +1002,13 @@ class ArffEncoder(object):
             # Verify for bad object format
             elif not isinstance(attr[1], (tuple, list)):
                 raise BadObject('Invalid attribute type "%s"'%str(attr))
+
+            # Verify attribute name is not used twice
+            if attr[0] in attribute_names:
+                raise BadObject('Trying to use attribute name "%s" for the '
+                                'second time.' % str(attr[0]))
+            else:
+                attribute_names.add(attr[0])
 
             yield self._encode_attribute(attr[0], attr[1])
         yield u''
