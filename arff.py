@@ -167,6 +167,7 @@ _RE_ESCAPE = re.compile(r'\\\'|\\\"|\\\%|[\\"\'%]')
 _RE_QUOTATION_MARKS = re.compile(r''''|"''', re.UNICODE)
 _RE_REPLACE_FIRST_QUOTATION_MARK = re.compile(r'^(\'|\")')
 _RE_REPLACE_LAST_QUOTATION_MARK = re.compile(r'(\'|\")$')
+_RE_SPACE = re.compile(r'\s+')
 
 _ESCAPE_DCT = {
     ',': ',',
@@ -220,7 +221,12 @@ class BadAttributeFormat(ArffException):
 
 class BadDataFormat(ArffException):
     '''Error raised when some data instance is in an invalid format.'''
-    message = 'Bad @DATA instance format, at line %d.'
+    def __init__(self, value):
+        super(BadDataFormat, self).__init__()
+        self.message = (
+            'Bad @DATA instance format in line %d: ' +
+            ('%s' % value)
+        )
 
 class BadAttributeType(ArffException):
     '''Error raised when some invalid type is provided into the attribute 
@@ -245,12 +251,28 @@ class BadNominalValue(ArffException):
 
     def __init__(self, value):
         super(BadNominalValue, self).__init__()
-        self.message = ('Data value %s not found in nominal declaration, ' % value) + 'at line %d.'
+        self.message = (
+            ('Data value %s not found in nominal declaration, ' % value)
+            + 'at line %d.'
+        )
+
+class BadNominalFormatting(ArffException):
+    '''Error raised when a nominal value with space is not properly quoted.'''
+    def __init__(self, value):
+        super(BadNominalFormatting, self).__init__()
+        self.message = (
+            ('Nominal data value "%s" not properly quoted in line ' % value) +
+            '%d.'
+        )
 
 class BadNumericalValue(ArffException):
     '''Error raised when and invalid numerical value is used in some data 
     instance.'''
     message = 'Invalid numerical value, at line %d.'
+
+class BadStringValue(ArffException):
+    '''Error raise when a string contains space but is not quoted.'''
+    message = 'Invalid string value at line %d.'
 
 class BadLayout(ArffException):
     '''Error raised when the layout of the ARFF file has something wrong.'''
@@ -286,6 +308,7 @@ class Conversor(object):
         '''Contructor.'''
 
         self.values = values
+        self.type_ = type_
 
         if type_ == 'NUMERIC' or type_ == 'REAL':
             self._conversor = self._float
@@ -345,12 +368,26 @@ class Conversor(object):
         if value == u'?' or value == u'':
             return None
 
-        if value[:1] == '"':
-            assert value[-1:] == '"'
-            value = value[1:-1]
-        elif value[:1] == "'":
-            assert value[-1:] == "'"
-            value = value[1:-1]
+        if self.type_ in ['INTEGER', 'NUMERIC', 'REAL']:
+            if value[:1] == '"':
+                assert value[-1:] == '"'
+                value = value[1:-1]
+            elif value[:1] == "'":
+                assert value[-1:] == "'"
+                value = value[1:-1]
+        else:
+            if value[0] not in ['"', "'"] and _RE_SPACE.findall(value):
+                if self.type_ == 'STRING':
+                    raise BadStringValue()
+                else:
+                    raise BadNominalFormatting(value)
+            else:
+                if value[:1] == '"':
+                    assert value[-1:] == '"'
+                    value = value[1:-1]
+                elif value[:1] == "'":
+                    assert value[-1:] == "'"
+                    value = value[1:-1]
 
         return self._conversor(value)
 
@@ -364,18 +401,18 @@ class Data(object):
         values = self._get_values(s)
 
         if values[0][0].strip(" ") == '{':
-            vdict = dict(map(lambda x: (int(x[0]), x[1]),
-                             [i.strip("{").strip("}").strip(" ").split(' ') for
-                              i in values]))
+            vdict = dict(map(self._tuplify_sparse_data,
+                             [i.strip("{").strip("}").strip(" ").split(' ', 1)
+                              for i in values]))
             for key in vdict:
                 if key >= len(conversors):
-                    raise BadDataFormat()
+                    raise BadDataFormat(s)
             values = [vdict[i] if i in vdict else unicode(0) for i in
                       xrange(len(conversors))]
         # dense lines are decoded one by one
         else:
             if len(values) != len(conversors):
-                raise BadDataFormat()
+                raise BadDataFormat(s)
         values = [conversors[i](values[i]) for i in xrange(len(values))]
 
         self.data.append(values)
@@ -386,6 +423,11 @@ class Data(object):
             return _read_csv(s.strip(' '))
         else:
             return next(csv.reader([s.strip(' ')]))
+
+    def _tuplify_sparse_data(self, x):
+        if len(x) != 2:
+            raise BadDataFormat(x)
+        return (int(x[0].strip('"').strip("'")), x[1])
 
     def encode_data(self, data, attributes):
         '''(INTERNAL) Encodes a line of data.
@@ -435,12 +477,12 @@ class COOData(Data):
             self._current_num_data_points += 1
             return
 
-        vdict = dict(map(lambda x: (int(x[0]), x[1]),
+        vdict = dict(map(self._tuplify_sparse_data,
                          [i.strip("{").strip("}").strip(" ").split(' ')
                          for i in values]))
         col = list(sorted(vdict))
         if col[-1] >= len(conversors):
-            raise BadDataFormat
+            raise BadDataFormat(s)
         values = [conversors[key](unicode(vdict[key])) for key in col]
         self.data[0].extend(values)
         self.data[1].extend([self._current_num_data_points] * len(values))
@@ -502,12 +544,12 @@ class LODData(Data):
             self.data.append({})
             return
 
-        vdict = dict(map(lambda x: (int(x[0]), x[1]),
+        vdict = dict(map(self._tuplify_sparse_data,
                          [i.strip("{").strip("}").strip(" ").split(' ')
                           for i in values]))
         for key in vdict:
             if key >= n_conversors:
-                raise BadDataFormat
+                raise BadDataFormat(s)
             vdict[key] = conversors[key](vdict[key])
         self.data.append(vdict)
 
@@ -572,27 +614,46 @@ def _read_csv(line):
     i = 0
     token = ''
     quote_token = False
+    partial_quote = -1
     comma_expected = False
-    only_whitespace = True
+    closing_whitespace = ''
+    end_of_line = False
 
     while i < len(line):
         line_i = line[i]
+        if end_of_line and line_i not in (' ', '\t', '\n', '\r'):
+            raise BadDataFormat(line_i)
         if line_i == ',' and not quoted:
             if quote_token:
-                values.append(u"%s%s%s" % (quote_token, token, quote_token))
+                if partial_quote == -1:
+                    values.append(u"%s%s%s%s" % (quote_token,
+                                                 token,
+                                                 quote_token,
+                                                 closing_whitespace))
+                else:
+                    values.append(u"%s%s%s%s%s" % (token[:partial_quote],
+                                                   quote_token,
+                                                   token[partial_quote:],
+                                                   quote_token,
+                                                   closing_whitespace))
             else:
                 values.append(token)
             token = ''
             i += 1
             quote_token = False
-            only_whitespace = True
+            partial_quote = -1
             comma_expected = False
         elif comma_expected:
             if line_i in (' ', '\t', '\n', '\r'):
                 i += 1
+                closing_whitespace += line_i
+            elif line_i == '}':
+                i += 1
+                end_of_line = True
+                comma_expected = False
             else:
-                print(line_i, i, line)
-                raise BadLayout()
+                raise ValueError('Expected comma or whitespace at position %d'
+                                 ', not %s for line %s.' % (i, line_i, line))
         # Escape character
         elif line_i == '\\':
             if len(line) == i+1:
@@ -605,12 +666,9 @@ def _read_csv(line):
             i += 2
         # Quoting
         elif line_i in ("'", '"') and (not quoted or line_i == quoted):
-            if only_whitespace is False:
-                raise ValueError(
-                    'Only whitespace allowed before quoting character at '
-                    'index %d in line: %s' % (i, line))
             if quoted is False:
-                token = ''
+                if len(token) != 0:
+                    partial_quote = len(token)
                 quoted = line_i
                 quote_token = line_i
             elif quoted == line_i:
@@ -622,18 +680,23 @@ def _read_csv(line):
                     'line at character %d: %s' % (i, line)
                 )
             i += 1
-        elif quoted:
-            token += line_i
-            i += 1
         else:
-            if line_i not in (' ', '\t', '\n', '\r'):
-                only_whitespace = False
             token += line_i
             i += 1
     if quoted:
         raise ValueError('Quote not closed for line: %s' % line)
     if quote_token:
-        values.append(u"%s%s%s" % (quote_token, token, quote_token))
+        if partial_quote == -1:
+            values.append(u"%s%s%s%s" % (quote_token,
+                                         token,
+                                         quote_token,
+                                         closing_whitespace))
+        else:
+            values.append(u"%s%s%s%s%s" % (token[:partial_quote],
+                                           quote_token,
+                                           token[partial_quote:],
+                                           quote_token,
+                                           closing_whitespace))
     else:
         values.append(token)
     return values
@@ -869,7 +932,6 @@ class ArffDecoder(object):
             return self._decode(s, encode_nominal=encode_nominal,
                                 matrix_type=return_type)
         except ArffException as e:
-            # print e
             e.line = self._current_line
             raise e
 

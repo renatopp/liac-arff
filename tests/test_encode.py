@@ -166,9 +166,9 @@ class TestEncodeComment(unittest.TestCase):
             'attributes': [('name', 'INTEGER'), ('name', 'INTEGER')],
             'data': [[0], [1]],
         }
-        with self.assertRaisesRegex(arff.BadObject,
-                                    'Trying to use attribute name "name" '
-                                    'for the second time.'):
+        with self.assertRaisesRegexp(arff.BadObject,
+                                     'Trying to use attribute name "name" '
+                                     'for the second time.'):
             encoder.encode(fixture)
 
     def test_encode_string(self):

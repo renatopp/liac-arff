@@ -115,8 +115,8 @@ class TestData(unittest.TestCase):
         }
 
         encoder = arff.ArffEncoder()
-        with self.assertRaisesRegex(arff.BadObject,
-                                    "Instance 1 has 2 attributes, expected 1"):
+        with self.assertRaisesRegexp(arff.BadObject,
+                                     "Instance 1 has 2 attributes, expected 1"):
             encoder.encode(my_arff)
 
 
@@ -168,6 +168,14 @@ class TestCOOData(unittest.TestCase):
         self.assertEqual(len(result), len(expected))
         for i in range(len(expected)):
             self.assertEqual(result[i], expected[i])
+
+    def test_tuplify_sparse_data(self):
+        fixture = "0 a b"
+
+        with self.assertRaisesRegexp(arff.BadDataFormat,
+                                     'Bad @DATA instance format in line -1: '
+                                     '0 a b'):
+            self.data._tuplify_sparse_data(fixture)
 
     # --------------------------------------------------------------------------
     # Tests for the encoding part
@@ -226,9 +234,9 @@ class TestCOOData(unittest.TestCase):
         }
 
         encoder = arff.ArffEncoder()
-        with self.assertRaisesRegex(arff.BadObject,
-                                    "Instance 1 has at least 2 attributes, "
-                                    "expected 1"):
+        with self.assertRaisesRegexp(arff.BadObject,
+                                     "Instance 1 has at least 2 attributes, "
+                                     "expected 1"):
             encoder.encode(my_arff)
 
 
@@ -322,6 +330,6 @@ class TestLODData(unittest.TestCase):
         }
 
         encoder = arff.ArffEncoder()
-        with self.assertRaisesRegex(arff.BadObject,
-                                    "Instance 1 has 2 attributes, expected 1"):
+        with self.assertRaisesRegexp(arff.BadObject,
+                                     "Instance 1 has 2 attributes, expected 1"):
             encoder.encode(my_arff)
