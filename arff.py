@@ -368,7 +368,15 @@ class Data(object):
     def _get_values(self, s):
         '''(INTERNAL) Split a line into a list of values'''
         if _RE_QUOTATION_MARKS.search(s):
-            return _read_csv(s.strip(' '))
+            if s.rstrip().endswith('}'):
+                # TODO: pull this out / neaten up sparse handling
+                quoted_re = r'"(?:(?<!\\)\\"|[^"])+"'
+                value_re = r'(?:%s|%s|[^,\s]+)' % (quoted_re,
+                                                   quoted_re.replace('"', "'"))
+                return re.findall(r'''(?:^\s*\{|,)\s*\d+\s+%(value_re)s'''
+                                  % {'value_re': value_re}, s)
+            else:
+                return _read_csv(s.strip(' '))
         else:
             return next(csv.reader([s.strip(' ')]))
 
