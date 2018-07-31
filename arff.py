@@ -282,7 +282,7 @@ class BadLayout(ArffException):
     def __init__(self, msg=''):
         super(BadLayout, self).__init__()
         if msg:
-            self.message = BadLayout.message + ' ' + msg
+            self.message = BadLayout.message + ' ' + msg.replace('%', '%%')
 
 class BadObject(ArffException):
     '''Error raised when the object representing the ARFF file has something 
