@@ -1,10 +1,37 @@
 import unittest
+import textwrap
 import arff
 
-class TestDecodeConversor(unittest.TestCase):
-    def get_conversor(self, *args, **kwargs):
-        conversor = arff.Conversor(*args, **kwargs)
-        return conversor
+
+class BaseTestDecodeConversor(object):
+
+    # Note that we want to test the normalisation (e.g. handling of missing
+    # values and quoting), as well as conversion from string to value type.
+    # As such, we test the full loading process in several variants.
+    # See implementations of get_conversor below.
+
+    def _get_arff_loader(self, return_type, type_, values=None):
+        encode_nominal = type_ == 'ENCODED_NOMINAL'
+        if values is not None:
+            type_ = u'{' + u','.join(values) + u'}'
+
+        def load(value):
+            if self.use_sparse:
+                data = '{ 0 %s }' % value
+            else:
+                data = '%s,0' % value
+            txt = textwrap.dedent(u'''
+            @RELATION testing
+
+            @ATTRIBUTE name {type_}
+            @ATTRIBUTE dummy REAL
+
+            @DATA
+            {data}
+            '''.format(type_=type_, data=data))
+            return arff.load(txt, return_type=return_type,
+                             encode_nominal=encode_nominal)
+        return load
 
     def test_real(self):
         '''Convert real value.'''
@@ -144,15 +171,6 @@ class TestDecodeConversor(unittest.TestCase):
         self.assertEqual(type(result), float)
         self.assertEqual(result, expected)
 
-
-    def test_invalid_type(self):
-        '''Invalid type_ parameter.'''
-        self.assertRaises(
-            arff.BadAttributeType,
-            self.get_conversor,
-            'ABACATE'
-        )
-
     def test_invalid_nominal_value(self):
         '''Invalid nominal value.'''
         conversor = self.get_conversor('NOMINAL', [u'a', u'b', u'3.4'])
@@ -185,3 +203,37 @@ class TestDecodeConversor(unittest.TestCase):
             conversor,
             'ABACATE'
         )
+
+
+class TestDecodeConversorDense(BaseTestDecodeConversor, unittest.TestCase):
+    use_sparse = False
+
+    def get_conversor(self, type_, values=None):
+        load = self._get_arff_loader(arff.DENSE, type_, values)
+
+        def conversor(value):
+            data = load(value)['data']
+            assert len(data) == 1
+            assert len(data[0]) == 2
+            assert data[0][1] == 0
+            return data[0][0]
+        return conversor
+
+
+class TestDecodeConversorSparseDense(TestDecodeConversorDense):
+    use_sparse = True
+
+
+class TestDecodeConversorCOO(BaseTestDecodeConversor, unittest.TestCase):
+    use_sparse = True
+
+    def get_conversor(self, type_, values=None):
+        load = self._get_arff_loader(arff.COO, type_, values)
+
+        def conversor(value):
+            data, row, col = load(value)['data']
+            assert len(row) == len(col) == len(data) == 1
+            assert row == [0]
+            assert col == [0]
+            return data[0]
+        return conversor
