@@ -168,6 +168,16 @@ _RE_QUOTATION_MARKS = re.compile(r''''|"''', re.UNICODE)
 _RE_REPLACE_FIRST_QUOTATION_MARK = re.compile(r'^(\'|\")')
 _RE_REPLACE_LAST_QUOTATION_MARK = re.compile(r'(\'|\")$')
 
+
+def _build_re_sparse():
+    quoted_re = r'"(?:(?<!\\)\\"|[^"])+"'
+    value_re = r'(?:%s|%s|[^,\s}]+)' % (quoted_re,
+                                        quoted_re.replace('"', "'"))
+    return re.compile(r'''(?:^\s*\{|,)\s*(\d+)\s+(%(value_re)s)'''
+                      % {'value_re': value_re})
+
+_RE_SPARSE_KEY_VALUES = _build_re_sparse()
+
 _ESCAPE_DCT = {
     ',': ',',
     ' ': ' ',
@@ -351,13 +361,9 @@ class Data(object):
     def decode_data(self, s, conversors):
         values = self._get_values(s)
 
-        if values[0][0].strip(" ") == '{':
-            vdict = dict(map(lambda x: (int(x[0]), x[1]),
-                             [i.strip("{").strip("}").strip(" ").split(' ') for
-                              i in values]))
-            values = [vdict[i] if i in vdict else unicode(0) for i in
+        if isinstance(values, dict):
+            values = [values[i] if i in values else unicode(0) for i in
                       xrange(len(conversors))]
-        # dense lines are decoded one by one
         else:
             if len(values) != len(conversors):
                 raise BadDataFormat()
@@ -367,15 +373,9 @@ class Data(object):
 
     def _get_values(self, s):
         '''(INTERNAL) Split a line into a list of values'''
+        if s.rstrip().endswith('}'):
+            return {int(k): v for k, v in _RE_SPARSE_KEY_VALUES.findall(s)}
         if _RE_QUOTATION_MARKS.search(s):
-            if s.rstrip().endswith('}'):
-                # TODO: pull this out / neaten up sparse handling
-                quoted_re = r'"(?:(?<!\\)\\"|[^"])+"'
-                value_re = r'(?:%s|%s|[^,\s]+)' % (quoted_re,
-                                                   quoted_re.replace('"', "'"))
-                return re.findall(r'''(?:^\s*\{|,)\s*\d+\s+%(value_re)s'''
-                                  % {'value_re': value_re}, s)
-            else:
                 return _read_csv(s.strip(' '))
         else:
             return next(csv.reader([s.strip(' ')]))
@@ -418,18 +418,13 @@ class COOData(Data):
     def decode_data(self, s, conversors):
         values = self._get_values(s)
 
-        if not values[0][0].strip(" ") == '{':
+        if not isinstance(values, dict):
             raise BadLayout()
-        elif s.replace(' ', '') == '{}':
+        if not values:
             self._current_num_data_points += 1
             return
-
-        vdict = dict(map(lambda x: (int(x[0]), x[1]),
-                         [i.strip("{").strip("}").strip(" ").split(' ')
-                         for i in values]))
-        col = sorted(vdict)
-        values = [conversors[key](unicode(vdict[key]))
-                  for key in sorted(vdict)]
+        col, values = zip(*sorted(values.items()))
+        values = [conversors[key](value) for key, value in zip(col, values)]
         self.data[0].extend(values)
         self.data[1].extend([self._current_num_data_points] * len(values))
         self.data[2].extend(col)
@@ -480,18 +475,10 @@ class LODData(Data):
     def decode_data(self, s, conversors):
         values = self._get_values(s)
 
-        if not values[0][0].strip(" ") == '{':
+        if not isinstance(values, dict):
             raise BadLayout()
-        elif s.replace(' ', '') == '{}':
-            self.data.append({})
-            return
-
-        vdict = dict(map(lambda x: (int(x[0]), x[1]),
-                         [i.strip("{").strip("}").strip(" ").split(' ')
-                          for i in values]))
-        for key in vdict:
-            vdict[key] = conversors[key](vdict[key])
-        self.data.append(vdict)
+        self.data.append({key: conversors[key](value)
+                          for key, value in values.items()})
 
     def encode_data(self, data, attributes):
         num_attributes = len(attributes)

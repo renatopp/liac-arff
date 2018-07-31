@@ -137,27 +137,32 @@ class BaseTestDecodeConversor(object):
         expected = None
         self.assertEqual(result, expected)
 
-        result = conversor('')
-        expected = None
-        self.assertEqual(result, expected)
+        if not self.use_sparse:
+            # using an empty string as missing value in sparse ARFF syntax is
+            # awkward and presumably forbidden
+            result = conversor('')
+            expected = None
+            self.assertEqual(result, expected)
 
         conversor = self.get_conversor('ENCODED_NOMINAL', [u'a', u'b', u'3.4'])
         result = conversor('?')
         expected = None
         self.assertEqual(result, expected)
 
-        result = conversor('')
-        expected = None
-        self.assertEqual(result, expected)
+        if not self.use_sparse:
+            result = conversor('')
+            expected = None
+            self.assertEqual(result, expected)
 
         conversor = self.get_conversor('INTEGER')
         result = conversor('?')
         expected = None
         self.assertEqual(result, expected)
 
-        result = conversor('')
-        expected = None
-        self.assertEqual(result, expected)
+        if not self.use_sparse:
+            result = conversor('')
+            expected = None
+            self.assertEqual(result, expected)
 
     def test_padding_value(self):
         '''Values such "    3.1415   "'''
