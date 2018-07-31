@@ -193,8 +193,10 @@ def _build_re_sparse():
                       \s*
                       (\d+)          # attribute key
                       \s+
-                      (%(value_re)s  # value
-                      )
+                      (%(value_re)s) # value
+                      |
+                      (?!}\s*$)
+                      \S.*            # error
                       '''
                       % {'value_re': value_re})
 
@@ -276,6 +278,11 @@ class BadNumericalValue(ArffException):
 class BadLayout(ArffException):
     '''Error raised when the layout of the ARFF file has something wrong.'''
     message = 'Invalid layout of the ARFF file, at line %d.'
+
+    def __init__(self, msg=''):
+        super(BadLayout, self).__init__()
+        if msg:
+            self.message = BadLayout.message + ' ' + msg
 
 class BadObject(ArffException):
     '''Error raised when the object representing the ARFF file has something 
@@ -397,7 +404,14 @@ class Data(object):
     def _get_values(self, s):
         '''(INTERNAL) Split a line into a list of values'''
         if s.rstrip().endswith('}'):
-            return {int(k): v for k, v in _RE_SPARSE_KEY_VALUES.findall(s)}
+            try:
+                return {int(k): v for k, v in _RE_SPARSE_KEY_VALUES.findall(s)}
+            except ValueError as exc:
+                for match in _RE_SPARSE_KEY_VALUES.finditer(s):
+                    if not match.group(1):
+                        raise BadLayout('Error parsing %r' % match.group())
+                raise
+
         if _RE_QUOTATION_MARKS.search(s):
                 return _read_csv(s.strip(' '))
         else:
