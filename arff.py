@@ -196,8 +196,9 @@ def _build_re_sparse():
                       \s+
                       (%(value_re)s) # value
                       |
-                      (?!}\s*$)
-                      \S.*            # error
+                      (?!}\s*$)      # not an error if it's }$
+                      (?!^\s*{\s*}\s*$)  # not an error if it's ^{}$
+                      \S.*           # error
                       '''
                       % {'value_re': value_re})
 
