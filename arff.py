@@ -159,16 +159,11 @@ _TK_COMMENT     = '%'
 _TK_RELATION    = '@RELATION'
 _TK_ATTRIBUTE   = '@ATTRIBUTE'
 _TK_DATA        = '@DATA'
-_TK_VALUE       = ''
 
 _RE_RELATION     = re.compile(r'^([^\{\}%,\s]*|\".*\"|\'.*\')$', re.UNICODE)
 _RE_ATTRIBUTE    = re.compile(r'^(\".*\"|\'.*\'|[^\{\}%,\s]*)\s+(.+)$', re.UNICODE)
 _RE_TYPE_NOMINAL = re.compile(r'^\{\s*((\".*\"|\'.*\'|\S*)\s*,\s*)*(\".*\"|\'.*\'|\S*)\s*\}$', re.UNICODE)
 _RE_ESCAPE = re.compile(r'\\\'|\\\"|\\\%|[\\"\'%]')
-_RE_QUOTATION_MARKS = re.compile(r''''|"''', re.UNICODE)
-_RE_REPLACE_FIRST_QUOTATION_MARK = re.compile(r'^(\'|\")')
-_RE_REPLACE_LAST_QUOTATION_MARK = re.compile(r'(\'|\")$')
-_RE_SPACE = re.compile(r'\s+')
 _RE_SPARSE_LINE = re.compile(r'^\{.*\}$')
 
 
@@ -221,6 +216,39 @@ def _build_re_values():
 
 
 _RE_DENSE_VALUES, _RE_SPARSE_KEY_VALUES = _build_re_values()
+
+
+def _unquote(v):
+    if v[:1] in ('"', "'"):
+        return v[1:-1].replace('\\', '')
+    elif v in ('?', ''):
+        return None
+    else:
+        return v
+
+
+def _parse_values(s):
+    '''(INTERNAL) Split a line into a list of values'''
+    values, errors = zip(*_RE_DENSE_VALUES.findall(',' + s))
+    if not any(errors):
+        return [_unquote(v) for v in values]
+    if _RE_SPARSE_LINE.match(s):
+        try:
+            return {int(k): _unquote(v)
+                    for k, v in _RE_SPARSE_KEY_VALUES.findall(s)}
+        except ValueError as exc:
+            # an ARFF syntax error in sparse data
+            for match in _RE_SPARSE_KEY_VALUES.finditer(s):
+                if not match.group(1):
+                    raise BadLayout('Error parsing %r' % match.group())
+            raise
+    else:
+        # an ARFF syntax error
+        for match in _RE_DENSE_VALUES.finditer(s):
+            if match.group(2):
+                raise BadLayout('Error parsing %r' % match.group())
+        raise
+
 
 _ESCAPE_DCT = {
     ',': ',',
@@ -360,13 +388,28 @@ def encode_string(s):
     return u"'" + _RE_ESCAPE.sub(replace, s) + u"'"
 
 
+class EncodedNominalConversor(object):
+    def __init__(self, values):
+        self.values = {v: i for i, v in enumerate(values)}
+        self.values[0] = 0
+
+    def __call__(self, value):
+        try:
+            return self.values[value]
+        except KeyError:
+            raise BadNominalValue(value)
+
+
 class NominalConversor(object):
     def __init__(self, values):
-        self.values = values
-        self.type_ = type_
+        self.values = set(values)
+        self.zero_value = values[0]
 
     def __call__(self, value):
         if value not in self.values:
+            if value == 0:
+                # Sparse decode
+                return self.zero_value
             raise BadNominalValue(value)
         return unicode(value)
 
@@ -378,55 +421,30 @@ class Data(object):
         self.data = []
 
     def decode_data(self, s, conversors):
-        values = self._get_values(s)
+        values = _parse_values(s)
 
         if isinstance(values, dict):
             if max(values) >= len(conversors):
                 raise BadDataFormat(s)
-            values = [values[i] if i in values else unicode(0) for i in
+            # XXX: int 0 is used for implicit values, not '0'
+            values = [values[i] if i in values else 0 for i in
                       xrange(len(conversors))]
         else:
             if len(values) != len(conversors):
                 raise BadDataFormat(s)
-        values = [conversors[i](values[i]) for i in xrange(len(values))]
 
         self.data.append(self._decode_values(values, conversors))
 
     @staticmethod
     def _decode_values(values, conversors):
-        values = [value.strip(' ') for value in values]
         try:
-            values = [None if value in ('?', '')
-                      else conversor(value[1:-1]
-                                     if value[0] in ('"', '\'')
-                                     else value)
+            values = [None if value is None else conversor(value)
                       for conversor, value
                       in zip(conversors, values)]
         except ValueError as exc:
             if 'float: ' in str(exc):
                 raise BadNumericalValue()
         return values
-
-    def _get_values(self, s):
-        '''(INTERNAL) Split a line into a list of values'''
-        values, errors = zip(*_RE_DENSE_VALUES.findall(',' + s))
-        if not any(errors):
-            return values
-        if _RE_SPARSE_LINE.match(s):
-            try:
-                return {int(k): v for k, v in _RE_SPARSE_KEY_VALUES.findall(s)}
-            except ValueError as exc:
-                # an ARFF syntax error in sparse data
-                for match in _RE_SPARSE_KEY_VALUES.finditer(s):
-                    if not match.group(1):
-                        raise BadLayout('Error parsing %r' % match.group())
-                raise
-        else:
-            # an ARFF syntax error
-            for match in _RE_DENSE_VALUES.finditer(s):
-                if match.group(2):
-                    raise BadLayout('Error parsing %r' % match.group())
-            raise
 
     def _tuplify_sparse_data(self, x):
         if len(x) != 2:
@@ -473,7 +491,7 @@ class COOData(Data):
         self._current_num_data_points = 0
 
     def decode_data(self, s, conversors):
-        values = self._get_values(s)
+        values = _parse_values(s)
 
         if not isinstance(values, dict):
             raise BadLayout()
@@ -482,8 +500,12 @@ class COOData(Data):
             return
         col, values = zip(*sorted(values.items()))
         try:
-            values = [conversors[key](value)
+            values = [value if value is None else conversors[key](value)
                       for key, value in zip(col, values)]
+        except ValueError as exc:
+            if 'float: ' in str(exc):
+                raise BadNumericalValue()
+            raise
         except IndexError:
             # conversor out of range
             raise BadDataFormat(s)
@@ -538,14 +560,18 @@ class LODData(Data):
         self.data = []
 
     def decode_data(self, s, conversors):
-        values = self._get_values(s)
+        values = _parse_values(s)
         n_conversors = len(conversors)
 
         if not isinstance(values, dict):
             raise BadLayout()
         try:
-            self.data.append({key: conversors[key](value)
+            self.data.append({key: None if value is None else conversors[key](value)
                               for key, value in values.items()})
+        except ValueError as exc:
+            if 'float: ' in str(exc):
+                raise BadNumericalValue()
+            raise
         except IndexError:
             # conversor out of range
             raise BadDataFormat(s)
@@ -693,19 +719,12 @@ class ArffDecoder(object):
 
         # Extracts the final type
         if _RE_TYPE_NOMINAL.match(type_):
-            values, non_values = zip(*_RE_DENSE_VALUES.findall(',' + type_.strip('{} ')))
-            if any(non_values[1:1]):
+            try:
+                type_ = _parse_values(type_.strip('{} '))
+            except Exception:
                 raise BadAttributeType()
-            values = values[1:-1]
-###            values = [
-###                unicode(
-###                    re.sub(_RE_REPLACE_LAST_QUOTATION_MARK, '',
-###                        re.sub(_RE_REPLACE_FIRST_QUOTATION_MARK, '', v_.strip(' '))
-###                    )
-###                )
-###                for v_ in values
-###            ]
-            type_ = values
+            if isinstance(type_, dict):
+                raise BadAttributeType()
 
         else:
             # If not nominal, verify the type name
@@ -833,8 +852,6 @@ class ArffDecoder(object):
             dataset. Can be one of `arff.DENSE`, `arff.COO` and `arff.LOD`.
             Consult the section on `working with sparse data`_
         '''
-        print(s)
-
         try:
             return self._decode(s, encode_nominal=encode_nominal,
                                 matrix_type=return_type)
