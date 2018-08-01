@@ -90,22 +90,18 @@ class TestData(unittest.TestCase):
         generator = self.data.encode_data(fixture, self.attributes)
         self.assertRaises(arff.BadObject, next, generator)
 
-    @mock.patch('arff._read_csv')
-    def test_detect_quotation_marks(self, patch):
-        fixture = """'ENACT.NOGOPMAJ,2017'"""
-        self.data._get_values(fixture)
-        self.assertEqual(patch.call_count, 1)
-        self.assertEqual(patch.call_args[0][0], fixture)
+    def test_encode_too_many_attributes_dense(self):
+        my_arff = {
+            "attributes": [["attr", "INTEGER"]],
+            "data": [[0], [1, 2]],
+            "relation": 'Too many attributes'
+        }
 
-        fixture_2 = '''"ENACT.NOGOPMAJ,2017"'''
-        self.data._get_values(fixture_2)
-        self.assertEqual(patch.call_count, 2)
-        self.assertEqual(patch.call_args[0][0], fixture_2)
+        encoder = arff.ArffEncoder()
+        with self.assertRaisesRegexp(arff.BadObject,
+                                     "Instance 1 has 2 attributes, expected 1"):
+            encoder.encode(my_arff)
 
-        fixture_3 = ''' 'A','B','"' '''
-        self.data._get_values(fixture_3)
-        self.assertEqual(patch.call_count, 3)
-        self.assertEqual(patch.call_args[0][0], fixture_3.strip(' '))
 
 class TestCOOData(unittest.TestCase):
     def setUp(self):
@@ -156,6 +152,14 @@ class TestCOOData(unittest.TestCase):
         for i in range(len(expected)):
             self.assertEqual(result[i], expected[i])
 
+    def test_tuplify_sparse_data(self):
+        fixture = "0 a b"
+
+        with self.assertRaisesRegexp(arff.BadDataFormat,
+                                     'Bad @DATA instance format in line -1: '
+                                     '0 a b'):
+            self.data._tuplify_sparse_data(fixture)
+
     # --------------------------------------------------------------------------
     # Tests for the encoding part
     def test_simple(self):
@@ -199,6 +203,24 @@ class TestCOOData(unittest.TestCase):
 
         generator = self.data.encode_data(fixture, attributes)
         self.assertRaises(ValueError, next, generator)
+
+    def test_encode_too_many_attributes_coo(self):
+        coo = COOStub([1, 1, 1, 1, 1, 1, 1],
+                      [0, 1, 1, 1, 1, 1, 3],
+                      [0, 1, 2, 3, 4, 5, 0])
+        coo.format = 'coo'
+
+        my_arff = {
+            "attributes": [["attr", "INTEGER"]],
+            "data": coo,
+            "relation": 'Too many attributes'
+        }
+
+        encoder = arff.ArffEncoder()
+        with self.assertRaisesRegexp(arff.BadObject,
+                                     "Instance 1 has at least 2 attributes, "
+                                     "expected 1"):
+            encoder.encode(my_arff)
 
 
 class TestLODData(unittest.TestCase):
@@ -281,3 +303,16 @@ class TestLODData(unittest.TestCase):
         self.assertEqual(lines[1], '{  }')
         self.assertEqual(lines[55], '{ 3 ? }')
         self.assertEqual(len(lines), 56)
+
+    def test_encode_too_many_attributes_lod(self):
+
+        my_arff = {
+            "attributes": [["attr", "INTEGER"]],
+            "data": [{0: 1}, {1: 2}],
+            "relation": 'Too many attributes'
+        }
+
+        encoder = arff.ArffEncoder()
+        with self.assertRaisesRegexp(arff.BadObject,
+                                     "Instance 1 has 2 attributes, expected 1"):
+            encoder.encode(my_arff)

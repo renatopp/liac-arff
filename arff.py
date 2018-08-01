@@ -142,11 +142,12 @@ This module provides several features, including:
 - Under `MIT License <http://opensource.org/licenses/MIT>`_
 
 '''
-__author__ = 'Renato de Pontes Pereira, Matthias Feurer'
-__author_email__ = 'renato.ppontes@gmail.com, feurerm@informatik.uni-freiburg.de'
+__author__ = 'Renato de Pontes Pereira, Matthias Feurer, Joel Nothman'
+__author_email__ = ('renato.ppontes@gmail.com, '
+                    'feurerm@informatik.uni-freiburg.de, '
+                    'joel.nothman@gmail.com')
 __version__ = '2.2.2'
 
-import csv
 import re
 import sys
 
@@ -167,6 +168,59 @@ _RE_ESCAPE = re.compile(r'\\\'|\\\"|\\\%|[\\"\'%]')
 _RE_QUOTATION_MARKS = re.compile(r''''|"''', re.UNICODE)
 _RE_REPLACE_FIRST_QUOTATION_MARK = re.compile(r'^(\'|\")')
 _RE_REPLACE_LAST_QUOTATION_MARK = re.compile(r'(\'|\")$')
+_RE_SPACE = re.compile(r'\s+')
+_RE_SPARSE_LINE = re.compile(r'^\{.*\}$')
+
+
+def _build_re_values():
+    quoted_re = r'''(?x)
+                    "      # open quote followed by zero or more of:
+                    (?:
+                        (?<!\\)    # no additional backslash
+                        (?:\\\\)*  # maybe escaped backslashes
+                        \\"        # escaped quote
+                    |
+                        [^"]       # non-quote char
+                    )*
+                    "      # close quote
+                    '''
+    # a value is surrounded by " or by ' or contains no quotables
+    value_re = r'''(?x)(?:
+        %s|          # a value may be surrounded by "
+        %s|          # or by '
+        [^,\s"'{}]+  # or may contain no characters requiring quoting
+        )''' % (quoted_re,
+                quoted_re.replace('"', "'"))
+
+    # This captures (value, error) groups. Because empty values are allowed,
+    # we cannot just look for empty values to handle syntax errors.
+    # We presume the line has had ',' prepended...
+    dense = re.compile(r'''(?x)
+        ,                # may follow ','
+        \s*
+        ((?=,)|$|%(value_re)s)  # empty or value
+        |
+        (\S.*)           # error
+        ''' % {'value_re': value_re})
+
+    # This captures (key, value) groups and will have an empty key/value
+    # in case of syntax errors.
+    # It does not ensure that the line starts with '{' or ends with '}'.
+    sparse = re.compile(r'''(?x)
+        (?:^\s*\{|,)   # may follow ',', or '{' at line start
+        \s*
+        (\d+)          # attribute key
+        \s+
+        (%(value_re)s) # value
+        |
+        (?!}\s*$)      # not an error if it's }$
+        (?!^\s*{\s*}\s*$)  # not an error if it's ^{}$
+        \S.*           # error
+        ''' % {'value_re': value_re})
+    return dense, sparse
+
+
+_RE_DENSE_VALUES, _RE_SPARSE_KEY_VALUES = _build_re_values()
 
 _ESCAPE_DCT = {
     ',': ',',
@@ -220,12 +274,29 @@ class BadAttributeFormat(ArffException):
 
 class BadDataFormat(ArffException):
     '''Error raised when some data instance is in an invalid format.'''
-    message = 'Bad @DATA instance format, at line %d.'
+    def __init__(self, value):
+        super(BadDataFormat, self).__init__()
+        self.message = (
+            'Bad @DATA instance format in line %d: ' +
+            ('%s' % value)
+        )
 
 class BadAttributeType(ArffException):
     '''Error raised when some invalid type is provided into the attribute 
     declaration.'''
     message = 'Bad @ATTRIBUTE type, at line %d.'
+
+class BadAttributeName(ArffException):
+    '''Error raised when an attribute name is provided twice the attribute
+    declaration.'''
+
+    def __init__(self, value, value2):
+        super(BadAttributeName, self).__init__()
+        self.message = (
+            ('Bad @ATTRIBUTE name %s at line' % value) +
+            ' %d, this name is already in use in line' +
+            (' %d.' % value2)
+        )
 
 class BadNominalValue(ArffException):
     '''Error raised when a value in used in some data instance but is not 
@@ -233,16 +304,37 @@ class BadNominalValue(ArffException):
 
     def __init__(self, value):
         super(BadNominalValue, self).__init__()
-        self.message = ('Data value %s not found in nominal declaration, ' % value) + 'at line %d.'
+        self.message = (
+            ('Data value %s not found in nominal declaration, ' % value)
+            + 'at line %d.'
+        )
+
+class BadNominalFormatting(ArffException):
+    '''Error raised when a nominal value with space is not properly quoted.'''
+    def __init__(self, value):
+        super(BadNominalFormatting, self).__init__()
+        self.message = (
+            ('Nominal data value "%s" not properly quoted in line ' % value) +
+            '%d.'
+        )
 
 class BadNumericalValue(ArffException):
     '''Error raised when and invalid numerical value is used in some data 
     instance.'''
     message = 'Invalid numerical value, at line %d.'
 
+class BadStringValue(ArffException):
+    '''Error raise when a string contains space but is not quoted.'''
+    message = 'Invalid string value at line %d.'
+
 class BadLayout(ArffException):
     '''Error raised when the layout of the ARFF file has something wrong.'''
     message = 'Invalid layout of the ARFF file, at line %d.'
+
+    def __init__(self, msg=''):
+        super(BadLayout, self).__init__()
+        if msg:
+            self.message = BadLayout.message + ' ' + msg.replace('%', '%%')
 
 class BadObject(ArffException):
     '''Error raised when the object representing the ARFF file has something 
@@ -271,22 +363,12 @@ def encode_string(s):
 class NominalConversor(object):
     def __init__(self, values):
         self.values = values
+        self.type_ = type_
 
     def __call__(self, value):
         if value not in self.values:
             raise BadNominalValue(value)
         return unicode(value)
-
-
-class EncodedNominalConversor(object):
-    def __init__(self, values):
-        self.values = {v: i for i, v in enumerate(values)}
-
-    def __call__(self, value):
-        try:
-            return self.values[value]
-        except KeyError:
-            raise BadNominalValue(value)
 
 
 class Data(object):
@@ -298,16 +380,15 @@ class Data(object):
     def decode_data(self, s, conversors):
         values = self._get_values(s)
 
-        if values[0].lstrip(' ')[:1] == '{':
-            vdict = dict(map(lambda x: (int(x[0]), x[1]),
-                             [i.strip("{").strip("}").strip(" ").split(' ') for
-                              i in values]))
-            values = [vdict[i] if i in vdict else unicode(0) for i in
+        if isinstance(values, dict):
+            if max(values) >= len(conversors):
+                raise BadDataFormat(s)
+            values = [values[i] if i in values else unicode(0) for i in
                       xrange(len(conversors))]
-        # dense lines are decoded one by one
         else:
             if len(values) != len(conversors):
-                raise BadDataFormat()
+                raise BadDataFormat(s)
+        values = [conversors[i](values[i]) for i in xrange(len(values))]
 
         self.data.append(self._decode_values(values, conversors))
 
@@ -328,10 +409,29 @@ class Data(object):
 
     def _get_values(self, s):
         '''(INTERNAL) Split a line into a list of values'''
-        if _RE_QUOTATION_MARKS.search(s):
-            return _read_csv(s.strip(' '))
+        values, errors = zip(*_RE_DENSE_VALUES.findall(',' + s))
+        if not any(errors):
+            return values
+        if _RE_SPARSE_LINE.match(s):
+            try:
+                return {int(k): v for k, v in _RE_SPARSE_KEY_VALUES.findall(s)}
+            except ValueError as exc:
+                # an ARFF syntax error in sparse data
+                for match in _RE_SPARSE_KEY_VALUES.finditer(s):
+                    if not match.group(1):
+                        raise BadLayout('Error parsing %r' % match.group())
+                raise
         else:
-            return next(csv.reader([s.strip(' ')]))
+            # an ARFF syntax error
+            for match in _RE_DENSE_VALUES.finditer(s):
+                if match.group(2):
+                    raise BadLayout('Error parsing %r' % match.group())
+            raise
+
+    def _tuplify_sparse_data(self, x):
+        if len(x) != 2:
+            raise BadDataFormat(x)
+        return (int(x[0].strip('"').strip("'")), x[1])
 
     def encode_data(self, data, attributes):
         '''(INTERNAL) Encodes a line of data.
@@ -343,11 +443,14 @@ class Data(object):
         :param attributes: a list of attributes. Used to check if data is valid.
         :return: a string with the encoded data line.
         '''
+        current_row = 0
+
         for inst in data:
             if len(inst) != len(attributes):
-                raise BadObject('len(inst) = {} != len(attributes) {}'.format(
-                     len(inst), len(attributes),
-                ))
+                raise BadObject(
+                    'Instance %d has %d attributes, expected %d' %
+                     (current_row, len(inst), len(attributes))
+                )
 
             new_data = []
             for value in inst:
@@ -361,6 +464,7 @@ class Data(object):
                         break
                 new_data.append(s)
 
+            current_row += 1
             yield u','.join(new_data)
 
 class COOData(Data):
@@ -371,18 +475,18 @@ class COOData(Data):
     def decode_data(self, s, conversors):
         values = self._get_values(s)
 
-        if not values[0][0].strip(" ") == '{':
+        if not isinstance(values, dict):
             raise BadLayout()
-        elif s.replace(' ', '') == '{}':
+        if not values:
             self._current_num_data_points += 1
             return
-
-        vdict = dict(map(lambda x: (int(x[0]), x[1]),
-                         [i.strip("{").strip("}").strip(" ").split(' ')
-                         for i in values]))
-        col = sorted(vdict)
-        values = [conversors[key](unicode(vdict[key]))
-                  for key in sorted(vdict)]
+        col, values = zip(*sorted(values.items()))
+        try:
+            values = [conversors[key](value)
+                      for key, value in zip(col, values)]
+        except IndexError:
+            # conversor out of range
+            raise BadDataFormat(s)
         self.data[0].extend(values)
         self.data[1].extend([self._current_num_data_points] * len(values))
         self.data[2].extend(col)
@@ -412,7 +516,10 @@ class COOData(Data):
                     current_row += 1
 
             if col >= num_attributes:
-                raise BadObject()
+                raise BadObject(
+                    'Instance %d has at least %d attributes, expected %d' %
+                    (current_row, col + 1, num_attributes)
+                )
 
             if v is None or v == u'' or v != v:
                 s = '?'
@@ -432,27 +539,29 @@ class LODData(Data):
 
     def decode_data(self, s, conversors):
         values = self._get_values(s)
+        n_conversors = len(conversors)
 
-        if not values[0][0].strip(" ") == '{':
+        if not isinstance(values, dict):
             raise BadLayout()
-        elif s.replace(' ', '') == '{}':
-            self.data.append({})
-            return
-
-        vdict = dict(map(lambda x: (int(x[0]), x[1]),
-                         [i.strip("{").strip("}").strip(" ").split(' ')
-                          for i in values]))
-        for key in vdict:
-            vdict[key] = conversors[key](vdict[key])
-        self.data.append(vdict)
+        try:
+            self.data.append({key: conversors[key](value)
+                              for key, value in values.items()})
+        except IndexError:
+            # conversor out of range
+            raise BadDataFormat(s)
 
     def encode_data(self, data, attributes):
+        current_row = 0
+
         num_attributes = len(attributes)
         for row in data:
             new_data = []
 
             if len(row) > 0 and max(row) >= num_attributes:
-                raise BadObject()
+                raise BadObject(
+                    'Instance %d has %d attributes, expected %d' %
+                    (current_row, max(row) + 1, num_attributes)
+                )
 
             for col in sorted(row):
                 v = row[col]
@@ -466,6 +575,7 @@ class LODData(Data):
                         break
                 new_data.append("%d %s" % (col, s))
 
+            current_row += 1
             yield " ".join([u"{", u','.join(new_data), u"}"])
 
 def _get_data_object_for_decoding(matrix_type):
@@ -483,87 +593,12 @@ def _get_data_object_for_encoding(matrix):
     if hasattr(matrix, 'format'):
         if matrix.format == 'coo':
             return COOData()
+        else:
+            raise ValueError('Cannot guess matrix format!')
     elif isinstance(matrix[0], dict):
         return LODData()
     else:
         return Data()
-
-def _read_csv(line):
-    # TODO document
-    # TODO add unit tests
-    # * mixed single quotes and double quotes
-    # * escaped characters!
-    # * does it behave like the regular csv reader?
-    values = []
-    quoted = False
-    i = 0
-    token = ''
-    quote_token = False
-    comma_expected = False
-    only_whitespace = True
-
-    while i < len(line):
-        line_i = line[i]
-        if line_i == ',' and not quoted:
-            if quote_token:
-                values.append(u"%s%s%s" % (quote_token, token, quote_token))
-            else:
-                values.append(token)
-            token = ''
-            i += 1
-            quote_token = False
-            only_whitespace = True
-            comma_expected = False
-        elif comma_expected:
-            if line_i in (' ', '\t', '\n', '\r'):
-                i += 1
-            else:
-                print(line_i, i, line)
-                raise BadLayout()
-        # Escape character
-        elif line_i == '\\':
-            if len(line) == i+1:
-                raise BadLayout()
-            if len(line) > i+2 and line[i+1] == '\\':
-                # Do not trim the escape character for escaping the escape character
-                token += line[i: i + 2]
-            else:
-                token += line[i+1: i+2]
-            i += 2
-        # Quoting
-        elif line_i in ("'", '"') and (not quoted or line_i == quoted):
-            if only_whitespace is False:
-                raise ValueError(
-                    'Only whitespace allowed before quoting character at '
-                    'index %d in line: %s' % (i, line))
-            if quoted is False:
-                token = ''
-                quoted = line_i
-                quote_token = line_i
-            elif quoted == line_i:
-                quoted = False
-                comma_expected = True
-            else:
-                raise ValueError(
-                    'Inconsistent use of single quotes and double quotes for '
-                    'line at character %d: %s' % (i, line)
-                )
-            i += 1
-        elif quoted:
-            token += line_i
-            i += 1
-        else:
-            if line_i not in (' ', '\t', '\n', '\r'):
-                only_whitespace = False
-            token += line_i
-            i += 1
-    if quoted:
-        raise ValueError('Quote not closed for line: %s' % line)
-    if quote_token:
-        values.append(u"%s%s%s" % (quote_token, token, quote_token))
-    else:
-        values.append(token)
-    return values
 
 # =============================================================================
 
@@ -658,15 +693,18 @@ class ArffDecoder(object):
 
         # Extracts the final type
         if _RE_TYPE_NOMINAL.match(type_):
-            values = _read_csv(type_.strip('{} '))
-            values = [
-                unicode(
-                    re.sub(_RE_REPLACE_LAST_QUOTATION_MARK, '',
-                        re.sub(_RE_REPLACE_FIRST_QUOTATION_MARK, '', v_.strip(' '))
-                    )
-                )
-                for v_ in values
-            ]
+            values, non_values = zip(*_RE_DENSE_VALUES.findall(',' + type_.strip('{} ')))
+            if any(non_values[1:1]):
+                raise BadAttributeType()
+            values = values[1:-1]
+###            values = [
+###                unicode(
+###                    re.sub(_RE_REPLACE_LAST_QUOTATION_MARK, '',
+###                        re.sub(_RE_REPLACE_FIRST_QUOTATION_MARK, '', v_.strip(' '))
+###                    )
+###                )
+###                for v_ in values
+###            ]
             type_ = values
 
         else:
@@ -694,6 +732,7 @@ class ArffDecoder(object):
             u'attributes': [],
             u'data': []
         }
+        attribute_names = {}
 
         # Create the data helper object
         data = _get_data_object_for_decoding(matrix_type)
@@ -730,6 +769,10 @@ class ArffDecoder(object):
                 STATE = _TK_ATTRIBUTE
 
                 attr = self._decode_attribute(row)
+                if attr[0] in attribute_names:
+                    raise BadAttributeName(attr[0], attribute_names[attr[0]])
+                else:
+                    attribute_names[attr[0]] = self._current_line
                 obj['attributes'].append(attr)
 
                 if isinstance(attr[1], (list, tuple)):
@@ -790,12 +833,12 @@ class ArffDecoder(object):
             dataset. Can be one of `arff.DENSE`, `arff.COO` and `arff.LOD`.
             Consult the section on `working with sparse data`_
         '''
+        print(s)
 
         try:
             return self._decode(s, encode_nominal=encode_nominal,
                                 matrix_type=return_type)
         except ArffException as e:
-            # print e
             e.line = self._current_line
             raise e
 
@@ -911,7 +954,8 @@ class ArffEncoder(object):
         # ATTRIBUTES
         if not obj.get('attributes'):
             raise BadObject('Attributes not found.')
-            
+
+        attribute_names = set()
         for attr in obj['attributes']:
             # Verify for bad object format
             if not isinstance(attr, (tuple, list)) or \
@@ -927,6 +971,13 @@ class ArffEncoder(object):
             # Verify for bad object format
             elif not isinstance(attr[1], (tuple, list)):
                 raise BadObject('Invalid attribute type "%s"'%str(attr))
+
+            # Verify attribute name is not used twice
+            if attr[0] in attribute_names:
+                raise BadObject('Trying to use attribute name "%s" for the '
+                                'second time.' % str(attr[0]))
+            else:
+                attribute_names.add(attr[0])
 
             yield self._encode_attribute(attr[0], attr[1])
         yield u''
