@@ -142,11 +142,12 @@ This module provides several features, including:
 - Under `MIT License <http://opensource.org/licenses/MIT>`_
 
 '''
-__author__ = 'Renato de Pontes Pereira, Matthias Feurer'
-__author_email__ = 'renato.ppontes@gmail.com, feurerm@informatik.uni-freiburg.de'
+__author__ = 'Renato de Pontes Pereira, Matthias Feurer, Joel Nothman'
+__author_email__ = ('renato.ppontes@gmail.com, '
+                    'feurerm@informatik.uni-freiburg.de, '
+                    'joel.nothman@gmail.com')
 __version__ = '2.2.2'
 
-import csv
 import re
 import sys
 
@@ -168,9 +169,10 @@ _RE_QUOTATION_MARKS = re.compile(r''''|"''', re.UNICODE)
 _RE_REPLACE_FIRST_QUOTATION_MARK = re.compile(r'^(\'|\")')
 _RE_REPLACE_LAST_QUOTATION_MARK = re.compile(r'(\'|\")$')
 _RE_SPACE = re.compile(r'\s+')
+_RE_SPARSE_LINE = re.compile(r'^\{.*\}$')
 
 
-def _build_re_sparse():
+def _build_re_values():
     quoted_re = r'''(?x)
                     "      # open quote followed by zero or more of:
                     (?:
@@ -186,24 +188,39 @@ def _build_re_sparse():
     value_re = r'''(?x)(?:
         %s|          # a value may be surrounded by "
         %s|          # or by '
-        [^,\s"'}]+   # or may contain no characters requiring quoting
+        [^,\s"'{}]+  # or may contain no characters requiring quoting
         )''' % (quoted_re,
                 quoted_re.replace('"', "'"))
-    return re.compile(r'''(?x)
-                      (?:^\s*\{|,)   # may follow ',', or '{' at line start
-                      \s*
-                      (\d+)          # attribute key
-                      \s+
-                      (%(value_re)s) # value
-                      |
-                      (?!}\s*$)      # not an error if it's }$
-                      (?!^\s*{\s*}\s*$)  # not an error if it's ^{}$
-                      \S.*           # error
-                      '''
-                      % {'value_re': value_re})
+
+    # This captures (value, error) groups. Because empty values are allowed,
+    # we cannot just look for empty values to handle syntax errors.
+    # We presume the line has had ',' prepended...
+    dense = re.compile(r'''(?x)
+        ,                # may follow ','
+        \s*
+        ((?=,)|$|%(value_re)s)  # empty or value
+        |
+        (\S.*)           # error
+        ''' % {'value_re': value_re})
+
+    # This captures (key, value) groups and will have an empty key/value
+    # in case of syntax errors.
+    # It does not ensure that the line starts with '{' or ends with '}'.
+    sparse = re.compile(r'''(?x)
+        (?:^\s*\{|,)   # may follow ',', or '{' at line start
+        \s*
+        (\d+)          # attribute key
+        \s+
+        (%(value_re)s) # value
+        |
+        (?!}\s*$)      # not an error if it's }$
+        (?!^\s*{\s*}\s*$)  # not an error if it's ^{}$
+        \S.*           # error
+        ''' % {'value_re': value_re})
+    return dense, sparse
 
 
-_RE_SPARSE_KEY_VALUES = _build_re_sparse()
+_RE_DENSE_VALUES, _RE_SPARSE_KEY_VALUES = _build_re_values()
 
 _ESCAPE_DCT = {
     ',': ',',
@@ -455,19 +472,24 @@ class Data(object):
 
     def _get_values(self, s):
         '''(INTERNAL) Split a line into a list of values'''
-        if s.rstrip().endswith('}'):
+        values, errors = zip(*_RE_DENSE_VALUES.findall(',' + s))
+        if not any(errors):
+            return values
+        if _RE_SPARSE_LINE.match(s):
             try:
                 return {int(k): v for k, v in _RE_SPARSE_KEY_VALUES.findall(s)}
             except ValueError as exc:
+                # an ARFF syntax error in sparse data
                 for match in _RE_SPARSE_KEY_VALUES.finditer(s):
                     if not match.group(1):
                         raise BadLayout('Error parsing %r' % match.group())
                 raise
-
-        if _RE_QUOTATION_MARKS.search(s):
-                return _read_csv(s.strip(' '))
         else:
-            return next(csv.reader([s.strip(' ')]))
+            # an ARFF syntax error
+            for match in _RE_DENSE_VALUES.finditer(s):
+                if match.group(2):
+                    raise BadLayout('Error parsing %r' % match.group())
+            raise
 
     def _tuplify_sparse_data(self, x):
         if len(x) != 2:
@@ -641,104 +663,6 @@ def _get_data_object_for_encoding(matrix):
     else:
         return Data()
 
-def _read_csv(line):
-    # TODO document
-    # TODO add unit tests
-    # * mixed single quotes and double quotes
-    # * escaped characters!
-    # * does it behave like the regular csv reader?
-    values = []
-    quoted = False
-    i = 0
-    token = ''
-    quote_token = False
-    partial_quote = -1
-    comma_expected = False
-    closing_whitespace = ''
-    end_of_line = False
-
-    while i < len(line):
-        line_i = line[i]
-        if end_of_line and line_i not in (' ', '\t', '\n', '\r'):
-            raise BadDataFormat(line_i)
-        if line_i == ',' and not quoted:
-            if quote_token:
-                if partial_quote == -1:
-                    values.append(u"%s%s%s%s" % (quote_token,
-                                                 token,
-                                                 quote_token,
-                                                 closing_whitespace))
-                else:
-                    values.append(u"%s%s%s%s%s" % (token[:partial_quote],
-                                                   quote_token,
-                                                   token[partial_quote:],
-                                                   quote_token,
-                                                   closing_whitespace))
-            else:
-                values.append(token)
-            token = ''
-            i += 1
-            quote_token = False
-            partial_quote = -1
-            comma_expected = False
-        elif comma_expected:
-            if line_i in (' ', '\t', '\n', '\r'):
-                i += 1
-                closing_whitespace += line_i
-            elif line_i == '}':
-                i += 1
-                end_of_line = True
-                comma_expected = False
-            else:
-                raise ValueError('Expected comma or whitespace at position %d'
-                                 ', not %s for line %s.' % (i, line_i, line))
-        # Escape character
-        elif line_i == '\\':
-            if len(line) == i+1:
-                raise BadLayout()
-            if len(line) > i+2 and line[i+1] == '\\':
-                # Do not trim the escape character for escaping the escape character
-                token += line[i: i + 2]
-            else:
-                token += line[i+1: i+2]
-            i += 2
-        # Quoting
-        elif line_i in ("'", '"') and (not quoted or line_i == quoted):
-            if quoted is False:
-                if len(token) != 0:
-                    partial_quote = len(token)
-                quoted = line_i
-                quote_token = line_i
-            elif quoted == line_i:
-                quoted = False
-                comma_expected = True
-            else:
-                raise ValueError(
-                    'Inconsistent use of single quotes and double quotes for '
-                    'line at character %d: %s' % (i, line)
-                )
-            i += 1
-        else:
-            token += line_i
-            i += 1
-    if quoted:
-        raise ValueError('Quote not closed for line: %s' % line)
-    if quote_token:
-        if partial_quote == -1:
-            values.append(u"%s%s%s%s" % (quote_token,
-                                         token,
-                                         quote_token,
-                                         closing_whitespace))
-        else:
-            values.append(u"%s%s%s%s%s" % (token[:partial_quote],
-                                           quote_token,
-                                           token[partial_quote:],
-                                           quote_token,
-                                           closing_whitespace))
-    else:
-        values.append(token)
-    return values
-
 # =============================================================================
 
 # ADVANCED INTERFACE ==========================================================
@@ -832,15 +756,18 @@ class ArffDecoder(object):
 
         # Extracts the final type
         if _RE_TYPE_NOMINAL.match(type_):
-            values = _read_csv(type_.strip('{} '))
-            values = [
-                unicode(
-                    re.sub(_RE_REPLACE_LAST_QUOTATION_MARK, '',
-                        re.sub(_RE_REPLACE_FIRST_QUOTATION_MARK, '', v_.strip(' '))
-                    )
-                )
-                for v_ in values
-            ]
+            values, non_values = zip(*_RE_DENSE_VALUES.findall(',' + type_.strip('{} ')))
+            if any(non_values[1:1]):
+                raise BadAttributeType()
+            values = values[1:-1]
+###            values = [
+###                unicode(
+###                    re.sub(_RE_REPLACE_LAST_QUOTATION_MARK, '',
+###                        re.sub(_RE_REPLACE_FIRST_QUOTATION_MARK, '', v_.strip(' '))
+###                    )
+###                )
+###                for v_ in values
+###            ]
             type_ = values
 
         else:
@@ -965,6 +892,7 @@ class ArffDecoder(object):
             dataset. Can be one of `arff.DENSE`, `arff.COO` and `arff.LOD`.
             Consult the section on `working with sparse data`_
         '''
+        print(s)
 
         try:
             return self._decode(s, encode_nominal=encode_nominal,
