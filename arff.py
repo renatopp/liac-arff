@@ -150,6 +150,7 @@ __version__ = '2.2.2'
 
 import re
 import sys
+import csv
 
 # CONSTANTS ===================================================================
 _SIMPLE_TYPES = ['NUMERIC', 'REAL', 'INTEGER', 'STRING']
@@ -165,6 +166,7 @@ _RE_ATTRIBUTE    = re.compile(r'^(\".*\"|\'.*\'|[^\{\}%,\s]*)\s+(.+)$', re.UNICO
 _RE_TYPE_NOMINAL = re.compile(r'^\{\s*((\".*\"|\'.*\'|\S*)\s*,\s*)*(\".*\"|\'.*\'|\S*)\s*\}$', re.UNICODE)
 _RE_ESCAPE = re.compile(r'\\\'|\\\"|\\\%|[\\"\'%]')
 _RE_SPARSE_LINE = re.compile(r'^\{.*\}$')
+_RE_NONTRIVIAL_DATA = re.compile('["\'{}\\s]')
 
 
 def _build_re_values():
@@ -229,6 +231,13 @@ def _unquote(v):
 
 def _parse_values(s):
     '''(INTERNAL) Split a line into a list of values'''
+    if not _RE_NONTRIVIAL_DATA.search(s):
+        # Fast path for trivial cases (unfortunately we have to handle missing
+        # values because of the empty string case :(.)
+        return [None if s in ('?', '') else s
+                for s in next(csv.reader([s]))]
+
+    # _RE_DENSE_VALUES tokenizes despite quoting, whitespace, etc.
     values, errors = zip(*_RE_DENSE_VALUES.findall(',' + s))
     if not any(errors):
         return [_unquote(v) for v in values]
