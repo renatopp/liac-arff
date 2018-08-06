@@ -418,6 +418,9 @@ class NominalConversor(object):
         if value not in self.values:
             if value == 0:
                 # Sparse decode
+                # See issue #52: nominals should take their first value when
+                # unspecified in a sparse matrix. Naturally, this is consistent
+                # with EncodedNominalConversor.
                 return self.zero_value
             raise BadNominalValue(value)
         return unicode(value)
