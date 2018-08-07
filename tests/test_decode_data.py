@@ -23,41 +23,44 @@ class TestDecodeLines(unittest.TestCase):
         print(txt)
         return arff.load(txt)['data']
 
+    def assertLoadsAs(self, data, expected, n_attribs=1):
+        result = self._load(data, n_attribs)
+        self.assertListEqual(result, expected)
+
     def test_quotes(self):
-        result = self._load("""'ENACT.NOGOPMAJ,2017'""")
-        self.assertListEqual(result, [['ENACT.NOGOPMAJ,2017']])
-
-        result = self._load('''"ENACT.NOGOPMAJ,2017"''')
-        self.assertListEqual(result, [['ENACT.NOGOPMAJ,2017']])
-
-        result = self._load(''' 'A','B' , '"','C,D' ''', 4)
-        self.assertListEqual(result, [['A', 'B', '"', 'C,D']])
+        self.assertLoadsAs("""'ENACT.NOGOPMAJ,2017'""",
+                           [['ENACT.NOGOPMAJ,2017']])
+        self.assertLoadsAs('''"ENACT.NOGOPMAJ,2017"''',
+                           [['ENACT.NOGOPMAJ,2017']])
+        self.assertLoadsAs(''' 'A','B' , '"','C,D' ''',
+                           [['A', 'B', '"', 'C,D']],
+                           n_attribs=4)
 
     def test_quotes_sparse(self):
-        result = self._load("""{0 'ENACT.NOGOPMAJ,2017'}""")
-        self.assertListEqual(result, [['ENACT.NOGOPMAJ,2017']])
+        self.assertLoadsAs("""{0 'ENACT.NOGOPMAJ,2017'}""",
+                           [['ENACT.NOGOPMAJ,2017']])
+        self.assertLoadsAs('''{0 "ENACT.NOGOPMAJ,2017"}''',
+                           [['ENACT.NOGOPMAJ,2017']])
 
-        result = self._load('''{0 "ENACT.NOGOPMAJ,2017"}''')
-        self.assertListEqual(result, [['ENACT.NOGOPMAJ,2017']])
-
-        result = self._load('''{ 0 'A',1 'B' ,2 '"',3 'C,D' }''', 4)
-        self.assertListEqual(result, [['A', 'B', '"', 'C,D']])
+        self.assertLoadsAs('''{ 0 'A',1 'B' ,2 '"',3 'C,D' }''',
+                           [['A', 'B', '"', 'C,D']],
+                           n_attribs=4)
 
     def test_escapes(self):
-        result = self._load(r''' '\'' ''')
-        self.assertListEqual(result, [["'"]])
-        result = self._load(r''' '\\' ''')
-        self.assertListEqual(result, [["\\"]])
-        result = self._load(r''' '\\\'' ''')
-        self.assertListEqual(result, [["\\'"]])
+        self.assertLoadsAs(r''' '\'' ''',
+                           [["'"]])
+        self.assertLoadsAs(r''' '\\' ''',
+                           [["\\"]])
+        self.assertLoadsAs(r''' '\\\'' ''',
+                           [["\\'"]])
 
     def test_escapes_sparse(self):
-        result = self._load(r''' {0 '\''} ''')
-        self.assertListEqual(result, [["'"]])
-        result = self._load(r''' {0 '\\'} ''')
-        self.assertListEqual(result, [["\\"]])
-        result = self._load(r''' {0 '\\\''} ''')
-        self.assertListEqual(result, [["\\'"]])
+        self.assertLoadsAs(r''' {0 '\''} ''',
+                           [["'"]])
+        self.assertLoadsAs(r''' {0 '\\'} ''',
+                           [["\\"]])
+        self.assertLoadsAs(r''' {0 '\\\''} ''',
+                           [["\\'"]])
 
     def test_bad_quotes(self):
         self.assertRaises(arff.BadLayout, self._load, r" \'A' ")
