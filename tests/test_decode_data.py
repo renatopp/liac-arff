@@ -3,7 +3,7 @@ import textwrap
 import arff
 
 
-class TestDecodeLines(unittest.TestCase):
+class TestDecodeData(unittest.TestCase):
     """Functionally tests the logic of _parse_values
 
     Focuses on string values, to ignore conversion logic.
