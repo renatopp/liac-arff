@@ -142,13 +142,15 @@ This module provides several features, including:
 - Under `MIT License <http://opensource.org/licenses/MIT>`_
 
 '''
-__author__ = 'Renato de Pontes Pereira, Matthias Feurer'
-__author_email__ = 'renato.ppontes@gmail.com, feurerm@informatik.uni-freiburg.de'
+__author__ = 'Renato de Pontes Pereira, Matthias Feurer, Joel Nothman'
+__author_email__ = ('renato.ppontes@gmail.com, '
+                    'feurerm@informatik.uni-freiburg.de, '
+                    'joel.nothman@gmail.com')
 __version__ = '2.2.2'
 
-import csv
 import re
 import sys
+import csv
 
 # CONSTANTS ===================================================================
 _SIMPLE_TYPES = ['NUMERIC', 'REAL', 'INTEGER', 'STRING']
@@ -158,28 +160,107 @@ _TK_COMMENT     = '%'
 _TK_RELATION    = '@RELATION'
 _TK_ATTRIBUTE   = '@ATTRIBUTE'
 _TK_DATA        = '@DATA'
-_TK_VALUE       = ''
 
 _RE_RELATION     = re.compile(r'^([^\{\}%,\s]*|\".*\"|\'.*\')$', re.UNICODE)
 _RE_ATTRIBUTE    = re.compile(r'^(\".*\"|\'.*\'|[^\{\}%,\s]*)\s+(.+)$', re.UNICODE)
 _RE_TYPE_NOMINAL = re.compile(r'^\{\s*((\".*\"|\'.*\'|\S*)\s*,\s*)*(\".*\"|\'.*\'|\S*)\s*\}$', re.UNICODE)
-_RE_ESCAPE = re.compile(r'\\\'|\\\"|\\\%|[\\"\'%]')
-_RE_QUOTATION_MARKS = re.compile(r''''|"''', re.UNICODE)
-_RE_REPLACE_FIRST_QUOTATION_MARK = re.compile(r'^(\'|\")')
-_RE_REPLACE_LAST_QUOTATION_MARK = re.compile(r'(\'|\")$')
-_RE_SPACE = re.compile(r'\s+')
+_RE_QUOTE_CHARS = re.compile(r'["\'\\ \t%,]')
+_RE_ESCAPE_CHARS = re.compile(r'(?=["\'\\%])')  # don't need to capture anything
+_RE_SPARSE_LINE = re.compile(r'^\{.*\}$')
+_RE_NONTRIVIAL_DATA = re.compile('["\'{}\\s]')
 
-_ESCAPE_DCT = {
-    ',': ',',
-    ' ': ' ',
-    "'": "\\'",
-    '"': '\\"',
-    '%': '\\%',
-    '\\': '\\',
-    '\\\'': '\\\'',
-    '\\"': '\\"',
-    '\\%': '\\%',
-}
+
+def _build_re_values():
+    quoted_re = r'''(?x)
+                    "      # open quote followed by zero or more of:
+                    (?:
+                        (?<!\\)    # no additional backslash
+                        (?:\\\\)*  # maybe escaped backslashes
+                        \\"        # escaped quote
+                    |
+                        \\[^"]     # escaping a non-quote
+                    |
+                        [^"\\]     # non-quote char
+                    )*
+                    "      # close quote
+                    '''
+    # a value is surrounded by " or by ' or contains no quotables
+    value_re = r'''(?x)(?:
+        %s|          # a value may be surrounded by "
+        %s|          # or by '
+        [^,\s"'{}]+  # or may contain no characters requiring quoting
+        )''' % (quoted_re,
+                quoted_re.replace('"', "'"))
+
+    # This captures (value, error) groups. Because empty values are allowed,
+    # we cannot just look for empty values to handle syntax errors.
+    # We presume the line has had ',' prepended...
+    dense = re.compile(r'''(?x)
+        ,                # may follow ','
+        \s*
+        ((?=,)|$|%(value_re)s)  # empty or value
+        |
+        (\S.*)           # error
+        ''' % {'value_re': value_re})
+
+    # This captures (key, value) groups and will have an empty key/value
+    # in case of syntax errors.
+    # It does not ensure that the line starts with '{' or ends with '}'.
+    sparse = re.compile(r'''(?x)
+        (?:^\s*\{|,)   # may follow ',', or '{' at line start
+        \s*
+        (\d+)          # attribute key
+        \s+
+        (%(value_re)s) # value
+        |
+        (?!}\s*$)      # not an error if it's }$
+        (?!^\s*{\s*}\s*$)  # not an error if it's ^{}$
+        \S.*           # error
+        ''' % {'value_re': value_re})
+    return dense, sparse
+
+
+_RE_DENSE_VALUES, _RE_SPARSE_KEY_VALUES = _build_re_values()
+
+
+def _unquote(v):
+    if v[:1] in ('"', "'"):
+        return re.sub(r'\\(.)', r'\1', v[1:-1])
+    elif v in ('?', ''):
+        return None
+    else:
+        return v
+
+
+def _parse_values(s):
+    '''(INTERNAL) Split a line into a list of values'''
+    if not _RE_NONTRIVIAL_DATA.search(s):
+        # Fast path for trivial cases (unfortunately we have to handle missing
+        # values because of the empty string case :(.)
+        return [None if s in ('?', '') else s
+                for s in next(csv.reader([s]))]
+
+    # _RE_DENSE_VALUES tokenizes despite quoting, whitespace, etc.
+    values, errors = zip(*_RE_DENSE_VALUES.findall(',' + s))
+    if not any(errors):
+        return [_unquote(v) for v in values]
+    if _RE_SPARSE_LINE.match(s):
+        try:
+            return {int(k): _unquote(v)
+                    for k, v in _RE_SPARSE_KEY_VALUES.findall(s)}
+        except ValueError as exc:
+            # an ARFF syntax error in sparse data
+            for match in _RE_SPARSE_KEY_VALUES.finditer(s):
+                if not match.group(1):
+                    raise BadLayout('Error parsing %r' % match.group())
+            raise
+    else:
+        # an ARFF syntax error
+        for match in _RE_DENSE_VALUES.finditer(s):
+            if match.group(2):
+                raise BadLayout('Error parsing %r' % match.group())
+        raise
+
 
 DENSE = 0   # Constant value representing a dense matrix
 COO = 1     # Constant value representing a sparse matrix in coordinate format
@@ -278,6 +359,11 @@ class BadLayout(ArffException):
     '''Error raised when the layout of the ARFF file has something wrong.'''
     message = 'Invalid layout of the ARFF file, at line %d.'
 
+    def __init__(self, msg=''):
+        super(BadLayout, self).__init__()
+        if msg:
+            self.message = BadLayout.message + ' ' + msg.replace('%', '%%')
+
 class BadObject(ArffException):
     '''Error raised when the object representing the ARFF file has something 
     wrong.'''
@@ -297,99 +383,39 @@ class BadObject(ArffException):
 
 # INTERNAL ====================================================================
 def encode_string(s):
-    def replace(match):
-        return _ESCAPE_DCT[match.group(0)]
-    return u"'" + _RE_ESCAPE.sub(replace, s) + u"'"
+    if _RE_QUOTE_CHARS.search(s):
+        return u"'%s'" % _RE_ESCAPE_CHARS.sub(r'\\', s)
+    return s
 
-class Conversor(object):
-    '''Conversor is a helper used for converting ARFF types to Python types.'''
 
-    def __init__(self, type_, values=None):
-        '''Contructor.'''
-
-        self.values = values
-        self.type_ = type_
-
-        if type_ == 'NUMERIC' or type_ == 'REAL':
-            self._conversor = self._float
-        elif type_ == 'STRING':
-            self._conversor = self._string
-        elif type_ == 'INTEGER':
-            self._conversor = self._integer
-        elif type_ == 'NOMINAL':
-            self._conversor = self._nominal
-        elif type_ == 'ENCODED_NOMINAL':
-            self._conversor = self._encoded_nominal
-            self._encoded_values = {value: i for (i, value) in enumerate(values)}
-        else:
-            raise BadAttributeType()
-
-    def _float(self, value):
-        '''Convert the value to float.'''
-        try:
-            return float(value)
-        except ValueError as e:
-            raise BadNumericalValue()
-
-    def _integer(self, value):
-        '''Convert the value to integer.'''
-        try:
-            return int(float(value))
-        except ValueError as e:
-            raise BadNumericalValue()
-
-    def _string(self, value):
-        '''Convert the value to string.'''
-        return unicode(value)
-
-    def _nominal(self, value):
-        '''Verify the value of nominal attribute and convert it to string.'''
-        if value not in self.values:
-            raise BadNominalValue(value)
-
-        return self._string(value)
-
-    def _encoded_nominal(self, value):
-        '''Perform label encoding (convert labels to integers) while reading
-        the .arff file.'''
-        if value not in self.values:
-            raise BadNominalValue(value)
-
-        return self._encoded_values[value]
+class EncodedNominalConversor(object):
+    def __init__(self, values):
+        self.values = {v: i for i, v in enumerate(values)}
+        self.values[0] = 0
 
     def __call__(self, value):
-        '''Convert a ``value`` to a given type. 
+        try:
+            return self.values[value]
+        except KeyError:
+            raise BadNominalValue(value)
 
-        This function also verify if the value is an empty string or a missing
-        value, either cases, it returns None.
-        '''
-        value = value.strip(' ')
 
-        if value == u'?' or value == u'':
-            return None
+class NominalConversor(object):
+    def __init__(self, values):
+        self.values = set(values)
+        self.zero_value = values[0]
 
-        if self.type_ in ['INTEGER', 'NUMERIC', 'REAL']:
-            if value[:1] == '"':
-                assert value[-1:] == '"'
-                value = value[1:-1]
-            elif value[:1] == "'":
-                assert value[-1:] == "'"
-                value = value[1:-1]
-        else:
-            if value[0] not in ['"', "'"] and _RE_SPACE.findall(value):
-                if self.type_ == 'STRING':
-                    raise BadStringValue()
-                else:
-                    raise BadNominalFormatting(value)
-            else:
-                if value[:1] == '"':
-                    assert value[-1:] == '"'
-                    value = value[1:-1]
-                elif value[:1] == "'":
-                    assert value[-1:] == "'"
-                    value = value[1:-1]
+    def __call__(self, value):
+        if value not in self.values:
+            if value == 0:
+                # Sparse decode
+                # See issue #52: nominals should take their first value when
+                # unspecified in a sparse matrix. Naturally, this is consistent
+                # with EncodedNominalConversor.
+                return self.zero_value
+            raise BadNominalValue(value)
+        return unicode(value)
 
-        return self._conversor(value)
 
 class Data(object):
     '''Internal helper class to allow for different matrix types without
@@ -398,31 +424,30 @@ class Data(object):
         self.data = []
 
     def decode_data(self, s, conversors):
-        values = self._get_values(s)
+        values = _parse_values(s)
 
-        if values[0][0].strip(" ") == '{':
-            vdict = dict(map(self._tuplify_sparse_data,
-                             [i.strip("{").strip("}").strip(" ").split(' ', 1)
-                              for i in values]))
-            for key in vdict:
-                if key >= len(conversors):
-                    raise BadDataFormat(s)
-            values = [vdict[i] if i in vdict else unicode(0) for i in
+        if isinstance(values, dict):
+            if max(values) >= len(conversors):
+                raise BadDataFormat(s)
+            # XXX: int 0 is used for implicit values, not '0'
+            values = [values[i] if i in values else 0 for i in
                       xrange(len(conversors))]
-        # dense lines are decoded one by one
         else:
             if len(values) != len(conversors):
                 raise BadDataFormat(s)
-        values = [conversors[i](values[i]) for i in xrange(len(values))]
 
-        self.data.append(values)
+        self.data.append(self._decode_values(values, conversors))
 
-    def _get_values(self, s):
-        '''(INTERNAL) Split a line into a list of values'''
-        if _RE_QUOTATION_MARKS.search(s):
-            return _read_csv(s.strip(' '))
-        else:
-            return next(csv.reader([s.strip(' ')]))
+    @staticmethod
+    def _decode_values(values, conversors):
+        try:
+            values = [None if value is None else conversor(value)
+                      for conversor, value
+                      in zip(conversors, values)]
+        except ValueError as exc:
+            if 'float: ' in str(exc):
+                raise BadNumericalValue()
+        return values
 
     def _tuplify_sparse_data(self, x):
         if len(x) != 2:
@@ -453,11 +478,7 @@ class Data(object):
                 if value is None or value == u'' or value != value:
                     s = '?'
                 else:
-                    s = unicode(value)
-                for escape_char in _ESCAPE_DCT:
-                    if escape_char in s:
-                        s = encode_string(s)
-                        break
+                    s = encode_string(unicode(value))
                 new_data.append(s)
 
             current_row += 1
@@ -469,21 +490,24 @@ class COOData(Data):
         self._current_num_data_points = 0
 
     def decode_data(self, s, conversors):
-        values = self._get_values(s)
+        values = _parse_values(s)
 
-        if not values[0][0].strip(" ") == '{':
+        if not isinstance(values, dict):
             raise BadLayout()
-        elif s.replace(' ', '') == '{}':
+        if not values:
             self._current_num_data_points += 1
             return
-
-        vdict = dict(map(self._tuplify_sparse_data,
-                         [i.strip("{").strip("}").strip(" ").split(' ')
-                         for i in values]))
-        col = list(sorted(vdict))
-        if col[-1] >= len(conversors):
+        col, values = zip(*sorted(values.items()))
+        try:
+            values = [value if value is None else conversors[key](value)
+                      for key, value in zip(col, values)]
+        except ValueError as exc:
+            if 'float: ' in str(exc):
+                raise BadNumericalValue()
+            raise
+        except IndexError:
+            # conversor out of range
             raise BadDataFormat(s)
-        values = [conversors[key](unicode(vdict[key])) for key in col]
         self.data[0].extend(values)
         self.data[1].extend([self._current_num_data_points] * len(values))
         self.data[2].extend(col)
@@ -521,11 +545,7 @@ class COOData(Data):
             if v is None or v == u'' or v != v:
                 s = '?'
             else:
-                s = unicode(v)
-            for escape_char in _ESCAPE_DCT:
-                if escape_char in s:
-                    s = encode_string(s)
-                    break
+                s = encode_string(unicode(v))
             new_data.append("%d %s" % (col, s))
 
         yield " ".join([u"{", u','.join(new_data), u"}"])
@@ -535,23 +555,21 @@ class LODData(Data):
         self.data = []
 
     def decode_data(self, s, conversors):
-        values = self._get_values(s)
+        values = _parse_values(s)
         n_conversors = len(conversors)
 
-        if not values[0][0].strip(" ") == '{':
+        if not isinstance(values, dict):
             raise BadLayout()
-        elif s.replace(' ', '') == '{}':
-            self.data.append({})
-            return
-
-        vdict = dict(map(self._tuplify_sparse_data,
-                         [i.strip("{").strip("}").strip(" ").split(' ')
-                          for i in values]))
-        for key in vdict:
-            if key >= n_conversors:
-                raise BadDataFormat(s)
-            vdict[key] = conversors[key](vdict[key])
-        self.data.append(vdict)
+        try:
+            self.data.append({key: None if value is None else conversors[key](value)
+                              for key, value in values.items()})
+        except ValueError as exc:
+            if 'float: ' in str(exc):
+                raise BadNumericalValue()
+            raise
+        except IndexError:
+            # conversor out of range
+            raise BadDataFormat(s)
 
     def encode_data(self, data, attributes):
         current_row = 0
@@ -571,11 +589,7 @@ class LODData(Data):
                 if v is None or v == u'' or v != v:
                     s = '?'
                 else:
-                    s = unicode(v)
-                for escape_char in _ESCAPE_DCT:
-                    if escape_char in s:
-                        s = encode_string(s)
-                        break
+                    s = encode_string(unicode(v))
                 new_data.append("%d %s" % (col, s))
 
             current_row += 1
@@ -602,104 +616,6 @@ def _get_data_object_for_encoding(matrix):
         return LODData()
     else:
         return Data()
-
-def _read_csv(line):
-    # TODO document
-    # TODO add unit tests
-    # * mixed single quotes and double quotes
-    # * escaped characters!
-    # * does it behave like the regular csv reader?
-    values = []
-    quoted = False
-    i = 0
-    token = ''
-    quote_token = False
-    partial_quote = -1
-    comma_expected = False
-    closing_whitespace = ''
-    end_of_line = False
-
-    while i < len(line):
-        line_i = line[i]
-        if end_of_line and line_i not in (' ', '\t', '\n', '\r'):
-            raise BadDataFormat(line_i)
-        if line_i == ',' and not quoted:
-            if quote_token:
-                if partial_quote == -1:
-                    values.append(u"%s%s%s%s" % (quote_token,
-                                                 token,
-                                                 quote_token,
-                                                 closing_whitespace))
-                else:
-                    values.append(u"%s%s%s%s%s" % (token[:partial_quote],
-                                                   quote_token,
-                                                   token[partial_quote:],
-                                                   quote_token,
-                                                   closing_whitespace))
-            else:
-                values.append(token)
-            token = ''
-            i += 1
-            quote_token = False
-            partial_quote = -1
-            comma_expected = False
-        elif comma_expected:
-            if line_i in (' ', '\t', '\n', '\r'):
-                i += 1
-                closing_whitespace += line_i
-            elif line_i == '}':
-                i += 1
-                end_of_line = True
-                comma_expected = False
-            else:
-                raise ValueError('Expected comma or whitespace at position %d'
-                                 ', not %s for line %s.' % (i, line_i, line))
-        # Escape character
-        elif line_i == '\\':
-            if len(line) == i+1:
-                raise BadLayout()
-            if len(line) > i+2 and line[i+1] == '\\':
-                # Do not trim the escape character for escaping the escape character
-                token += line[i: i + 2]
-            else:
-                token += line[i+1: i+2]
-            i += 2
-        # Quoting
-        elif line_i in ("'", '"') and (not quoted or line_i == quoted):
-            if quoted is False:
-                if len(token) != 0:
-                    partial_quote = len(token)
-                quoted = line_i
-                quote_token = line_i
-            elif quoted == line_i:
-                quoted = False
-                comma_expected = True
-            else:
-                raise ValueError(
-                    'Inconsistent use of single quotes and double quotes for '
-                    'line at character %d: %s' % (i, line)
-                )
-            i += 1
-        else:
-            token += line_i
-            i += 1
-    if quoted:
-        raise ValueError('Quote not closed for line: %s' % line)
-    if quote_token:
-        if partial_quote == -1:
-            values.append(u"%s%s%s%s" % (quote_token,
-                                         token,
-                                         quote_token,
-                                         closing_whitespace))
-        else:
-            values.append(u"%s%s%s%s%s" % (token[:partial_quote],
-                                           quote_token,
-                                           token[partial_quote:],
-                                           quote_token,
-                                           closing_whitespace))
-    else:
-        values.append(token)
-    return values
 
 # =============================================================================
 
@@ -794,16 +710,12 @@ class ArffDecoder(object):
 
         # Extracts the final type
         if _RE_TYPE_NOMINAL.match(type_):
-            values = _read_csv(type_.strip('{} '))
-            values = [
-                unicode(
-                    re.sub(_RE_REPLACE_LAST_QUOTATION_MARK, '',
-                        re.sub(_RE_REPLACE_FIRST_QUOTATION_MARK, '', v_.strip(' '))
-                    )
-                )
-                for v_ in values
-            ]
-            type_ = values
+            try:
+                type_ = _parse_values(type_.strip('{} '))
+            except Exception:
+                raise BadAttributeType()
+            if isinstance(type_, dict):
+                raise BadAttributeType()
 
         else:
             # If not nominal, verify the type name
@@ -875,11 +787,15 @@ class ArffDecoder(object):
 
                 if isinstance(attr[1], (list, tuple)):
                     if encode_nominal:
-                        conversor = Conversor('ENCODED_NOMINAL', attr[1])
+                        conversor = EncodedNominalConversor(attr[1])
                     else:
-                        conversor = Conversor('NOMINAL', attr[1])
+                        conversor = NominalConversor(attr[1])
                 else:
-                    conversor = Conversor(attr[1])
+                    CONVERSOR_MAP = {'STRING': unicode,
+                                     'INTEGER': lambda x: int(float(x)),
+                                     'NUMERIC': float,
+                                     'REAL': float}
+                    conversor = CONVERSOR_MAP[attr[1]]
 
                 self._conversors.append(conversor)
             # -----------------------------------------------------------------
@@ -927,7 +843,6 @@ class ArffDecoder(object):
             dataset. Can be one of `arff.DENSE`, `arff.COO` and `arff.LOD`.
             Consult the section on `working with sparse data`_
         '''
-
         try:
             return self._decode(s, encode_nominal=encode_nominal,
                                 matrix_type=return_type)
@@ -1003,12 +918,7 @@ class ArffEncoder(object):
         if isinstance(type_, (tuple, list)):
             type_tmp = []
             for i in range(len(type_)):
-                type_i = type_[i]
-                for escape_char in _ESCAPE_DCT:
-                    if escape_char in type_[i]:
-                        type_i = encode_string(type_[i])
-                        break
-                type_tmp.append(u'%s' % type_i)
+                type_tmp.append(u'%s' % encode_string(type_[i]))
             type_ = u'{%s}'%(u', '.join(type_tmp))
 
         return u'%s %s %s'%(_TK_ATTRIBUTE, name, type_)

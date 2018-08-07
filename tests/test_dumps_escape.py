@@ -19,7 +19,7 @@ OBJ = {
         ['lorem', 'b', 'this is a valid statement with an % symbol', '"b"'],
         ['lorem2', 'd', 'this is a valid statement', '"d"'],
         ['lorem3', 'c', 'this is a valid statement with double quotes included """""""! ', '"c"'],
-        ['lorem4', 'a', 'this is a valid statement with singlequotes included \\\' lol \\\'! ', '"a"']
+        ['lorem4', 'a', 'this is a valid \\ statement with singlequotes included \' lol \'! ', '"a"']
     ]
 }
 
@@ -36,7 +36,7 @@ lorem,b,thisisavalidstatement,\'\\"b\\"\'
 lorem,b,'this is a valid statement with an \\% symbol',\'\\"b\\"\'
 lorem2,d,'this is a valid statement',\'\\"d\\"\'
 lorem3,c,'this is a valid statement with double quotes included \\"\\"\\"\\"\\"\\"\\"! ',\'\\"c\\"\'
-lorem4,a,'this is a valid statement with singlequotes included \\\' lol \\\'! ',\'\\"a\\"\'
+lorem4,a,'this is a valid \\\\ statement with singlequotes included \\\' lol \\\'! ',\'\\"a\\"\'
 '''
 
 
@@ -53,7 +53,6 @@ class TestDumps(unittest.TestCase):
         count = 0
         while count < 10:
             count += 1
-
             obj = arff.loads(s)
             src = arff.dumps(obj)
             self.assertEqual(src, ARFF)

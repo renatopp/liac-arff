@@ -145,6 +145,7 @@ Contributors
 - `Matthias Feurer (mfeurer) <https://github.com/mfeurer>`_
 - `Hongjoo Lee (midnightradio) <https://github.com/midnightradio>`_
 - `Calvin Jeong (calvin) <http://ty.pe.kr/>`_
+- `Joel Nothman (jnothman) <https://github.com/jnothman>`_
 
 Project Page
 ------------
