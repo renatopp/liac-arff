@@ -53,6 +53,9 @@ class TestDecodeLines(unittest.TestCase):
                            [["\\"]])
         self.assertLoadsAs(r''' '\\\'' ''',
                            [["\\'"]])
+        self.assertLoadsAs('''"\\\\,",",\\\\"''',
+                           [['\\,', ',\\']],
+                           n_attribs=2)
 
     def test_escapes_sparse(self):
         self.assertLoadsAs(r''' {0 '\''} ''',
@@ -81,6 +84,24 @@ class TestDecodeLines(unittest.TestCase):
         self.assertRaises(arff.BadLayout, self._load, " {0 A' }")
         self.assertRaises(arff.BadLayout, self._load, r" {0 'A\' }")
         self.assertRaises(arff.BadLayout, self._load, r' {0 "A\" }')
+
+    def test_multiple_values(self):
+        self.assertRaises(arff.BadLayout, self._load, r" A B ")
+        self.assertRaises(arff.BadLayout, self._load, r" 5 6 ")
+        self.assertRaises(arff.BadLayout, self._load, r" '5' '6' ")
+
+    def test_multiple_values_sparse(self):
+        self.assertRaises(arff.BadLayout, self._load, r" {0 A B }")
+        self.assertRaises(arff.BadLayout, self._load, r" {0 5 6 }")
+        self.assertRaises(arff.BadLayout, self._load, r" {0 '5' '6' }")
+
+    def test_internal_brace(self):
+        self.assertRaises(arff.BadLayout, self._load, r" 0 {0 A }")
+        self.assertRaises(arff.BadLayout, self._load, r" 0, {0 A }")
+        self.assertRaises(arff.BadLayout, self._load, r" {0 A } 0")
+        self.assertRaises(arff.BadLayout, self._load, r" {0 A }, 0")
+        self.assertRaises(arff.BadLayout, self._load, r" {0")
+        self.assertRaises(arff.BadLayout, self._load, r" 0}")
 
     # TODO: more tests of whitespace
     # TODO: tests escapes other than \", \' and \\
