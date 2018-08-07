@@ -164,7 +164,8 @@ _TK_DATA        = '@DATA'
 _RE_RELATION     = re.compile(r'^([^\{\}%,\s]*|\".*\"|\'.*\')$', re.UNICODE)
 _RE_ATTRIBUTE    = re.compile(r'^(\".*\"|\'.*\'|[^\{\}%,\s]*)\s+(.+)$', re.UNICODE)
 _RE_TYPE_NOMINAL = re.compile(r'^\{\s*((\".*\"|\'.*\'|\S*)\s*,\s*)*(\".*\"|\'.*\'|\S*)\s*\}$', re.UNICODE)
-_RE_ESCAPE = re.compile(r'\\\'|\\\"|\\\%|[\\"\'%]')
+_RE_QUOTE_CHARS = re.compile(r'["\'\\ \t%,]')
+_RE_ESCAPE_CHARS = re.compile(r'(?=["\'\\%])')  # don't need to capture anything
 _RE_SPARSE_LINE = re.compile(r'^\{.*\}$')
 _RE_NONTRIVIAL_DATA = re.compile('["\'{}\\s]')
 
@@ -260,18 +261,6 @@ def _parse_values(s):
                 raise BadLayout('Error parsing %r' % match.group())
         raise
 
-
-_ESCAPE_DCT = {
-    ',': ',',
-    ' ': ' ',
-    "'": "\\'",
-    '"': '\\"',
-    '%': '\\%',
-    '\\': '\\',
-    '\\\'': '\\\'',
-    '\\"': '\\"',
-    '\\%': '\\%',
-}
 
 DENSE = 0   # Constant value representing a dense matrix
 COO = 1     # Constant value representing a sparse matrix in coordinate format
@@ -394,9 +383,9 @@ class BadObject(ArffException):
 
 # INTERNAL ====================================================================
 def encode_string(s):
-    def replace(match):
-        return _ESCAPE_DCT[match.group(0)]
-    return u"'" + _RE_ESCAPE.sub(replace, s) + u"'"
+    if _RE_QUOTE_CHARS.search(s):
+        return u"'%s'" % _RE_ESCAPE_CHARS.sub(r'\\', s)
+    return s
 
 
 class EncodedNominalConversor(object):
@@ -489,11 +478,7 @@ class Data(object):
                 if value is None or value == u'' or value != value:
                     s = '?'
                 else:
-                    s = unicode(value)
-                for escape_char in _ESCAPE_DCT:
-                    if escape_char in s:
-                        s = encode_string(s)
-                        break
+                    s = encode_string(unicode(value))
                 new_data.append(s)
 
             current_row += 1
@@ -560,11 +545,7 @@ class COOData(Data):
             if v is None or v == u'' or v != v:
                 s = '?'
             else:
-                s = unicode(v)
-            for escape_char in _ESCAPE_DCT:
-                if escape_char in s:
-                    s = encode_string(s)
-                    break
+                s = encode_string(unicode(v))
             new_data.append("%d %s" % (col, s))
 
         yield " ".join([u"{", u','.join(new_data), u"}"])
@@ -608,11 +589,7 @@ class LODData(Data):
                 if v is None or v == u'' or v != v:
                     s = '?'
                 else:
-                    s = unicode(v)
-                for escape_char in _ESCAPE_DCT:
-                    if escape_char in s:
-                        s = encode_string(s)
-                        break
+                    s = encode_string(unicode(v))
                 new_data.append("%d %s" % (col, s))
 
             current_row += 1
@@ -941,12 +918,7 @@ class ArffEncoder(object):
         if isinstance(type_, (tuple, list)):
             type_tmp = []
             for i in range(len(type_)):
-                type_i = type_[i]
-                for escape_char in _ESCAPE_DCT:
-                    if escape_char in type_[i]:
-                        type_i = encode_string(type_[i])
-                        break
-                type_tmp.append(u'%s' % type_i)
+                type_tmp.append(u'%s' % encode_string(type_[i]))
             type_ = u'{%s}'%(u', '.join(type_tmp))
 
         return u'%s %s %s'%(_TK_ATTRIBUTE, name, type_)
