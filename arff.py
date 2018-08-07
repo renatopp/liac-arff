@@ -146,7 +146,7 @@ __author__ = 'Renato de Pontes Pereira, Matthias Feurer, Joel Nothman'
 __author_email__ = ('renato.ppontes@gmail.com, '
                     'feurerm@informatik.uni-freiburg.de, '
                     'joel.nothman@gmail.com')
-__version__ = '2.2.3'
+__version__ = '2.3'
 
 import re
 import sys
