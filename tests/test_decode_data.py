@@ -20,7 +20,6 @@ class TestDecodeLines(unittest.TestCase):
         ''').format(attribs='\n'.join('@ATTRIBUTE x%d STRING' % i
                                       for i in range(n_attribs)),
                     data=data)
-        print(txt)
         return arff.load(txt)['data']
 
     def assertLoadsAs(self, data, expected, n_attribs=1):

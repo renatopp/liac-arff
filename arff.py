@@ -224,7 +224,6 @@ _RE_DENSE_VALUES, _RE_SPARSE_KEY_VALUES = _build_re_values()
 
 def _unquote(v):
     if v[:1] in ('"', "'"):
-        print(v)
         return re.sub(r'\\(.)', r'\1', v[1:-1])
     elif v in ('?', ''):
         return None
