@@ -6,6 +6,7 @@ LIAC-ARFF 2.3
 - enh: improvements to loading runtime (issue #76)
 - fix: several bugs in decoding and encoding quoted and escaped values,
   particularly in loading sparse ARFF.
+- fix #52: Circumvent a known bug when loading sparse data written by WEKA
 
 LIAC-ARFF 2.2.3
 

@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 
-__author__ = 'Renato de Pontes Pereira, Matthias Feurer'
-__author_email__ = 'renato.ppontes@gmail.com, feurerm@informatik.uni-freiburg.de'
-__version__ = '2.2.2'
-__date__ = '2018 06 19'
+__author__ = 'Renato de Pontes Pereira, Matthias Feurer, Joel Nothman'
+__author_email__ = ('renato.ppontes@gmail.com, '
+                    'feurerm@informatik.uni-freiburg.de, '
+                    'joel.nothman@gmail.com')
+__version__ = '2.2.3'
+__date__ = '2018 07 07'
 
 try:
     import setuptools
@@ -21,16 +23,16 @@ except:
     long_description = ''
 
 setup(
-    name = 'liac-arff',
-    version = __version__,
-    author = __author__,
-    author_email = __author_email__,
+    name='liac-arff',
+    version= __version__,
+    author= __author__,
+    author_email=__author_email__,
     license='MIT License',
-    description = 'A module for read and write ARFF files in Python.',
+    description='A module for read and write ARFF files in Python.',
     long_description=long_description,
-    url = 'https://github.com/renatopp/liac-arff',
-    download_url = 'https://github.com/renatopp/liac-arff',
-    tests_require = ['mock'],
+    url='https://github.com/renatopp/liac-arff',
+    download_url='https://github.com/renatopp/liac-arff',
+    tests_require=['mock'],
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Environment :: MacOS X',
@@ -48,6 +50,6 @@ setup(
     ],
     keywords='arff weka parser liac python',
     py_modules=['arff'],
-    package_data={'':['README.rst', 'CHANGES.rst', 'LICENSE']},
+    package_data={'': ['README.rst', 'CHANGES.rst', 'LICENSE']},
     test_suite='tests',
 )
