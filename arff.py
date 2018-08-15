@@ -253,7 +253,7 @@ def _parse_values(s):
             for match in _RE_SPARSE_KEY_VALUES.finditer(s):
                 if not match.group(1):
                     raise BadLayout('Error parsing %r' % match.group())
-            raise
+            raise BadLayout('Unknown parsing error')
     else:
         # an ARFF syntax error
         for match in _RE_DENSE_VALUES.finditer(s):
