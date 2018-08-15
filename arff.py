@@ -171,7 +171,7 @@ _RE_NONTRIVIAL_DATA = re.compile('["\'{}\\s]')
 
 
 def _build_re_values():
-    quoted_re = r'''(?x)
+    quoted_re = r'''
                     "      # open quote followed by zero or more of:
                     (?:
                         (?<!\\)    # no additional backslash
@@ -185,7 +185,7 @@ def _build_re_values():
                     "      # close quote
                     '''
     # a value is surrounded by " or by ' or contains no quotables
-    value_re = r'''(?x)(?:
+    value_re = r'''(?:
         %s|          # a value may be surrounded by "
         %s|          # or by '
         [^,\s"'{}]+  # or may contain no characters requiring quoting
