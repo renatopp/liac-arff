@@ -166,7 +166,8 @@ _RE_ATTRIBUTE    = re.compile(r'^(\".*\"|\'.*\'|[^\{\}%,\s]*)\s+(.+)$', re.UNICO
 _RE_TYPE_NOMINAL = re.compile(r'^\{\s*((\".*\"|\'.*\'|\S*)\s*,\s*)*(\".*\"|\'.*\'|\S*)\s*\}$', re.UNICODE)
 _RE_QUOTE_CHARS = re.compile(r'["\'\\ \t%,]')
 _RE_ESCAPE_CHARS = re.compile(r'(?=["\'\\%])')  # don't need to capture anything
-_RE_SPARSE_LINE = re.compile(r'^\{.*\}$')
+_RE_COMMENT_LINE = re.compile(r'^\s*(?:%|$)')
+_RE_SPARSE_LINE = re.compile(r'^\s*\{.*\}\s*$')
 _RE_NONTRIVIAL_DATA = re.compile('["\'{}\\s]')
 
 
@@ -749,6 +750,7 @@ class ArffDecoder(object):
 
         # Read all lines
         STATE = _TK_DESCRIPTION
+        s = iter(s)
         for row in s:
             self._current_line += 1
             # Ignore empty lines
@@ -805,23 +807,25 @@ class ArffDecoder(object):
                 if STATE != _TK_ATTRIBUTE:
                     raise BadLayout()
 
-                STATE = _TK_DATA
+                break
             # -----------------------------------------------------------------
 
             # COMMENT ---------------------------------------------------------
             elif u_row.startswith(_TK_COMMENT):
                 pass
             # -----------------------------------------------------------------
+        else:
+            # Never found @DATA
+            raise BadLayout()
 
-            # DATA INSTANCES --------------------------------------------------
-            elif STATE == _TK_DATA:
-                data.decode_data(row, self._conversors)
-            # -----------------------------------------------------------------
-
-            # UNKNOWN INFORMATION ---------------------------------------------
-            else:
-                raise BadLayout()
-            # -----------------------------------------------------------------
+        # DATA INSTANCES --------------------------------------------------
+        for row in s:
+            self._current_line += 1
+            row = row.strip()
+            # Ignore empty lines and comment lines.
+            if not row or row.startswith(_TK_COMMENT):
+                continue
+            data.decode_data(row, self._conversors)
 
         # Alter the data object
         obj['data'] = data.data
