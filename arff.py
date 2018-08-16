@@ -166,7 +166,6 @@ _RE_ATTRIBUTE    = re.compile(r'^(\".*\"|\'.*\'|[^\{\}%,\s]*)\s+(.+)$', re.UNICO
 _RE_TYPE_NOMINAL = re.compile(r'^\{\s*((\".*\"|\'.*\'|\S*)\s*,\s*)*(\".*\"|\'.*\'|\S*)\s*\}$', re.UNICODE)
 _RE_QUOTE_CHARS = re.compile(r'["\'\\ \t%,]')
 _RE_ESCAPE_CHARS = re.compile(r'(?=["\'\\%])')  # don't need to capture anything
-_RE_COMMENT_LINE = re.compile(r'^\s*(?:%|$)')
 _RE_SPARSE_LINE = re.compile(r'^\s*\{.*\}\s*$')
 _RE_NONTRIVIAL_DATA = re.compile('["\'{}\\s]')
 
@@ -421,8 +420,10 @@ class NominalConversor(object):
 class Data(object):
     '''Internal helper class to allow for different matrix types without
     making the code a huge collection of if statements.'''
-    def __init__(self):
-        self.data = []
+
+    def decode_all(self, decoder, stream, conversors):
+        return [self.decode_data(row, conversors)
+                for row in stream]
 
     def decode_data(self, s, conversors):
         values = _parse_values(s)
@@ -437,7 +438,7 @@ class Data(object):
             if len(values) != len(conversors):
                 raise BadDataFormat(s)
 
-        self.data.append(self._decode_values(values, conversors))
+        return self._decode_values(values, conversors)
 
     @staticmethod
     def _decode_values(values, conversors):
@@ -818,17 +819,16 @@ class ArffDecoder(object):
             # Never found @DATA
             raise BadLayout()
 
-        # DATA INSTANCES --------------------------------------------------
-        for row in s:
-            self._current_line += 1
-            row = row.strip()
-            # Ignore empty lines and comment lines.
-            if not row or row.startswith(_TK_COMMENT):
-                continue
-            data.decode_data(row, self._conversors)
+        def stream():
+            for row in s:
+                self._current_line += 1
+                row = row.strip()
+                # Ignore empty lines and comment lines.
+                if row and not row.startswith(_TK_COMMENT):
+                    yield row
 
         # Alter the data object
-        obj['data'] = data.data
+        obj['data'] = data.decode_all(self, stream(), self._conversors)
         if obj['description'].endswith('\n'):
             obj['description'] = obj['description'][:-1]
 
