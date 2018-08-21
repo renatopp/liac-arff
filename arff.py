@@ -262,11 +262,13 @@ def _parse_values(s):
         raise BadLayout('Unknown parsing error')
 
 
-DENSE = 0   # Constant value representing a dense matrix
-COO = 1     # Constant value representing a sparse matrix in coordinate format
-LOD = 2     # Constant value representing a sparse matrix in list of
-            # dictionaries format
-_SUPPORTED_DATA_STRUCTURES = [DENSE, COO, LOD]
+DENSE = 0     # Constant value representing a dense matrix
+COO = 1       # Constant value representing a sparse matrix in coordinate format
+LOD = 2       # Constant value representing a sparse matrix in list of
+              # dictionaries format
+DENSE_GEN = 3 # Generator of dictionaries
+LOD_GEN = 4   # Generator of dictionaries
+_SUPPORTED_DATA_STRUCTURES = [DENSE, COO, LOD, DENSE_GEN, LOD_GEN]
 
 # =============================================================================
 
@@ -417,28 +419,25 @@ class NominalConversor(object):
         return unicode(value)
 
 
-class Data(object):
+class DenseGeneratorData(object):
     '''Internal helper class to allow for different matrix types without
     making the code a huge collection of if statements.'''
 
     def decode_rows(self, stream, conversors):
-        return [self.decode_row(row, conversors)
-                for row in stream]
+        for row in stream:
+            values = _parse_values(row)
 
-    def decode_row(self, s, conversors):
-        values = _parse_values(s)
+            if isinstance(values, dict):
+                if values and max(values) >= len(conversors):
+                    raise BadDataFormat(row)
+                # XXX: int 0 is used for implicit values, not '0'
+                values = [values[i] if i in values else 0 for i in
+                          xrange(len(conversors))]
+            else:
+                if len(values) != len(conversors):
+                    raise BadDataFormat(row)
 
-        if isinstance(values, dict):
-            if values and max(values) >= len(conversors):
-                raise BadDataFormat(s)
-            # XXX: int 0 is used for implicit values, not '0'
-            values = [values[i] if i in values else 0 for i in
-                      xrange(len(conversors))]
-        else:
-            if len(values) != len(conversors):
-                raise BadDataFormat(s)
-
-        return self._decode_values(values, conversors)
+            yield self._decode_values(values, conversors)
 
     @staticmethod
     def _decode_values(values, conversors):
@@ -481,7 +480,18 @@ class Data(object):
             current_row += 1
             yield u','.join(new_data)
 
-class COOData(Data):
+
+class _DataListMixin(object):
+    """Mixin to return a list from decode_rows instead of a generator"""
+    def decode_rows(self, stream, conversors):
+        return list(super(_DataListMixin, self).decode_rows(stream, conversors))
+
+
+class Data(_DataListMixin, DenseGeneratorData):
+    pass
+
+
+class COOData(object):
     def decode_rows(self, stream, conversors):
         data, rows, cols = [], [], []
         for i, row in enumerate(stream):
@@ -544,26 +554,23 @@ class COOData(Data):
 
         yield " ".join([u"{", u','.join(new_data), u"}"])
 
-class LODData(Data):
+class LODGeneratorData(object):
     def decode_rows(self, stream, conversors):
-        return [self.decode_row(row, conversors)
-                for row in stream]
+        for row in stream:
+            values = _parse_values(row)
 
-    def decode_row(self, row, conversors):
-        values = _parse_values(row)
-
-        if not isinstance(values, dict):
-            raise BadLayout()
-        try:
-            return {key: None if value is None else conversors[key](value)
-                    for key, value in values.items()}
-        except ValueError as exc:
-            if 'float: ' in str(exc):
-                raise BadNumericalValue()
-            raise
-        except IndexError:
-            # conversor out of range
-            raise BadDataFormat(row)
+            if not isinstance(values, dict):
+                raise BadLayout()
+            try:
+                yield {key: None if value is None else conversors[key](value)
+                       for key, value in values.items()}
+            except ValueError as exc:
+                if 'float: ' in str(exc):
+                    raise BadNumericalValue()
+                raise
+            except IndexError:
+                # conversor out of range
+                raise BadDataFormat(row)
 
     def encode_data(self, data, attributes):
         current_row = 0
@@ -589,6 +596,10 @@ class LODData(Data):
             current_row += 1
             yield " ".join([u"{", u','.join(new_data), u"}"])
 
+class LODData(_DataListMixin, LODGeneratorData):
+    pass
+
+
 def _get_data_object_for_decoding(matrix_type):
     if matrix_type == DENSE:
         return Data()
@@ -596,6 +607,10 @@ def _get_data_object_for_decoding(matrix_type):
         return COOData()
     elif matrix_type == LOD:
         return LODData()
+    elif matrix_type == DENSE_GEN:
+        return DenseGeneratorData()
+    elif matrix_type == LOD_GEN:
+        return LODGeneratorData()
     else:
         raise ValueError("Matrix type %s not supported." % str(matrix_type))
 
@@ -836,7 +851,8 @@ class ArffDecoder(object):
         :param encode_nominal: boolean, if True perform a label encoding
             while reading the .arff file.
         :param return_type: determines the data structure used to store the
-            dataset. Can be one of `arff.DENSE`, `arff.COO` and `arff.LOD`.
+            dataset. Can be one of `arff.DENSE`, `arff.COO`, `arff.LOD`,
+            `arff.DENSE_GEN` or `arff.LOD_GEN`.
             Consult the section on `working with sparse data`_
         '''
         try:
@@ -1002,7 +1018,8 @@ def load(fp, encode_nominal=False, return_type=DENSE):
     :param encode_nominal: boolean, if True perform a label encoding
         while reading the .arff file.
     :param return_type: determines the data structure used to store the
-        dataset. Can be one of `arff.DENSE`, `arff.COO` and `arff.LOD`.
+        dataset. Can be one of `arff.DENSE`, `arff.COO`, `arff.LOD`,
+        `arff.DENSE_GEN` or `arff.LOD_GEN`.
         Consult the section on `working with sparse data`_
     :return: a dictionary.
      '''
@@ -1018,7 +1035,8 @@ def loads(s, encode_nominal=False, return_type=DENSE):
     :param encode_nominal: boolean, if True perform a label encoding
         while reading the .arff file.
     :param return_type: determines the data structure used to store the
-        dataset. Can be one of `arff.DENSE`, `arff.COO` and `arff.LOD`.
+        dataset. Can be one of `arff.DENSE`, `arff.COO`, `arff.LOD`,
+        `arff.DENSE_GEN` or `arff.LOD_GEN`.
         Consult the section on `working with sparse data`_
     :return: a dictionary.
     '''
