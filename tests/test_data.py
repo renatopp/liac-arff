@@ -39,8 +39,7 @@ class TestData(unittest.TestCase):
                       ConversorStub(str if arff.PY3 else unicode)]
 
         fixture = u'Iris,3.4,2,Setosa'
-        self.data.decode_data(fixture, conversors)
-        result = self.data.data[0]
+        result, = self.data.decode_rows([fixture], conversors)
         expected = [u'Iris', 3.4, 2, u'Setosa']
 
         self.assertEqual(len(result), 4)
@@ -59,8 +58,7 @@ class TestData(unittest.TestCase):
                       ConversorStub(int)]
 
         fixture = u'{0 Iris,1 3.4, 2 2}'
-        self.data.decode_data(fixture, conversors)
-        result = self.data.data[0]
+        result, = self.data.decode_rows([fixture], conversors)
         expected = [u'Iris', 3.4, 2, u'0', 0.0, 0]
 
         self.assertEqual(len(result), len(expected))
@@ -120,10 +118,7 @@ class TestCOOData(unittest.TestCase):
                       ConversorStub(str if arff.PY3 else unicode)]
 
         fixture = u'{0 Iris,1 3.4,2 2,3 Setosa}'
-        self.data.decode_data(fixture, conversors)
-        result = self.data.data[0]
-        row = self.data.data[1]
-        col = self.data.data[2]
+        result, row, col = self.data.decode_rows([fixture], conversors)
         expected = [u'Iris', 3.4, 2, u'Setosa']
 
         self.assertEqual(len(result), 4)
@@ -144,8 +139,7 @@ class TestCOOData(unittest.TestCase):
                       ConversorStub(int)]
 
         fixture = u'{0 Iris,1 3.4, 2 2}'
-        self.data.decode_data(fixture, conversors)
-        result = self.data.data[0]
+        result, row, col = self.data.decode_rows([fixture], conversors)
         expected = {0: u'Iris', 1: 3.4, 2: 2}
 
         self.assertEqual(len(result), len(expected))
@@ -240,8 +234,7 @@ class TestLODData(unittest.TestCase):
                       ConversorStub(str if arff.PY3 else unicode)]
 
         fixture = u'{0 Iris,1 3.4,2 2,3 Setosa}'
-        self.data.decode_data(fixture, conversors)
-        result = self.data.data[0]
+        result, = self.data.decode_rows([fixture], conversors)
         expected = {0: u'Iris', 1: 3.4, 2: 2, 3: u'Setosa'}
 
         self.assertEqual(len(result), 4)
@@ -260,8 +253,7 @@ class TestLODData(unittest.TestCase):
                       ConversorStub(int)]
 
         fixture = u'{0 Iris,1 3.4, 2 2}'
-        self.data.decode_data(fixture, conversors)
-        result = self.data.data[0]
+        result, = self.data.decode_rows([fixture], conversors)
         expected = [u'Iris', 3.4, 2]
 
         self.assertEqual(len(result), len(expected))

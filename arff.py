@@ -421,15 +421,15 @@ class Data(object):
     '''Internal helper class to allow for different matrix types without
     making the code a huge collection of if statements.'''
 
-    def decode_all(self, decoder, stream, conversors):
-        return [self.decode_data(row, conversors)
+    def decode_rows(self, stream, conversors):
+        return [self.decode_row(row, conversors)
                 for row in stream]
 
-    def decode_data(self, s, conversors):
+    def decode_row(self, s, conversors):
         values = _parse_values(s)
 
         if isinstance(values, dict):
-            if max(values) >= len(conversors):
+            if values and max(values) >= len(conversors):
                 raise BadDataFormat(s)
             # XXX: int 0 is used for implicit values, not '0'
             values = [values[i] if i in values else 0 for i in
@@ -487,34 +487,31 @@ class Data(object):
             yield u','.join(new_data)
 
 class COOData(Data):
-    def __init__(self):
-        self.data = ([], [], [])
-        self._current_num_data_points = 0
+    def decode_rows(self, stream, conversors):
+        data, rows, cols = [], [], []
+        for i, row in enumerate(stream):
+            values = _parse_values(row)
+            if not isinstance(values, dict):
+                raise BadLayout()
+            if not values:
+                continue
+            row_cols, values = zip(*sorted(values.items()))
+            try:
+                values = [value if value is None else conversors[key](value)
+                          for key, value in zip(row_cols, values)]
+            except ValueError as exc:
+                if 'float: ' in str(exc):
+                    raise BadNumericalValue()
+                raise
+            except IndexError:
+                # conversor out of range
+                raise BadDataFormat(row)
 
-    def decode_data(self, s, conversors):
-        values = _parse_values(s)
+            data.extend(values)
+            rows.extend([i] * len(values))
+            cols.extend(row_cols)
 
-        if not isinstance(values, dict):
-            raise BadLayout()
-        if not values:
-            self._current_num_data_points += 1
-            return
-        col, values = zip(*sorted(values.items()))
-        try:
-            values = [value if value is None else conversors[key](value)
-                      for key, value in zip(col, values)]
-        except ValueError as exc:
-            if 'float: ' in str(exc):
-                raise BadNumericalValue()
-            raise
-        except IndexError:
-            # conversor out of range
-            raise BadDataFormat(s)
-        self.data[0].extend(values)
-        self.data[1].extend([self._current_num_data_points] * len(values))
-        self.data[2].extend(col)
-
-        self._current_num_data_points += 1
+        return data, rows, cols
 
     def encode_data(self, data, attributes):
         num_attributes = len(attributes)
@@ -553,25 +550,25 @@ class COOData(Data):
         yield " ".join([u"{", u','.join(new_data), u"}"])
 
 class LODData(Data):
-    def __init__(self):
-        self.data = []
+    def decode_rows(self, stream, conversors):
+        return [self.decode_row(row, conversors)
+                for row in stream]
 
-    def decode_data(self, s, conversors):
-        values = _parse_values(s)
-        n_conversors = len(conversors)
+    def decode_row(self, row, conversors):
+        values = _parse_values(row)
 
         if not isinstance(values, dict):
             raise BadLayout()
         try:
-            self.data.append({key: None if value is None else conversors[key](value)
-                              for key, value in values.items()})
+            return {key: None if value is None else conversors[key](value)
+                    for key, value in values.items()}
         except ValueError as exc:
             if 'float: ' in str(exc):
                 raise BadNumericalValue()
             raise
         except IndexError:
             # conversor out of range
-            raise BadDataFormat(s)
+            raise BadDataFormat(row)
 
     def encode_data(self, data, attributes):
         current_row = 0
@@ -828,7 +825,7 @@ class ArffDecoder(object):
                     yield row
 
         # Alter the data object
-        obj['data'] = data.decode_all(self, stream(), self._conversors)
+        obj['data'] = data.decode_rows(stream(), self._conversors)
         if obj['description'].endswith('\n'):
             obj['description'] = obj['description'][:-1]
 
