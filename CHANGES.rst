@@ -1,9 +1,15 @@
 What's New on LIAC-ARFF
 =======================
 
+LIAC-ARFF 2.3.1
+
+* maintenance: replace two bare ``raise`` by appropriate ``raise Exception``
+  statements
+* maintenance: avoid deprecation warning in Python >= 3.6
+
 LIAC-ARFF 2.3
 
-- enh: improvements to loading runtime (issue #76)
+- enhancement: improvements to loading runtime (issue #76)
 - fix: several bugs in decoding and encoding quoted and escaped values,
   particularly in loading sparse ARFF.
 - fix #52: Circumvent a known bug when loading sparse data written by WEKA
