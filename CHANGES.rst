@@ -1,6 +1,10 @@
 What's New on LIAC-ARFF
 =======================
 
+LIAC-ARFF 2.3.2
+* fix: match all possible separator spaces to add quotes to be compliant with
+  ARFF format.
+
 LIAC-ARFF 2.3.1
 
 * maintenance: replace two bare ``raise`` by appropriate ``raise Exception``

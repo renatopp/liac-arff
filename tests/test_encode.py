@@ -187,3 +187,30 @@ class TestEncodeComment(unittest.TestCase):
             "data": [["a,b,c"], ["a,b,c "]],
             "relation": "bla"}
         self.assertEqual(encoder.encode(my_arff), fixture)
+
+    def test_encode_adding_quotes_with_spaces(self):
+        # regression tests for https://github.com/renatopp/liac-arff/issues/87
+        encoder = self.get_encoder()
+
+        # \u3000 corresponds to an ideographic space. It should be treated as
+        # a space.
+        fixture = {
+            'relation': 'name',
+            'attributes': [('A', 'STRING'), ('B', 'STRING')],
+            'data': [['a', 'b'], ['b\u3000e', 'a']],
+        }
+        expected_data = """@RELATION name
+
+@ATTRIBUTE A STRING
+@ATTRIBUTE B STRING
+
+@DATA
+a,b
+'b　e',a
+"""
+        arff_data = encoder.encode(fixture)
+        self.assertEqual(arff_data, expected_data)
+
+        decoder = arff.ArffDecoder()
+        arff_object = decoder.decode(arff_data)
+        self.assertEqual(arff_object['data'], fixture['data'])
