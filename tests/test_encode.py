@@ -197,16 +197,16 @@ class TestEncodeComment(unittest.TestCase):
         fixture = {
             'relation': 'name',
             'attributes': [('A', 'STRING'), ('B', 'STRING')],
-            'data': [['a', 'b'], ['b\u3000e', 'a']],
+            'data': [[u'a', u'b'], [u'b\u3000e', u'a']],
         }
-        expected_data = """@RELATION name
+        expected_data = u"""@RELATION name
 
 @ATTRIBUTE A STRING
 @ATTRIBUTE B STRING
 
 @DATA
 a,b
-'b　e',a
+'b\u3000e',a
 """
         arff_data = encoder.encode(fixture)
         self.assertEqual(arff_data, expected_data)
