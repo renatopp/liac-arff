@@ -3,7 +3,7 @@ What's New on LIAC-ARFF
 
 LIAC-ARFF 2.3.2
 * fix: match all possible separator spaces to add quotes to be compliant with
-  ARFF format.
+  ARFF format when writing.
 
 LIAC-ARFF 2.3.1
 
