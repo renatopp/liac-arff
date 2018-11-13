@@ -449,11 +449,6 @@ class Data(object):
                 raise BadNumericalValue()
         return values
 
-    def _tuplify_sparse_data(self, x):
-        if len(x) != 2:
-            raise BadDataFormat(x)
-        return (int(x[0].strip('"').strip("'")), x[1])
-
     def encode_data(self, data, attributes):
         '''(INTERNAL) Encodes a line of data.
 
@@ -641,7 +636,7 @@ class ArffDecoder(object):
         :param s: a normalized string.
         :return: a string with the decoded comment.
         '''
-        res = re.sub('^\%( )?', '', s)
+        res = re.sub(r'^\%( )?', '', s)
         return res
 
     def _decode_relation(self, s):

@@ -152,14 +152,6 @@ class TestCOOData(unittest.TestCase):
         for i in range(len(expected)):
             self.assertEqual(result[i], expected[i])
 
-    def test_tuplify_sparse_data(self):
-        fixture = "0 a b"
-
-        with self.assertRaisesRegexp(arff.BadDataFormat,
-                                     'Bad @DATA instance format in line -1: '
-                                     '0 a b'):
-            self.data._tuplify_sparse_data(fixture)
-
     # --------------------------------------------------------------------------
     # Tests for the encoding part
     def test_simple(self):
