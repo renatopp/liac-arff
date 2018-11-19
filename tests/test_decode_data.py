@@ -68,9 +68,9 @@ class TestDecodeData(unittest.TestCase):
         self.assertLoadsAs('"abc\\01abc"', [["abc\01abc"]])
         self.assertLoadsAs('"abc\\011abc"', [["abc\tabc"]])
         self.assertLoadsAs('"abc\\u123aabc"', [["abc\u123aabc"]])
+        self.assertLoadsAs('"\\%"', [["%"]])  # legacy support
 
     def test_bad_escapes(self):
-        self.assertRaises(ValueError, self._load, r" '\%' ")
         self.assertRaises(ValueError, self._load, r" '\x00' ")
         self.assertRaises(ValueError, self._load, r" '\u1' ")
         self.assertRaises(ValueError, self._load, r" '\uzzzz' ")

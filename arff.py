@@ -232,6 +232,7 @@ _ESCAPE_SUB_MAP = {
     '\\r': '\r',
     '\\b': '\b',
     '\\f': '\f',
+    '\\%': '%',
 }
 _UNESCAPE_SUB_MAP = {chr(i): '\\%03o' % i for i in range(32)}
 _UNESCAPE_SUB_MAP.update({v: k for k, v in _ESCAPE_SUB_MAP.items()})
