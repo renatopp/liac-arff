@@ -248,7 +248,7 @@ def _escape_sub_callback(match):
         except KeyError:
             raise ValueError('Unsupported escape sequence: %s' % s)
     if s[1] == 'u':
-        return chr(int(s[2:], 16))
+        return unichr(int(s[2:], 16))
     else:
         return chr(int(s[1:], 8))
 
@@ -307,6 +307,7 @@ if PY3:
     unicode = str
     basestring = str
     xrange = range
+    unichr = chr
 # COMPABILITY WITH PYTHON 2 ===================================================
 # =============================================================================
 PY2 = sys.version_info[0] == 2
