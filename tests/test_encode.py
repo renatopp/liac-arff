@@ -193,7 +193,7 @@ class TestEncodeComment(unittest.TestCase):
             "attributes": [["attr", "STRING"]],
             "data": [["a,b,c"],
                      ["a,b,c "],
-                     ["a|c"],
+                     ["a\\c"],
                      ["a\"c"],
                      ["a'c"],
                      ["a\nc"],
