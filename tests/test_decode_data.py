@@ -55,6 +55,19 @@ class TestDecodeData(unittest.TestCase):
         self.assertLoadsAs('''"\\\\,",",\\\\"''',
                            [['\\,', ',\\']],
                            n_attribs=2)
+        self.assertLoadsAs('"\\n"', [["\n"]])
+        self.assertLoadsAs('"\\r"', [["\r"]])
+        self.assertLoadsAs('"\\t"', [["\t"]])
+        self.assertLoadsAs('"\\b"', [["\b"]])
+        self.assertLoadsAs('"\\f"', [["\f"]])
+        self.assertLoadsAs('"\\0"', [["\0"]])
+        self.assertLoadsAs('"\\01"', [["\01"]])
+        self.assertLoadsAs('"\\011"', [["\t"]])
+        self.assertLoadsAs('"\\u123a"', [["\u123a"]])
+        self.assertLoadsAs('"abc\\0abc"', [["abc\0abc"]])
+        self.assertLoadsAs('"abc\\01abc"', [["abc\01abc"]])
+        self.assertLoadsAs('"abc\\011abc"', [["abc\tabc"]])
+        self.assertLoadsAs('"abc\\u123aabc"', [["abc\u123aabc"]])
 
     def test_escapes_sparse(self):
         self.assertLoadsAs(r''' {0 '\''} ''',

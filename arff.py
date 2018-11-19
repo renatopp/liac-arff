@@ -223,9 +223,36 @@ def _build_re_values():
 _RE_DENSE_VALUES, _RE_SPARSE_KEY_VALUES = _build_re_values()
 
 
+_ESCAPE_SUB_MAP = {
+    '\\\\': '\\',
+    '\\"': '"',
+    "\\'": "'",
+    '\\t': '\t',
+    '\\n': '\n',
+    '\\r': '\r',
+    '\\b': '\b',
+    '\\f': '\f',
+}
+_ESCAPE_SUB_MAP.update({'\\%d' % i: chr(i) for i in range(10)})
+
+
+def _escape_sub_callback(match):
+    s = match.group()
+    if len(s) == 2:
+        try:
+            return _ESCAPE_SUB_MAP[s]
+        except KeyError:
+            raise ValueError('Unsupported escape sequence: %s' % s)
+    if s[1] == 'u':
+        return chr(int(s[2:], 16))
+    else:
+        return chr(int(s[1:], 8))
+
+
 def _unquote(v):
     if v[:1] in ('"', "'"):
-        return re.sub(r'\\(.)', r'\1', v[1:-1])
+        return re.sub(r'\\([0-9]{1,3}|u[0-9a-f]{4}|.)', _escape_sub_callback,
+                      v[1:-1])
     elif v in ('?', ''):
         return None
     else:
