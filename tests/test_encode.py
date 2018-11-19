@@ -187,7 +187,7 @@ class TestEncodeComment(unittest.TestCase):
 'a\\nc'
 'a\\tc'
 'a\\000c'
-###'a\\017c'
+'a\\017c'
 """
         my_arff = {
             "attributes": [["attr", "STRING"]],
