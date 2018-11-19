@@ -69,6 +69,15 @@ class TestDecodeData(unittest.TestCase):
         self.assertLoadsAs('"abc\\011abc"', [["abc\tabc"]])
         self.assertLoadsAs('"abc\\u123aabc"', [["abc\u123aabc"]])
 
+    def test_bad_escapes(self):
+        self.assertRaises(ValueError, self._load, r" '\%' ")
+        self.assertRaises(ValueError, self._load, r" '\x00' ")
+        self.assertRaises(ValueError, self._load, r" '\u1' ")
+        self.assertRaises(ValueError, self._load, r" '\uzzzz' ")
+        # case sensitive
+        self.assertRaises(ValueError, self._load, r" '\N' ")
+        self.assertRaises(ValueError, self._load, r" '\T' ")
+
     def test_escapes_sparse(self):
         self.assertLoadsAs(r''' {0 '\''} ''',
                            [["'"]])
@@ -116,4 +125,3 @@ class TestDecodeData(unittest.TestCase):
         self.assertRaises(arff.BadLayout, self._load, r" 0}")
 
     # TODO: more tests of whitespace
-    # TODO: tests escapes other than \", \' and \\
