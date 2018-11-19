@@ -164,8 +164,8 @@ _TK_DATA        = '@DATA'
 _RE_RELATION     = re.compile(r'^([^\{\}%,\s]*|\".*\"|\'.*\')$', re.UNICODE)
 _RE_ATTRIBUTE    = re.compile(r'^(\".*\"|\'.*\'|[^\{\}%,\s]*)\s+(.+)$', re.UNICODE)
 _RE_TYPE_NOMINAL = re.compile(r'^\{\s*((\".*\"|\'.*\'|\S*)\s*,\s*)*(\".*\"|\'.*\'|\S*)\s*\}$', re.UNICODE)
-_RE_QUOTE_CHARS = re.compile(r'["\'\\ \t%,]')
-_RE_ESCAPE_CHARS = re.compile(r'(?=["\'\\%])')  # don't need to capture anything
+_RE_QUOTE_CHARS = re.compile(r'["\'\\\s%,\000-\031]')
+_RE_ESCAPE_CHARS = re.compile(r'(?=["\'\\%])|[\n\r\t\000-\031]')
 _RE_SPARSE_LINE = re.compile(r'^\{.*\}$')
 _RE_NONTRIVIAL_DATA = re.compile('["\'{}\\s]')
 
@@ -233,6 +233,9 @@ _ESCAPE_SUB_MAP = {
     '\\b': '\b',
     '\\f': '\f',
 }
+_UNESCAPE_SUB_MAP = {chr(i): '\\%03o' % i for i in range(32)}
+_UNESCAPE_SUB_MAP.update({v: k for k, v in _ESCAPE_SUB_MAP.items()})
+_UNESCAPE_SUB_MAP[''] = '\\'
 _ESCAPE_SUB_MAP.update({'\\%d' % i: chr(i) for i in range(10)})
 
 
@@ -409,9 +412,13 @@ class BadObject(ArffException):
 # =============================================================================
 
 # INTERNAL ====================================================================
+def _unescape_sub_callback(match):
+    return _UNESCAPE_SUB_MAP[match.group()]
+
+
 def encode_string(s):
     if _RE_QUOTE_CHARS.search(s):
-        return u"'%s'" % _RE_ESCAPE_CHARS.sub(r'\\', s)
+        return u"'%s'" % _RE_ESCAPE_CHARS.sub(_unescape_sub_callback, s)
     return s
 
 

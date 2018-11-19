@@ -181,9 +181,25 @@ class TestEncodeComment(unittest.TestCase):
 @DATA
 'a,b,c'
 'a,b,c '
+'a\\\\c'
+'a\\"c'
+'a\\'c'
+'a\\nc'
+'a\\tc'
+'a\\000c'
+###'a\\017c'
 """
         my_arff = {
             "attributes": [["attr", "STRING"]],
-            "data": [["a,b,c"], ["a,b,c "]],
+            "data": [["a,b,c"],
+                     ["a,b,c "],
+                     ["a|c"],
+                     ["a\"c"],
+                     ["a'c"],
+                     ["a\nc"],
+                     ["a\tc"],
+                     ["a\0c"],
+                     ["a\017c"],
+                     ],
             "relation": "bla"}
         self.assertEqual(encoder.encode(my_arff), fixture)
