@@ -1,5 +1,6 @@
 import textwrap
 import unittest
+import inspect
 import arff
 
 ARFF = '''% 
@@ -200,6 +201,42 @@ class TestDecodeComment(unittest.TestCase):
         result = decoder.decode(xor_dataset, return_type=arff.LOD)
         expected = xor_object_lod
 
+        self.assertEqual(result, expected)
+
+    def test_decode_dense_gen(self):
+        decoder = self.get_decoder()
+        result = decoder.decode(ARFF, return_type=arff.DENSE_GEN)
+        self.assertTrue(inspect.isgenerator(result['data']))
+        result['data'] = list(result['data'])
+        expected = OBJ
+        self.assertEqual(result, expected)
+
+    def test_decode_dense_gen_data_error(self):
+        decoder = self.get_decoder()
+        result = decoder.decode(ARFF + '\nJU"N"K', return_type=arff.DENSE_GEN)
+        # no error for valid entries
+        self.assertEqual(next(result['data']), OBJ['data'][0])
+        # but error when getting all entries
+        self.assertRaises(arff.BadLayout,
+                          list,
+                          result['data'])
+
+    def test_decode_lod_gen_data_error(self):
+        decoder = self.get_decoder()
+        result = decoder.decode(xor_dataset + '\nJU"N"K', return_type=arff.LOD_GEN)
+        # no error for valid entries
+        self.assertEqual(next(result['data']), xor_object_lod['data'][0])
+        # but error when getting all entries
+        self.assertRaises(arff.BadLayout,
+                          list,
+                          result['data'])
+
+    def test_decode_lod_gen(self):
+        decoder = self.get_decoder()
+        result = decoder.decode(xor_dataset, return_type=arff.LOD_GEN)
+        self.assertTrue(inspect.isgenerator(result['data']))
+        result['data'] = list(result['data'])
+        expected = xor_object_lod
         self.assertEqual(result, expected)
 
     def test_invalid_layout(self):
