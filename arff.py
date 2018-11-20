@@ -853,7 +853,8 @@ class ArffDecoder(object):
         :param return_type: determines the data structure used to store the
             dataset. Can be one of `arff.DENSE`, `arff.COO`, `arff.LOD`,
             `arff.DENSE_GEN` or `arff.LOD_GEN`.
-            Consult the section on `working with sparse data`_
+            Consult the sections on `working with sparse data`_ and `loading
+            progressively`_.
         '''
         try:
             return self._decode(s, encode_nominal=encode_nominal,
@@ -1020,7 +1021,8 @@ def load(fp, encode_nominal=False, return_type=DENSE):
     :param return_type: determines the data structure used to store the
         dataset. Can be one of `arff.DENSE`, `arff.COO`, `arff.LOD`,
         `arff.DENSE_GEN` or `arff.LOD_GEN`.
-        Consult the section on `working with sparse data`_
+        Consult the sections on `working with sparse data`_ and `loading
+        progressively`_.
     :return: a dictionary.
      '''
     decoder = ArffDecoder()
@@ -1037,7 +1039,8 @@ def loads(s, encode_nominal=False, return_type=DENSE):
     :param return_type: determines the data structure used to store the
         dataset. Can be one of `arff.DENSE`, `arff.COO`, `arff.LOD`,
         `arff.DENSE_GEN` or `arff.LOD_GEN`.
-        Consult the section on `working with sparse data`_
+        Consult the sections on `working with sparse data`_ and `loading
+        progressively`_.
     :return: a dictionary.
     '''
     decoder = ArffDecoder()
