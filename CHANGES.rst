@@ -1,6 +1,10 @@
 What's New on LIAC-ARFF
 =======================
 
+LIAC-ARFF 2.4
+
+* enhancement: load data progressively with generator `return_type`.
+
 LIAC-ARFF 2.3.1
 
 * maintenance: replace two bare ``raise`` by appropriate ``raise Exception``
