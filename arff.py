@@ -910,8 +910,7 @@ class ArffEncoder(object):
                 break
 
         if isinstance(type_, (tuple, list)):
-            type_tmp = [u'%s' % encode_string(type_k)
-                        for type_k in type_.values()]
+            type_tmp = [u'%s' % encode_string(type_k) for type_k in type_]
             type_ = u'{%s}'%(u', '.join(type_tmp))
 
         return u'%s %s %s'%(_TK_ATTRIBUTE, name, type_)
