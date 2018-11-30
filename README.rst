@@ -146,6 +146,7 @@ Contributors
 - `Hongjoo Lee (midnightradio) <https://github.com/midnightradio>`_
 - `Calvin Jeong (calvin) <http://ty.pe.kr/>`_
 - `Joel Nothman (jnothman) <https://github.com/jnothman>`_
+- `Guillaume Lemaitre (glemaitre) <https://github.com/glemaitre>`_
 
 Project Page
 ------------
