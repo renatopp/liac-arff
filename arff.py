@@ -551,7 +551,6 @@ class LODData(Data):
 
     def decode_data(self, s, conversors):
         values = _parse_values(s)
-        n_conversors = len(conversors)
 
         if not isinstance(values, dict):
             raise BadLayout()
@@ -911,9 +910,7 @@ class ArffEncoder(object):
                 break
 
         if isinstance(type_, (tuple, list)):
-            type_tmp = []
-            for i in range(len(type_)):
-                type_tmp.append(u'%s' % encode_string(type_[i]))
+            type_tmp = [u'%s' % encode_string(type_k) for type_k in type_]
             type_ = u'{%s}'%(u', '.join(type_tmp))
 
         return u'%s %s %s'%(_TK_ATTRIBUTE, name, type_)
