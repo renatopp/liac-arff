@@ -35,6 +35,8 @@ Manually::
     $ python setup.py install
 
 
+.. include:: ../../CHANGES.rst
+
 -----------
 Basic Usage
 -----------

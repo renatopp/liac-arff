@@ -1,5 +1,10 @@
-What's New on LIAC-ARFF
-=======================
+~~~~~~~~~~~~~~~~~~~~~~~
+What's New in LIAC-ARFF
+~~~~~~~~~~~~~~~~~~~~~~~
+
+LIAC-ARFF 2.3.2
+* fix: match all possible separator spaces to add quotes when encoding into
+  ARFF. These separator spaces will be preserved when decoding the ARFF files.
 
 LIAC-ARFF 2.4
 
@@ -28,13 +33,11 @@ LIAC-ARFF 2.2.2
   characters (issue #69).
 
 LIAC-ARFF 2.2.1
----------------
 
 - fix: better support for string features and nominals containing commas
   (issue # 64)
 
 LIAC-ARFF 2.2
--------------
 
 - fix: do not treat quoted questionmarks as missing values (issue #50)
 - fix: compability issue using zip with python2.7
@@ -45,7 +48,6 @@ LIAC-ARFF 2.2
 
 
 LIAC-ARFF 2.1.1
----------------
 
 - fix: working for 2.6+
 - fix: working for 3.3+
@@ -54,7 +56,6 @@ LIAC-ARFF 2.1.1
 
 
 LIAC-ARFF 2.1.0
----------------
 
 - fix: working for 2.6+
 - fix: working for 3.3+
@@ -63,20 +64,17 @@ LIAC-ARFF 2.1.0
 
 
 LIAC-ARFF 2.0.2
----------------
 
 - fix: attribute and relation names now follow the new ARFF specification.
 - new: encoded nominal values.
 
 
 LIAC-ARFF 2.0.1
----------------
 
 - fix: dump now escapes correctly special symbols, such %, ', ", and \.
 
 
 LIAC-ARFF 2.0
--------------
 
 - new: ArffEncoder and ArffDecoder helpers which actually do the serialization
   and loading of ARFF files.
@@ -87,7 +85,6 @@ LIAC-ARFF 2.0
 
 
 LIAC-ARFF 1.0
--------------
 
 First commit.
 

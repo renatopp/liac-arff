@@ -164,7 +164,7 @@ _TK_DATA        = '@DATA'
 _RE_RELATION     = re.compile(r'^([^\{\}%,\s]*|\".*\"|\'.*\')$', re.UNICODE)
 _RE_ATTRIBUTE    = re.compile(r'^(\".*\"|\'.*\'|[^\{\}%,\s]*)\s+(.+)$', re.UNICODE)
 _RE_TYPE_NOMINAL = re.compile(r'^\{\s*((\".*\"|\'.*\'|\S*)\s*,\s*)*(\".*\"|\'.*\'|\S*)\s*\}$', re.UNICODE)
-_RE_QUOTE_CHARS = re.compile(r'["\'\\ \t%,]')
+_RE_QUOTE_CHARS = re.compile(r'["\'\s%,]', re.UNICODE)
 _RE_ESCAPE_CHARS = re.compile(r'(?=["\'\\%])')  # don't need to capture anything
 _RE_SPARSE_LINE = re.compile(r'^\s*\{.*\}\s*$')
 _RE_NONTRIVIAL_DATA = re.compile('["\'{}\\s]')
@@ -929,9 +929,7 @@ class ArffEncoder(object):
                 break
 
         if isinstance(type_, (tuple, list)):
-            type_tmp = []
-            for i in range(len(type_)):
-                type_tmp.append(u'%s' % encode_string(type_[i]))
+            type_tmp = [u'%s' % encode_string(type_k) for type_k in type_]
             type_ = u'{%s}'%(u', '.join(type_tmp))
 
         return u'%s %s %s'%(_TK_ATTRIBUTE, name, type_)
