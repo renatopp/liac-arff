@@ -166,7 +166,7 @@ _RE_ATTRIBUTE    = re.compile(r'^(\".*\"|\'.*\'|[^\{\}%,\s]*)\s+(.+)$', re.UNICO
 _RE_TYPE_NOMINAL = re.compile(r'^\{\s*((\".*\"|\'.*\'|\S*)\s*,\s*)*(\".*\"|\'.*\'|\S*)\s*\}$', re.UNICODE)
 _RE_QUOTE_CHARS = re.compile(r'["\'\s%,]', re.UNICODE)
 _RE_ESCAPE_CHARS = re.compile(r'(?=["\'\\%])')  # don't need to capture anything
-_RE_SPARSE_LINE = re.compile(r'^\{.*\}$')
+_RE_SPARSE_LINE = re.compile(r'^\s*\{.*\}\s*$')
 _RE_NONTRIVIAL_DATA = re.compile('["\'{}\\s]')
 
 
@@ -262,11 +262,13 @@ def _parse_values(s):
         raise BadLayout('Unknown parsing error')
 
 
-DENSE = 0   # Constant value representing a dense matrix
-COO = 1     # Constant value representing a sparse matrix in coordinate format
-LOD = 2     # Constant value representing a sparse matrix in list of
-            # dictionaries format
-_SUPPORTED_DATA_STRUCTURES = [DENSE, COO, LOD]
+DENSE = 0     # Constant value representing a dense matrix
+COO = 1       # Constant value representing a sparse matrix in coordinate format
+LOD = 2       # Constant value representing a sparse matrix in list of
+              # dictionaries format
+DENSE_GEN = 3 # Generator of dictionaries
+LOD_GEN = 4   # Generator of dictionaries
+_SUPPORTED_DATA_STRUCTURES = [DENSE, COO, LOD, DENSE_GEN, LOD_GEN]
 
 # =============================================================================
 
@@ -417,26 +419,25 @@ class NominalConversor(object):
         return unicode(value)
 
 
-class Data(object):
+class DenseGeneratorData(object):
     '''Internal helper class to allow for different matrix types without
     making the code a huge collection of if statements.'''
-    def __init__(self):
-        self.data = []
 
-    def decode_data(self, s, conversors):
-        values = _parse_values(s)
+    def decode_rows(self, stream, conversors):
+        for row in stream:
+            values = _parse_values(row)
 
-        if isinstance(values, dict):
-            if max(values) >= len(conversors):
-                raise BadDataFormat(s)
-            # XXX: int 0 is used for implicit values, not '0'
-            values = [values[i] if i in values else 0 for i in
-                      xrange(len(conversors))]
-        else:
-            if len(values) != len(conversors):
-                raise BadDataFormat(s)
+            if isinstance(values, dict):
+                if values and max(values) >= len(conversors):
+                    raise BadDataFormat(row)
+                # XXX: int 0 is used for implicit values, not '0'
+                values = [values[i] if i in values else 0 for i in
+                          xrange(len(conversors))]
+            else:
+                if len(values) != len(conversors):
+                    raise BadDataFormat(row)
 
-        self.data.append(self._decode_values(values, conversors))
+            yield self._decode_values(values, conversors)
 
     @staticmethod
     def _decode_values(values, conversors):
@@ -479,35 +480,43 @@ class Data(object):
             current_row += 1
             yield u','.join(new_data)
 
-class COOData(Data):
-    def __init__(self):
-        self.data = ([], [], [])
-        self._current_num_data_points = 0
 
-    def decode_data(self, s, conversors):
-        values = _parse_values(s)
+class _DataListMixin(object):
+    """Mixin to return a list from decode_rows instead of a generator"""
+    def decode_rows(self, stream, conversors):
+        return list(super(_DataListMixin, self).decode_rows(stream, conversors))
 
-        if not isinstance(values, dict):
-            raise BadLayout()
-        if not values:
-            self._current_num_data_points += 1
-            return
-        col, values = zip(*sorted(values.items()))
-        try:
-            values = [value if value is None else conversors[key](value)
-                      for key, value in zip(col, values)]
-        except ValueError as exc:
-            if 'float: ' in str(exc):
-                raise BadNumericalValue()
-            raise
-        except IndexError:
-            # conversor out of range
-            raise BadDataFormat(s)
-        self.data[0].extend(values)
-        self.data[1].extend([self._current_num_data_points] * len(values))
-        self.data[2].extend(col)
 
-        self._current_num_data_points += 1
+class Data(_DataListMixin, DenseGeneratorData):
+    pass
+
+
+class COOData(object):
+    def decode_rows(self, stream, conversors):
+        data, rows, cols = [], [], []
+        for i, row in enumerate(stream):
+            values = _parse_values(row)
+            if not isinstance(values, dict):
+                raise BadLayout()
+            if not values:
+                continue
+            row_cols, values = zip(*sorted(values.items()))
+            try:
+                values = [value if value is None else conversors[key](value)
+                          for key, value in zip(row_cols, values)]
+            except ValueError as exc:
+                if 'float: ' in str(exc):
+                    raise BadNumericalValue()
+                raise
+            except IndexError:
+                # conversor out of range
+                raise BadDataFormat(row)
+
+            data.extend(values)
+            rows.extend([i] * len(values))
+            cols.extend(row_cols)
+
+        return data, rows, cols
 
     def encode_data(self, data, attributes):
         num_attributes = len(attributes)
@@ -545,25 +554,23 @@ class COOData(Data):
 
         yield " ".join([u"{", u','.join(new_data), u"}"])
 
-class LODData(Data):
-    def __init__(self):
-        self.data = []
+class LODGeneratorData(object):
+    def decode_rows(self, stream, conversors):
+        for row in stream:
+            values = _parse_values(row)
 
-    def decode_data(self, s, conversors):
-        values = _parse_values(s)
-
-        if not isinstance(values, dict):
-            raise BadLayout()
-        try:
-            self.data.append({key: None if value is None else conversors[key](value)
-                              for key, value in values.items()})
-        except ValueError as exc:
-            if 'float: ' in str(exc):
-                raise BadNumericalValue()
-            raise
-        except IndexError:
-            # conversor out of range
-            raise BadDataFormat(s)
+            if not isinstance(values, dict):
+                raise BadLayout()
+            try:
+                yield {key: None if value is None else conversors[key](value)
+                       for key, value in values.items()}
+            except ValueError as exc:
+                if 'float: ' in str(exc):
+                    raise BadNumericalValue()
+                raise
+            except IndexError:
+                # conversor out of range
+                raise BadDataFormat(row)
 
     def encode_data(self, data, attributes):
         current_row = 0
@@ -589,6 +596,10 @@ class LODData(Data):
             current_row += 1
             yield " ".join([u"{", u','.join(new_data), u"}"])
 
+class LODData(_DataListMixin, LODGeneratorData):
+    pass
+
+
 def _get_data_object_for_decoding(matrix_type):
     if matrix_type == DENSE:
         return Data()
@@ -596,6 +607,10 @@ def _get_data_object_for_decoding(matrix_type):
         return COOData()
     elif matrix_type == LOD:
         return LODData()
+    elif matrix_type == DENSE_GEN:
+        return DenseGeneratorData()
+    elif matrix_type == LOD_GEN:
+        return LODGeneratorData()
     else:
         raise ValueError("Matrix type %s not supported." % str(matrix_type))
 
@@ -743,6 +758,7 @@ class ArffDecoder(object):
 
         # Read all lines
         STATE = _TK_DESCRIPTION
+        s = iter(s)
         for row in s:
             self._current_line += 1
             # Ignore empty lines
@@ -799,26 +815,27 @@ class ArffDecoder(object):
                 if STATE != _TK_ATTRIBUTE:
                     raise BadLayout()
 
-                STATE = _TK_DATA
+                break
             # -----------------------------------------------------------------
 
             # COMMENT ---------------------------------------------------------
             elif u_row.startswith(_TK_COMMENT):
                 pass
             # -----------------------------------------------------------------
+        else:
+            # Never found @DATA
+            raise BadLayout()
 
-            # DATA INSTANCES --------------------------------------------------
-            elif STATE == _TK_DATA:
-                data.decode_data(row, self._conversors)
-            # -----------------------------------------------------------------
-
-            # UNKNOWN INFORMATION ---------------------------------------------
-            else:
-                raise BadLayout()
-            # -----------------------------------------------------------------
+        def stream():
+            for row in s:
+                self._current_line += 1
+                row = row.strip()
+                # Ignore empty lines and comment lines.
+                if row and not row.startswith(_TK_COMMENT):
+                    yield row
 
         # Alter the data object
-        obj['data'] = data.data
+        obj['data'] = data.decode_rows(stream(), self._conversors)
         if obj['description'].endswith('\n'):
             obj['description'] = obj['description'][:-1]
 
@@ -834,8 +851,10 @@ class ArffDecoder(object):
         :param encode_nominal: boolean, if True perform a label encoding
             while reading the .arff file.
         :param return_type: determines the data structure used to store the
-            dataset. Can be one of `arff.DENSE`, `arff.COO` and `arff.LOD`.
-            Consult the section on `working with sparse data`_
+            dataset. Can be one of `arff.DENSE`, `arff.COO`, `arff.LOD`,
+            `arff.DENSE_GEN` or `arff.LOD_GEN`.
+            Consult the sections on `working with sparse data`_ and `loading
+            progressively`_.
         '''
         try:
             return self._decode(s, encode_nominal=encode_nominal,
@@ -998,8 +1017,10 @@ def load(fp, encode_nominal=False, return_type=DENSE):
     :param encode_nominal: boolean, if True perform a label encoding
         while reading the .arff file.
     :param return_type: determines the data structure used to store the
-        dataset. Can be one of `arff.DENSE`, `arff.COO` and `arff.LOD`.
-        Consult the section on `working with sparse data`_
+        dataset. Can be one of `arff.DENSE`, `arff.COO`, `arff.LOD`,
+        `arff.DENSE_GEN` or `arff.LOD_GEN`.
+        Consult the sections on `working with sparse data`_ and `loading
+        progressively`_.
     :return: a dictionary.
      '''
     decoder = ArffDecoder()
@@ -1014,8 +1035,10 @@ def loads(s, encode_nominal=False, return_type=DENSE):
     :param encode_nominal: boolean, if True perform a label encoding
         while reading the .arff file.
     :param return_type: determines the data structure used to store the
-        dataset. Can be one of `arff.DENSE`, `arff.COO` and `arff.LOD`.
-        Consult the section on `working with sparse data`_
+        dataset. Can be one of `arff.DENSE`, `arff.COO`, `arff.LOD`,
+        `arff.DENSE_GEN` or `arff.LOD_GEN`.
+        Consult the sections on `working with sparse data`_ and `loading
+        progressively`_.
     :return: a dictionary.
     '''
     decoder = ArffDecoder()
