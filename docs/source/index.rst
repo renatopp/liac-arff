@@ -35,6 +35,8 @@ Manually::
     $ python setup.py install
 
 
+.. include:: ../../CHANGES.rst
+
 -----------
 Basic Usage
 -----------
@@ -425,3 +427,70 @@ constructor::
     row = d['data'][1]
     col = d['data'][2]
     matrix = sparse.coo_matrix((data, (row, col)), shape=(max(row)+1, max(col)+1))
+
+.. _generator:
+
+~~~~~~~~~~~~~~~~~~~~~
+Loading progressively
+~~~~~~~~~~~~~~~~~~~~~
+
+To avoid storing all the data in memory at once, dense and LOD sparse matrices
+can be loaded progressively. Setting `return_type` to `arff.DENSE_GEN` or
+`arff.LOD_GEN` results in the returned 'data' key containing a generator.
+Iterating through this generator will process each line of input and yield its
+data::
+
+    file_ = '''@RELATION weather
+
+    @ATTRIBUTE outlook {sunny, overcast, rainy}
+    @ATTRIBUTE temperature REAL
+    @ATTRIBUTE humidity REAL
+    @ATTRIBUTE windy {TRUE, FALSE}
+    @ATTRIBUTE play {yes, no}
+
+    @DATA
+    sunny,85.0,85.0,FALSE,no
+    sunny,80.0,90.0,TRUE,no
+    overcast,83.0,86.0,FALSE,yes
+    rainy,70.0,96.0,FALSE,yes
+    rainy,68.0,80.0,FALSE,yes
+    rainy,65.0,70.0,TRUE,no
+    overcast,64.0,65.0,TRUE,yes
+    sunny,72.0,95.0,FALSE,no
+    sunny,69.0,70.0,FALSE,yes
+    rainy,75.0,80.0,FALSE,yes
+    sunny,75.0,70.0,TRUE,yes
+    overcast,72.0,90.0,TRUE,yes
+    overcast,81.0,75.0,FALSE,yes
+    rainy,71.0,91.0,TRUE,no
+    %
+    %
+    % '''
+
+    decoder = arff.ArffDecoder()
+    d = decoder.decode(file_, return_type=arff.DENSE_GEN)
+    next(d['data'])  # get process the first record
+
+resulting in::
+
+    [u'sunny', 85.0, 85.0, u'FALSE', u'no']
+
+If you know the number of samples in your data, you can also use progressive
+loading to preallocate an array and do any data conversion on the fly::
+
+    import numpy as np
+    decoder = arff.ArffDecoder()
+    d = decoder.decode(file_, return_type=arff.DENSE_GEN, encode_nominal=True)
+    arr = np.fromiter((tuple(x) for x in d['data']),
+                      dtype=[('outlook', 'int'),
+                             ('temperature', 'float'),
+                             ('humidity', 'float'),
+                             ('windy', 'bool'),
+                             ('play', 'bool')],
+                      count=14)
+
+`arr[:2]` is then::
+
+    array([(0, 85., 85.,  True,  True), (0, 80., 90., False,  True)],
+          dtype=[('outlook', '<i8'), ('temperature', '<f8'),
+                 ('humidity', '<f8'), ('windy', '?'), ('play', '?')])
