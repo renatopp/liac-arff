@@ -366,21 +366,16 @@ class BadLayout(ArffException):
         if msg:
             self.message = BadLayout.message + ' ' + msg.replace('%', '%%')
 
-class BadObject(ArffException):
-    '''Error raised when the object representing the ARFF file has something 
-    wrong.'''
-
-    def __str__(self):
-        return 'Invalid object.'
 
 class BadObject(ArffException):
-    '''Error raised when the object representing the ARFF file has something 
+    '''Error raised when the object representing the ARFF file has something
     wrong.'''
-    def __init__(self, msg=''):
+    def __init__(self, msg='Invalid object.'):
         self.msg = msg
 
     def __str__(self):
-        return '%s'%self.msg
+        return '%s' % self.msg
+
 # =============================================================================
 
 # INTERNAL ====================================================================
