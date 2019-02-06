@@ -28,34 +28,34 @@
 '''
 The liac-arff module implements functions to read and write ARFF files in
 Python. It was created in the Connectionist Artificial Intelligence Laboratory
-(LIAC), which takes place at the Federal University of Rio Grande do Sul 
+(LIAC), which takes place at the Federal University of Rio Grande do Sul
 (UFRGS), in Brazil.
 
 ARFF (Attribute-Relation File Format) is an file format specially created for
 describe datasets which are commonly used for machine learning experiments and
-softwares. This file format was created to be used in Weka, the best 
+softwares. This file format was created to be used in Weka, the best
 representative software for machine learning automated experiments.
 
-An ARFF file can be divided into two sections: header and data. The Header 
-describes the metadata of the dataset, including a general description of the 
-dataset, its name and its attributes. The source below is an example of a 
+An ARFF file can be divided into two sections: header and data. The Header
+describes the metadata of the dataset, including a general description of the
+dataset, its name and its attributes. The source below is an example of a
 header section in a XOR dataset::
 
-    % 
+    %
     % XOR Dataset
-    % 
+    %
     % Created by Renato Pereira
     %            rppereira@inf.ufrgs.br
     %            http://inf.ufrgs.br/~rppereira
-    % 
-    % 
+    %
+    %
     @RELATION XOR
 
     @ATTRIBUTE input1 REAL
     @ATTRIBUTE input2 REAL
     @ATTRIBUTE y REAL
 
-The Data section of an ARFF file describes the observations of the dataset, in 
+The Data section of an ARFF file describes the observations of the dataset, in
 the case of XOR dataset::
 
     @DATA
@@ -63,13 +63,13 @@ the case of XOR dataset::
     0.0,1.0,1.0
     1.0,0.0,1.0
     1.0,1.0,0.0
-    % 
-    % 
-    % 
+    %
+    %
+    %
 
-Notice that several lines are starting with an ``%`` symbol, denoting a 
+Notice that several lines are starting with an ``%`` symbol, denoting a
 comment, thus, lines with ``%`` at the beginning will be ignored, except by the
-description part at the beginning of the file. The declarations ``@RELATION``, 
+description part at the beginning of the file. The declarations ``@RELATION``,
 ``@ATTRIBUTE``, and ``@DATA`` are all case insensitive and obligatory.
 
 For more information and details about the ARFF file description, consult
@@ -79,29 +79,29 @@ http://www.cs.waikato.ac.nz/~ml/weka/arff.html
 ARFF Files in Python
 ~~~~~~~~~~~~~~~~~~~~
 
-This module uses built-ins python objects to represent a deserialized ARFF 
+This module uses built-ins python objects to represent a deserialized ARFF
 file. A dictionary is used as the container of the data and metadata of ARFF,
 and have the following keys:
 
 - **description**: (OPTIONAL) a string with the description of the dataset.
 - **relation**: (OBLIGATORY) a string with the name of the dataset.
-- **attributes**: (OBLIGATORY) a list of attributes with the following 
+- **attributes**: (OBLIGATORY) a list of attributes with the following
   template::
 
     (attribute_name, attribute_type)
 
   the attribute_name is a string, and attribute_type must be an string
   or a list of strings.
-- **data**: (OBLIGATORY) a list of data instances. Each data instance must be 
+- **data**: (OBLIGATORY) a list of data instances. Each data instance must be
   a list with values, depending on the attributes.
 
-The above keys must follow the case which were described, i.e., the keys are 
-case sensitive. The attribute type ``attribute_type`` must be one of these 
-strings (they are not case sensitive): ``NUMERIC``, ``INTEGER``, ``REAL`` or 
-``STRING``. For nominal attributes, the ``atribute_type`` must be a list of 
+The above keys must follow the case which were described, i.e., the keys are
+case sensitive. The attribute type ``attribute_type`` must be one of these
+strings (they are not case sensitive): ``NUMERIC``, ``INTEGER``, ``REAL`` or
+``STRING``. For nominal attributes, the ``atribute_type`` must be a list of
 strings.
 
-In this format, the XOR dataset presented above can be represented as a python 
+In this format, the XOR dataset presented above can be represented as a python
 object as::
 
     xor_dataset = {
@@ -133,7 +133,7 @@ This module provides several features, including:
   and lists of dictionaries as used by SVMLight
 - Supports the following attribute types: NUMERIC, REAL, INTEGER, STRING, and
   NOMINAL;
-- Has an interface similar to other built-in modules such as ``json``, or 
+- Has an interface similar to other built-in modules such as ``json``, or
   ``zipfile``;
 - Supports read and write the descriptions of files;
 - Supports missing values and names with spaces;
@@ -146,7 +146,7 @@ __author__ = 'Renato de Pontes Pereira, Matthias Feurer, Joel Nothman'
 __author_email__ = ('renato.ppontes@gmail.com, '
                     'feurerm@informatik.uni-freiburg.de, '
                     'joel.nothman@gmail.com')
-__version__ = '2.3.1'
+__version__ = '2.4.0'
 
 import re
 import sys
@@ -344,7 +344,7 @@ class BadDataFormat(ArffException):
         )
 
 class BadAttributeType(ArffException):
-    '''Error raised when some invalid type is provided into the attribute 
+    '''Error raised when some invalid type is provided into the attribute
     declaration.'''
     message = 'Bad @ATTRIBUTE type, at line %d.'
 
@@ -361,7 +361,7 @@ class BadAttributeName(ArffException):
         )
 
 class BadNominalValue(ArffException):
-    '''Error raised when a value in used in some data instance but is not 
+    '''Error raised when a value in used in some data instance but is not
     declared into it respective attribute declaration.'''
 
     def __init__(self, value):
@@ -381,7 +381,7 @@ class BadNominalFormatting(ArffException):
         )
 
 class BadNumericalValue(ArffException):
-    '''Error raised when and invalid numerical value is used in some data 
+    '''Error raised when and invalid numerical value is used in some data
     instance.'''
     message = 'Invalid numerical value, at line %d.'
 
@@ -676,7 +676,7 @@ class ArffDecoder(object):
         characters.
 
         This method must receive a normalized string, i.e., a string without
-        padding, including the "\r\n" characters. 
+        padding, including the "\r\n" characters.
 
         :param s: a normalized string.
         :return: a string with the decoded comment.
@@ -687,13 +687,13 @@ class ArffDecoder(object):
     def _decode_relation(self, s):
         '''(INTERNAL) Decodes a relation line.
 
-        The relation declaration is a line with the format ``@RELATION 
+        The relation declaration is a line with the format ``@RELATION
         <relation-name>``, where ``relation-name`` is a string. The string must
         start with alphabetic character and must be quoted if the name includes
         spaces, otherwise this method will raise a `BadRelationFormat` exception.
 
         This method must receive a normalized string, i.e., a string without
-        padding, including the "\r\n" characters. 
+        padding, including the "\r\n" characters.
 
         :param s: a normalized string.
         :return: a string with the decoded relation name.
@@ -710,12 +710,12 @@ class ArffDecoder(object):
     def _decode_attribute(self, s):
         '''(INTERNAL) Decodes an attribute line.
 
-        The attribute is the most complex declaration in an arff file. All 
+        The attribute is the most complex declaration in an arff file. All
         attributes must follow the template::
 
              @attribute <attribute-name> <datatype>
 
-        where ``attribute-name`` is a string, quoted if the name contains any 
+        where ``attribute-name`` is a string, quoted if the name contains any
         whitespace, and ``datatype`` can be:
 
         - Numerical attributes as ``NUMERIC``, ``INTEGER`` or ``REAL``.
@@ -723,13 +723,13 @@ class ArffDecoder(object):
         - Dates (NOT IMPLEMENTED).
         - Nominal attributes with format:
 
-            {<nominal-name1>, <nominal-name2>, <nominal-name3>, ...} 
+            {<nominal-name1>, <nominal-name2>, <nominal-name3>, ...}
 
         The nominal names follow the rules for the attribute names, i.e., they
         must be quoted if the name contains whitespaces.
 
         This method must receive a normalized string, i.e., a string without
-        padding, including the "\r\n" characters. 
+        padding, including the "\r\n" characters.
 
         :param s: a normalized string.
         :return: a tuple (ATTRIBUTE_NAME, TYPE_OR_VALUES).
@@ -918,8 +918,8 @@ class ArffEncoder(object):
     def _encode_relation(self, name):
         '''(INTERNAL) Decodes a relation line.
 
-        The relation declaration is a line with the format ``@RELATION 
-        <relation-name>``, where ``relation-name`` is a string. 
+        The relation declaration is a line with the format ``@RELATION
+        <relation-name>``, where ``relation-name`` is a string.
 
         :param name: a string.
         :return: a string with the encoded relation declaration.
@@ -945,7 +945,7 @@ class ArffEncoder(object):
         - Dates (NOT IMPLEMENTED).
         - Nominal attributes with format:
 
-            {<nominal-name1>, <nominal-name2>, <nominal-name3>, ...} 
+            {<nominal-name1>, <nominal-name2>, <nominal-name3>, ...}
 
         This method must receive a the name of the attribute and its type, if
         the attribute type is nominal, ``type`` must be a list of values.
@@ -978,7 +978,7 @@ class ArffEncoder(object):
     def iter_encode(self, obj):
         '''The iterative version of `arff.ArffEncoder.encode`.
 
-        This encodes iteratively a given object and return, one-by-one, the 
+        This encodes iteratively a given object and return, one-by-one, the
         lines of the ARFF file.
 
         :param obj: the object containing the ARFF information.
@@ -1042,7 +1042,7 @@ class ArffEncoder(object):
 # BASIC INTERFACE =============================================================
 def load(fp, encode_nominal=False, return_type=DENSE):
     '''Load a file-like object containing the ARFF document and convert it into
-    a Python object. 
+    a Python object.
 
     :param fp: a file-like object.
     :param encode_nominal: boolean, if True perform a label encoding
@@ -1077,7 +1077,7 @@ def loads(s, encode_nominal=False, return_type=DENSE):
                           return_type=return_type)
 
 def dump(obj, fp):
-    '''Serialize an object representing the ARFF document to a given file-like 
+    '''Serialize an object representing the ARFF document to a given file-like
     object.
 
     :param obj: a dictionary.

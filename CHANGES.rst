@@ -2,18 +2,13 @@
 What's New in LIAC-ARFF
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-LIAC-ARFF 2.3.2
-* fix: match all possible separator spaces to add quotes when encoding into
-  ARFF. These separator spaces will be preserved when decoding the ARFF files.
-
 LIAC-ARFF 2.4
 
 * enhancement: load data progressively with generator `return_type`.
-
-LIAC-ARFF 2.4
-
 * enhancement: standard Java escape sequences are now decoded in string
   attributes, and non-printable characters are now encoded with escaping.
+* fix: match all possible separator spaces to add quotes when encoding into
+  ARFF. These separator spaces will be preserved when decoding the ARFF files.
 
 LIAC-ARFF 2.3.1
 

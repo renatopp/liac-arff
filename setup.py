@@ -4,8 +4,8 @@ __author__ = 'Renato de Pontes Pereira, Matthias Feurer, Joel Nothman'
 __author_email__ = ('renato.ppontes@gmail.com, '
                     'feurerm@informatik.uni-freiburg.de, '
                     'joel.nothman@gmail.com')
-__version__ = '2.3.1'
-__date__ = '2018 07 16'
+__version__ = '2.4.0'
+__date__ = '2019 02 06'
 
 try:
     import setuptools
@@ -13,7 +13,7 @@ except ImportError:
     from ez_setup import use_setuptools
     use_setuptools()
 
-from setuptools import setup, find_packages
+from setuptools import setup
 
 try:
     f = open('README.rst','rU')
