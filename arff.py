@@ -164,10 +164,10 @@ _TK_DATA        = '@DATA'
 _RE_RELATION     = re.compile(r'^([^\{\}%,\s]*|\".*\"|\'.*\')$', re.UNICODE)
 _RE_ATTRIBUTE    = re.compile(r'^(\".*\"|\'.*\'|[^\{\}%,\s]*)\s+(.+)$', re.UNICODE)
 _RE_TYPE_NOMINAL = re.compile(r'^\{\s*((\".*\"|\'.*\'|\S*)\s*,\s*)*(\".*\"|\'.*\'|\S*)\s*\}$', re.UNICODE)
-_RE_QUOTE_CHARS = re.compile(r'["\'\s%,]', re.UNICODE)
-_RE_ESCAPE_CHARS = re.compile(r'(?=["\'\\%])')  # don't need to capture anything
-_RE_SPARSE_LINE = re.compile(r'^\s*\{.*\}\s*$')
-_RE_NONTRIVIAL_DATA = re.compile('["\'{}\\s]')
+_RE_QUOTE_CHARS = re.compile(r'["\'\\\s%,\000-\031]', re.UNICODE)
+_RE_ESCAPE_CHARS = re.compile(r'(?=["\'\\%])|[\n\r\t\000-\031]')
+_RE_SPARSE_LINE = re.compile(r'^\s*\{.*\}\s*$', re.UNICODE)
+_RE_NONTRIVIAL_DATA = re.compile('["\'{}\\s]', re.UNICODE)
 
 
 def _build_re_values():
@@ -223,9 +223,40 @@ def _build_re_values():
 _RE_DENSE_VALUES, _RE_SPARSE_KEY_VALUES = _build_re_values()
 
 
+_ESCAPE_SUB_MAP = {
+    '\\\\': '\\',
+    '\\"': '"',
+    "\\'": "'",
+    '\\t': '\t',
+    '\\n': '\n',
+    '\\r': '\r',
+    '\\b': '\b',
+    '\\f': '\f',
+    '\\%': '%',
+}
+_UNESCAPE_SUB_MAP = {chr(i): '\\%03o' % i for i in range(32)}
+_UNESCAPE_SUB_MAP.update({v: k for k, v in _ESCAPE_SUB_MAP.items()})
+_UNESCAPE_SUB_MAP[''] = '\\'
+_ESCAPE_SUB_MAP.update({'\\%d' % i: chr(i) for i in range(10)})
+
+
+def _escape_sub_callback(match):
+    s = match.group()
+    if len(s) == 2:
+        try:
+            return _ESCAPE_SUB_MAP[s]
+        except KeyError:
+            raise ValueError('Unsupported escape sequence: %s' % s)
+    if s[1] == 'u':
+        return unichr(int(s[2:], 16))
+    else:
+        return chr(int(s[1:], 8))
+
+
 def _unquote(v):
     if v[:1] in ('"', "'"):
-        return re.sub(r'\\(.)', r'\1', v[1:-1])
+        return re.sub(r'\\([0-9]{1,3}|u[0-9a-f]{4}|.)', _escape_sub_callback,
+                      v[1:-1])
     elif v in ('?', ''):
         return None
     else:
@@ -278,6 +309,7 @@ if PY3:
     unicode = str
     basestring = str
     xrange = range
+    unichr = chr
 # COMPABILITY WITH PYTHON 2 ===================================================
 # =============================================================================
 PY2 = sys.version_info[0] == 2
@@ -379,9 +411,13 @@ class BadObject(ArffException):
 # =============================================================================
 
 # INTERNAL ====================================================================
+def _unescape_sub_callback(match):
+    return _UNESCAPE_SUB_MAP[match.group()]
+
+
 def encode_string(s):
     if _RE_QUOTE_CHARS.search(s):
-        return u"'%s'" % _RE_ESCAPE_CHARS.sub(r'\\', s)
+        return u"'%s'" % _RE_ESCAPE_CHARS.sub(_unescape_sub_callback, s)
     return s
 
 

@@ -10,6 +10,11 @@ LIAC-ARFF 2.4
 
 * enhancement: load data progressively with generator `return_type`.
 
+LIAC-ARFF 2.4
+
+* enhancement: standard Java escape sequences are now decoded in string
+  attributes, and non-printable characters are now encoded with escaping.
+
 LIAC-ARFF 2.3.1
 
 * maintenance: replace two bare ``raise`` by appropriate ``raise Exception``
