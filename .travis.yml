@@ -1,4 +1,5 @@
 language: python
+
 matrix:
   include:
     - python: 2.7
@@ -12,18 +13,19 @@ matrix:
       sudo: required
     - python: pypy
     - python: pypy3
+	
 install: python setup.py install
 script: python setup.py test
 after_success: source ci_scripts/create_doc.sh $TRAVIS_BRANCH "doc_result"
 
-# For more info regarding the deploy process and the github token look at:
+# For more info regarding the deploy process and the github token, look at:
 # https://docs.travis-ci.com/user/deployment/pages/
 
 deploy:
   provider: pages
   skip_cleanup: true
   github_token: $GITHUB_TOKEN
-  keep-history: true
+  keep-history: false
   committer-from-gh: true
   on:
     all_branches: true

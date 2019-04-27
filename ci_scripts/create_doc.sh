@@ -10,14 +10,14 @@ if ! [[ -z ${DOCPUSH+x} ]]; then
         # $1 is the branch name
         # $2 is the global variable where we set the script status
 
-        if ! { [ $1 = "master" ]; }; then
+        if ! [[ $1 = "master" ]]; then
             { echo "Not one of the allowed branches"; exit 0; }
         fi
 
         # create the documentation
         cd docs && make html
         
-        # necessary file for the documentation to display properly
+        # create necessary file for the documentation to display properly
         # after it is deployed.
         touch build/html/.nojekyll
 
