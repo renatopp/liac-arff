@@ -13,7 +13,7 @@ matrix:
       sudo: required
     - python: pypy
     - python: pypy3
-	
+
 install: python setup.py install
 script: python setup.py test
 after_success: source ci_scripts/create_doc.sh $TRAVIS_BRANCH "doc_result"
