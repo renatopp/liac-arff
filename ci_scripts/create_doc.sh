@@ -16,6 +16,10 @@ if ! [[ -z ${DOCPUSH+x} ]]; then
 
         # create the documentation
         cd docs && make html
+        
+        # necessary file for the documentation to display properly
+        # after it is deployed.
+        touch build/html/.nojekyll
 
         # takes a variable name as an argument and assigns the script outcome to a
         # variable with the given name. If it got this far, the script was successful
