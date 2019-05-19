@@ -7,12 +7,6 @@ if ! [[ -z ${DOCPUSH+x} ]]; then
 
         # install documentation building dependencies
         pip install sphinx sphinx-gallery sphinx_bootstrap_theme
-        # $1 is the branch name
-        # $2 is the global variable where we set the script status
-
-        if ! [[ $1 = "master" ]]; then
-            { echo "Not one of the allowed branches"; exit 0; }
-        fi
 
         # create the documentation
         cd docs && make html
@@ -20,6 +14,12 @@ if ! [[ -z ${DOCPUSH+x} ]]; then
         # create necessary file for the documentation to display properly
         # after it is deployed.
         touch build/html/.nojekyll
+
+        # $1 is the branch name
+        # $2 is the global variable where we set the script status
+        if ! [[ $1 = "master" ]]; then
+            { echo "Not one of the allowed branches"; exit 0; }
+        fi
 
         # takes a variable name as an argument and assigns the script outcome to a
         # variable with the given name. If it got this far, the script was successful

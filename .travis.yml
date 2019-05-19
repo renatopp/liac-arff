@@ -15,8 +15,9 @@ matrix:
     - python: pypy3
 
 install: python setup.py install
-script: python setup.py test
-after_success: source ci_scripts/create_doc.sh $TRAVIS_BRANCH "doc_result"
+script:
+- python setup.py test
+- source ci_scripts/create_doc.sh $TRAVIS_BRANCH "doc_result"
 
 # For more info regarding the deploy process and the github token, look at:
 # https://docs.travis-ci.com/user/deployment/pages/
