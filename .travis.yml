@@ -3,14 +3,10 @@ language: python
 matrix:
   include:
     - python: 2.7
-    - python: 3.3
-    - python: 3.4
     - python: 3.5
     - python: 3.6
       env: DOCPUSH="true"
     - python: 3.7
-      dist: xenial
-      sudo: required
     - python: pypy
     - python: pypy3
 

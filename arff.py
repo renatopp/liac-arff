@@ -138,7 +138,7 @@ This module provides several features, including:
 - Supports read and write the descriptions of files;
 - Supports missing values and names with spaces;
 - Supports unicode values and names;
-- Fully compatible with Python 2.7+, Python 3.3+, pypy and pypy3;
+- Fully compatible with Python 2.7+, Python 3.5+, pypy and pypy3;
 - Under `MIT License <http://opensource.org/licenses/MIT>`_
 
 '''
