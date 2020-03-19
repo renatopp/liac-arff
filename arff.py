@@ -151,6 +151,7 @@ __version__ = '2.4.0'
 import re
 import sys
 import csv
+from typing import Optional
 
 # CONSTANTS ===================================================================
 _SIMPLE_TYPES = ['NUMERIC', 'REAL', 'INTEGER', 'STRING']
@@ -318,7 +319,7 @@ if PY2:
 
 # EXCEPTIONS ==================================================================
 class ArffException(Exception):
-    message = None
+    message: Optional[str] = None
 
     def __init__(self):
         self.line = -1
