@@ -319,7 +319,7 @@ if PY2:
 
 # EXCEPTIONS ==================================================================
 class ArffException(Exception):
-    message: Optional[str] = None
+    message = None  # type: Optional[str]
 
     def __init__(self):
         self.line = -1
