@@ -13,12 +13,13 @@ except ImportError:
     from ez_setup import use_setuptools
     use_setuptools()
 
+import sys
 from setuptools import setup
 
 try:
-    f = open('README.rst','rU')
-    long_description = f.read()
-    f.close()
+    mode = 'rU' if sys.version_info[0] == 2 else 'r'
+    with open('README.rst', mode):
+        long_description = f.read()
 except:
     long_description = ''
 
