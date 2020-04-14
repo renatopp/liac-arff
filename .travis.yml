@@ -11,8 +11,12 @@ matrix:
     - python: pypy
     - python: pypy3
 
-install: python setup.py install
+install:
+- pip install .
+- pip install flake8
+
 script:
+- flake8 arff.py
 - python setup.py test
 - source ci_scripts/create_doc.sh $TRAVIS_BRANCH "doc_result"
 
