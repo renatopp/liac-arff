@@ -32,3 +32,5 @@ nosetests.xml
 #Mr Developer
 .mr.developer.cfg
 
+.mypy_cache/
+
