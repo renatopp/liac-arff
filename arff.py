@@ -248,7 +248,7 @@ def _escape_sub_callback(match):
         except KeyError:
             raise ValueError('Unsupported escape sequence: %s' % s)
     if s[1] == 'u':
-        return unichr(int(s[2:], 16))
+        return chr(int(s[2:], 16))
     else:
         return chr(int(s[1:], 8))
 
@@ -301,24 +301,10 @@ DENSE_GEN = 3 # Generator of dictionaries
 LOD_GEN = 4   # Generator of dictionaries
 _SUPPORTED_DATA_STRUCTURES = [DENSE, COO, LOD, DENSE_GEN, LOD_GEN]
 
-# =============================================================================
-
-# COMPATIBILITY WITH PYTHON 3 =================================================
-PY3 = sys.version_info[0] >= 3
-if PY3:
-    unicode = str
-    basestring = str
-    xrange = range
-    unichr = chr
-# COMPABILITY WITH PYTHON 2 ===================================================
-# =============================================================================
-PY2 = sys.version_info[0] == 2
-if PY2:
-    from itertools import izip as zip
 
 # EXCEPTIONS ==================================================================
 class ArffException(Exception):
-    message = None  # type: Optional[str]
+    message: Optional[str] = None
 
     def __init__(self):
         self.line = -1
@@ -447,7 +433,7 @@ class NominalConversor:
                 # with EncodedNominalConversor.
                 return self.zero_value
             raise BadNominalValue(value)
-        return unicode(value)
+        return str(value)
 
 
 class DenseGeneratorData:
@@ -463,7 +449,7 @@ class DenseGeneratorData:
                     raise BadDataFormat(row)
                 # XXX: int 0 is used for implicit values, not '0'
                 values = [values[i] if i in values else 0 for i in
-                          xrange(len(conversors))]
+                          range(len(conversors))]
             else:
                 if len(values) != len(conversors):
                     raise BadDataFormat(row)
@@ -505,7 +491,7 @@ class DenseGeneratorData:
                 if value is None or value == '' or value != value:
                     s = '?'
                 else:
-                    s = encode_string(unicode(value))
+                    s = encode_string(str(value))
                 new_data.append(s)
 
             current_row += 1
@@ -559,7 +545,7 @@ class COOData:
         data = data.data
 
         # Check if the rows are sorted
-        if not all(row[i] <= row[i + 1] for i in xrange(len(row) - 1)):
+        if not all(row[i] <= row[i + 1] for i in range(len(row) - 1)):
             raise ValueError("liac-arff can only output COO matrices with "
                              "sorted rows.")
 
@@ -580,7 +566,7 @@ class COOData:
             if v is None or v == '' or v != v:
                 s = '?'
             else:
-                s = encode_string(unicode(v))
+                s = encode_string(str(v))
             new_data.append("%d %s" % (col, s))
 
         yield " ".join(["{", ','.join(new_data), "}"])
@@ -621,7 +607,7 @@ class LODGeneratorData:
                 if v is None or v == '' or v != v:
                     s = '?'
                 else:
-                    s = encode_string(unicode(v))
+                    s = encode_string(str(v))
                 new_data.append("%d %s" % (col, s))
 
             current_row += 1
@@ -704,7 +690,7 @@ class ArffDecoder:
         if not _RE_RELATION.match(v):
             raise BadRelationFormat()
 
-        res = unicode(v.strip('"\''))
+        res = str(v.strip('"\''))
         return res
 
     def _decode_attribute(self, s):
@@ -746,7 +732,7 @@ class ArffDecoder:
         name, type_ = m.groups()
 
         # Extracts the final name
-        name = unicode(name.strip('"\''))
+        name = str(name.strip('"\''))
 
         # Extracts the final type
         if _RE_TYPE_NOMINAL.match(type_):
@@ -759,7 +745,7 @@ class ArffDecoder:
 
         else:
             # If not nominal, verify the type name
-            type_ = unicode(type_).upper()
+            type_ = str(type_).upper()
             if type_ not in ['NUMERIC', 'REAL', 'INTEGER', 'STRING']:
                 raise BadAttributeType()
 
@@ -772,7 +758,7 @@ class ArffDecoder:
         self._current_line = 0
 
         # If string, convert to a list of lines
-        if isinstance(s, basestring):
+        if isinstance(s, str):
             s = s.strip('\r\n ').replace('\r\n', '\n').split('\n')
 
         # Create the return object
@@ -832,7 +818,7 @@ class ArffDecoder:
                     else:
                         conversor = NominalConversor(attr[1])
                 else:
-                    CONVERSOR_MAP = {'STRING': unicode,
+                    CONVERSOR_MAP = {'STRING': str,
                                      'INTEGER': lambda x: int(float(x)),
                                      'NUMERIC': float,
                                      'REAL': float}
@@ -969,7 +955,7 @@ class ArffEncoder:
         '''Encodes a given object to an ARFF file.
 
         :param obj: the object containing the ARFF information.
-        :return: the ARFF file as an unicode string.
+        :return: the ARFF file as an string.
         '''
         data = [row for row in self.iter_encode(obj)]
 
@@ -982,7 +968,7 @@ class ArffEncoder:
         lines of the ARFF file.
 
         :param obj: the object containing the ARFF information.
-        :return: (yields) the ARFF file as unicode strings.
+        :return: (yields) the ARFF file as strings.
         '''
         # DESCRIPTION
         if obj.get('description', None):
@@ -1005,10 +991,10 @@ class ArffEncoder:
             # Verify for bad object format
             if not isinstance(attr, (tuple, list)) or \
                len(attr) != 2 or \
-               not isinstance(attr[0], basestring):
+               not isinstance(attr[0], str):
                 raise BadObject('Invalid attribute declaration "%s"'%str(attr))
 
-            if isinstance(attr[1], basestring):
+            if isinstance(attr[1], str):
                 # Verify for invalid types
                 if attr[1] not in _SIMPLE_TYPES:
                     raise BadObject('Invalid attribute type "%s"'%str(attr))

@@ -17,8 +17,7 @@ import sys
 from setuptools import setup
 
 try:
-    mode = 'rU' if sys.version_info[0] == 2 else 'r'
-    with open('README.rst', mode):
+    with open('README.rst', 'r'):
         long_description = f.read()
 except:
     long_description = ''
@@ -33,8 +32,7 @@ setup(
     long_description=long_description,
     url='https://github.com/renatopp/liac-arff',
     download_url='https://github.com/renatopp/liac-arff',
-    tests_require=['mock'],
-    python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*',
+    python_requires='>=3.6',
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Environment :: MacOS X',

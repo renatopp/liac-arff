@@ -325,21 +325,21 @@ class TestTooManyAttributes(unittest.TestCase):
         decoder = arff.ArffDecoder()
         with self.assertRaisesRegexp(arff.BadDataFormat,
                                      'Bad @DATA instance format in line 10: '
-                                     '\{2 a\}'):
+                                     r'\{2 a\}'):
             decoder.decode(too_many_attributes, return_type=arff.DENSE)
 
     def test_coo(self):
         decoder = arff.ArffDecoder()
         with self.assertRaisesRegexp(arff.BadDataFormat,
                                      'Bad @DATA instance format in line 10: '
-                                     '\{2 a\}'):
+                                     r'\{2 a\}'):
             decoder.decode(too_many_attributes, return_type=arff.COO)
 
     def test_lod(self):
         decoder = arff.ArffDecoder()
         with self.assertRaisesRegexp(arff.BadDataFormat,
                                      'Bad @DATA instance format in line 10: '
-                                     '\{2 a\}'):
+                                     r'\{2 a\}'):
             decoder.decode(too_many_attributes, return_type=arff.LOD)
 
 
@@ -397,7 +397,7 @@ class TestInvalidValues(unittest.TestCase):
 
         fixture = self.my_arff.format(data="{0 a',1 'c d'}")
         with self.assertRaisesRegexp(arff.ArffException,
-                                     "',1 'c d'\}."):
+                                     r"',1 'c d'\}."):
             arff.load(fixture)
 
         fixture = self.my_arff.format(data="{0 a b,1 'c d'}")

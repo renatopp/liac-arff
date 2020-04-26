@@ -2,10 +2,7 @@ import types
 import unittest
 import arff
 
-if arff.PY2:
-    import mock
-else:
-    import unittest.mock as mock
+from unittest import mock
 
 
 class ConversorStub(object):
@@ -33,10 +30,10 @@ class TestData(unittest.TestCase):
     # Tests for the decoding part
     def test_conversor(self):
         '''Basic data instances.'''
-        conversors = [ConversorStub(str if arff.PY3 else unicode),
+        conversors = [ConversorStub(str),
                       ConversorStub(float),
                       ConversorStub(int),
-                      ConversorStub(str if arff.PY3 else unicode)]
+                      ConversorStub(str)]
 
         fixture = u'Iris,3.4,2,Setosa'
         result, = self.data.decode_rows([fixture], conversors)
@@ -50,10 +47,10 @@ class TestData(unittest.TestCase):
 
     def test_sparse(self):
         '''Basic data instances.'''
-        conversors = [ConversorStub(str if arff.PY3 else unicode),
+        conversors = [ConversorStub(str),
                       ConversorStub(float),
                       ConversorStub(int),
-                      ConversorStub(str if arff.PY3 else unicode),
+                      ConversorStub(str),
                       ConversorStub(float),
                       ConversorStub(int)]
 
@@ -112,10 +109,10 @@ class TestCOOData(unittest.TestCase):
     # Tests for the decoding part
     def test_conversor(self):
         '''Basic data instances.'''
-        conversors = [ConversorStub(str if arff.PY3 else unicode),
+        conversors = [ConversorStub(str),
                       ConversorStub(float),
                       ConversorStub(int),
-                      ConversorStub(str if arff.PY3 else unicode)]
+                      ConversorStub(str)]
 
         fixture = u'{0 Iris,1 3.4,2 2,3 Setosa}'
         result, row, col = self.data.decode_rows([fixture], conversors)
@@ -131,10 +128,10 @@ class TestCOOData(unittest.TestCase):
 
     def test_sparse(self):
         '''Basic data instances.'''
-        conversors = [ConversorStub(str if arff.PY3 else unicode),
+        conversors = [ConversorStub(str),
                       ConversorStub(float),
                       ConversorStub(int),
-                      ConversorStub(str if arff.PY3 else unicode),
+                      ConversorStub(str),
                       ConversorStub(float),
                       ConversorStub(int)]
 
@@ -220,10 +217,10 @@ class TestLODData(unittest.TestCase):
     # Tests for the decoding part
     def test_conversor(self):
         '''Basic data instances.'''
-        conversors = [ConversorStub(str if arff.PY3 else unicode),
+        conversors = [ConversorStub(str),
                       ConversorStub(float),
                       ConversorStub(int),
-                      ConversorStub(str if arff.PY3 else unicode)]
+                      ConversorStub(str)]
 
         fixture = u'{0 Iris,1 3.4,2 2,3 Setosa}'
         result, = self.data.decode_rows([fixture], conversors)
@@ -237,10 +234,10 @@ class TestLODData(unittest.TestCase):
 
     def test_sparse(self):
         '''Basic data instances.'''
-        conversors = [ConversorStub(str if arff.PY3 else unicode),
+        conversors = [ConversorStub(str),
                       ConversorStub(float),
                       ConversorStub(int),
-                      ConversorStub(str if arff.PY3 else unicode),
+                      ConversorStub(str),
                       ConversorStub(float),
                       ConversorStub(int)]
 
