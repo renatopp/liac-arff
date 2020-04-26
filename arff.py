@@ -186,10 +186,10 @@ def _build_re_values():
                     '''
     # a value is surrounded by " or by ' or contains no quotables
     value_re = r'''(?:
-        {}|          # a value may be surrounded by "
-        {}|          # or by '
-        [^,\s"'{{}}]+  # or may contain no characters requiring quoting
-        )'''.format(quoted_re,
+        %s|          # a value may be surrounded by "
+        %s|          # or by '
+        [^,\s"'{}]+  # or may contain no characters requiring quoting
+        )''' % (quoted_re,
                 quoted_re.replace('"', "'"))
 
     # This captures (value, error) groups. Because empty values are allowed,
@@ -207,17 +207,18 @@ def _build_re_values():
     # in case of syntax errors.
     # It does not ensure that the line starts with '{' or ends with '}'.
     sparse = re.compile(r'''(?x)
-        (?:^\s*\{{|,)   # may follow ',', or '{{' at line start
+        (?:^\s*\{|,)   # may follow ',', or '{' at line start
         \s*
         (\d+)          # attribute key
         \s+
-        ({value_re}) # value
+        (%(value_re)s) # value
         |
-        (?!}}\s*$)      # not an error if it's }}$
-        (?!^\s*{{\s*}}\s*$)  # not an error if it's ^{{}}$
+        (?!}\s*$)      # not an error if it's }$
+        (?!^\s*{\s*}\s*$)  # not an error if it's ^{}$
         \S.*           # error
-        '''.format(value_re=value_re))
+        ''' % {'value_re': value_re})
     return dense, sparse
+
 
 
 _RE_DENSE_VALUES, _RE_SPARSE_KEY_VALUES = _build_re_values()
