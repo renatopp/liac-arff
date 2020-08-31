@@ -7,7 +7,9 @@ matrix:
     - python: 3.6
       env: DOCPUSH="true"
     - python: 3.7
-    - python: 3.8-dev
+    - python: 3.8
+    - python: 3.9dev
+    - python: 3.10dev
     - python: pypy
     - python: pypy3
 

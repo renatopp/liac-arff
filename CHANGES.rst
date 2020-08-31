@@ -2,6 +2,15 @@
 What's New in LIAC-ARFF
 ~~~~~~~~~~~~~~~~~~~~~~~
 
+LIAC-ARFF 2.5
+
+This is the last release supporting Python 2.
+
+* maintenance: drop support for Python 3.3 and 3.4, add support for Python 3.8
+* maintenance: improve compatibility with the upcoming Python 3.10
+* maintenance: automatically build the documentation.
+* maintenance: fix mypy errors
+
 LIAC-ARFF 2.4
 
 * enhancement: load data progressively with generator `return_type`.
