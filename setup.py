@@ -62,5 +62,6 @@ setup(
     keywords='arff weka parser liac python',
     py_modules=['arff'],
     package_data={'': ['README.rst', 'CHANGES.rst', 'LICENSE']},
+    data_files=[('LICENSE')],
     test_suite='tests',
 )
