@@ -2,13 +2,10 @@ import types
 import unittest
 import arff
 
-if arff.PY2:
-    import mock
-else:
-    import unittest.mock as mock
+from unittest import mock
 
 
-class ConversorStub(object):
+class ConversorStub:
     def __init__(self, r_value):
         self.r_value = r_value
 
@@ -16,7 +13,7 @@ class ConversorStub(object):
         return self.r_value(value)
 
 
-class COOStub(object):
+class COOStub:
     def __init__(self, data, row, col):
         self.data = data
         self.row = row
@@ -33,14 +30,14 @@ class TestData(unittest.TestCase):
     # Tests for the decoding part
     def test_conversor(self):
         '''Basic data instances.'''
-        conversors = [ConversorStub(str if arff.PY3 else unicode),
+        conversors = [ConversorStub(str),
                       ConversorStub(float),
                       ConversorStub(int),
-                      ConversorStub(str if arff.PY3 else unicode)]
+                      ConversorStub(str)]
 
-        fixture = u'Iris,3.4,2,Setosa'
+        fixture = 'Iris,3.4,2,Setosa'
         result, = self.data.decode_rows([fixture], conversors)
-        expected = [u'Iris', 3.4, 2, u'Setosa']
+        expected = ['Iris', 3.4, 2, 'Setosa']
 
         self.assertEqual(len(result), 4)
         self.assertEqual(result[0], expected[0])
@@ -50,16 +47,16 @@ class TestData(unittest.TestCase):
 
     def test_sparse(self):
         '''Basic data instances.'''
-        conversors = [ConversorStub(str if arff.PY3 else unicode),
+        conversors = [ConversorStub(str),
                       ConversorStub(float),
                       ConversorStub(int),
-                      ConversorStub(str if arff.PY3 else unicode),
+                      ConversorStub(str),
                       ConversorStub(float),
                       ConversorStub(int)]
 
-        fixture = u'{0 Iris,1 3.4, 2 2}'
+        fixture = '{0 Iris,1 3.4, 2 2}'
         result, = self.data.decode_rows([fixture], conversors)
-        expected = [u'Iris', 3.4, 2, u'0', 0.0, 0]
+        expected = ['Iris', 3.4, 2, '0', 0.0, 0]
 
         self.assertEqual(len(result), len(expected))
         for i in range(len(expected)):
@@ -70,7 +67,7 @@ class TestData(unittest.TestCase):
     def test_simple(self):
         fixture = [[1, 3, 'Renato', 'Name with spaces']]
         result = self.data.encode_data(fixture, self.attributes)
-        expected = u"1,3,Renato,'Name with spaces'"
+        expected = "1,3,Renato,'Name with spaces'"
 
         self.assertTrue(isinstance(result, types.GeneratorType))
         self.assertEqual(next(result), expected)
@@ -78,7 +75,7 @@ class TestData(unittest.TestCase):
     def test_null_value(self):
         fixture = [[1, None, 'Renato', '']]
         result = self.data.encode_data(fixture, self.attributes)
-        expected = u"1,?,Renato,?"
+        expected = "1,?,Renato,?"
 
         self.assertTrue(isinstance(result, types.GeneratorType))
         self.assertEqual(next(result), expected)
@@ -112,14 +109,14 @@ class TestCOOData(unittest.TestCase):
     # Tests for the decoding part
     def test_conversor(self):
         '''Basic data instances.'''
-        conversors = [ConversorStub(str if arff.PY3 else unicode),
+        conversors = [ConversorStub(str),
                       ConversorStub(float),
                       ConversorStub(int),
-                      ConversorStub(str if arff.PY3 else unicode)]
+                      ConversorStub(str)]
 
-        fixture = u'{0 Iris,1 3.4,2 2,3 Setosa}'
+        fixture = '{0 Iris,1 3.4,2 2,3 Setosa}'
         result, row, col = self.data.decode_rows([fixture], conversors)
-        expected = [u'Iris', 3.4, 2, u'Setosa']
+        expected = ['Iris', 3.4, 2, 'Setosa']
 
         self.assertEqual(len(result), 4)
         self.assertEqual(result[0], expected[0])
@@ -131,16 +128,16 @@ class TestCOOData(unittest.TestCase):
 
     def test_sparse(self):
         '''Basic data instances.'''
-        conversors = [ConversorStub(str if arff.PY3 else unicode),
+        conversors = [ConversorStub(str),
                       ConversorStub(float),
                       ConversorStub(int),
-                      ConversorStub(str if arff.PY3 else unicode),
+                      ConversorStub(str),
                       ConversorStub(float),
                       ConversorStub(int)]
 
-        fixture = u'{0 Iris,1 3.4, 2 2}'
+        fixture = '{0 Iris,1 3.4, 2 2}'
         result, row, col = self.data.decode_rows([fixture], conversors)
-        expected = {0: u'Iris', 1: 3.4, 2: 2}
+        expected = {0: 'Iris', 1: 3.4, 2: 2}
 
         self.assertEqual(len(result), len(expected))
         for i in range(len(expected)):
@@ -156,7 +153,7 @@ class TestCOOData(unittest.TestCase):
 
         self.assertTrue(isinstance(result, types.GeneratorType))
         self.assertEqual(next(result),
-                         u'{ 0 1,1 ?,2 Renato,3 \'Name with spaces\' }')
+                         '{ 0 1,1 ?,2 Renato,3 \'Name with spaces\' }')
 
 
     def test_null_value(self):
@@ -166,7 +163,7 @@ class TestCOOData(unittest.TestCase):
         result = self.data.encode_data(fixture, self.attributes)
 
         self.assertTrue(isinstance(result, types.GeneratorType))
-        self.assertEqual(next(result), u'{ 0 1,1 ?,2 Renato,3 ? }')
+        self.assertEqual(next(result), '{ 0 1,1 ?,2 Renato,3 ? }')
 
     def test_sparse_matrix(self):
         fixture = COOStub([1, None, 'Renato', ''],
@@ -220,14 +217,14 @@ class TestLODData(unittest.TestCase):
     # Tests for the decoding part
     def test_conversor(self):
         '''Basic data instances.'''
-        conversors = [ConversorStub(str if arff.PY3 else unicode),
+        conversors = [ConversorStub(str),
                       ConversorStub(float),
                       ConversorStub(int),
-                      ConversorStub(str if arff.PY3 else unicode)]
+                      ConversorStub(str)]
 
-        fixture = u'{0 Iris,1 3.4,2 2,3 Setosa}'
+        fixture = '{0 Iris,1 3.4,2 2,3 Setosa}'
         result, = self.data.decode_rows([fixture], conversors)
-        expected = {0: u'Iris', 1: 3.4, 2: 2, 3: u'Setosa'}
+        expected = {0: 'Iris', 1: 3.4, 2: 2, 3: 'Setosa'}
 
         self.assertEqual(len(result), 4)
         self.assertEqual(result[0], expected[0])
@@ -237,16 +234,16 @@ class TestLODData(unittest.TestCase):
 
     def test_sparse(self):
         '''Basic data instances.'''
-        conversors = [ConversorStub(str if arff.PY3 else unicode),
+        conversors = [ConversorStub(str),
                       ConversorStub(float),
                       ConversorStub(int),
-                      ConversorStub(str if arff.PY3 else unicode),
+                      ConversorStub(str),
                       ConversorStub(float),
                       ConversorStub(int)]
 
-        fixture = u'{0 Iris,1 3.4, 2 2}'
+        fixture = '{0 Iris,1 3.4, 2 2}'
         result, = self.data.decode_rows([fixture], conversors)
-        expected = [u'Iris', 3.4, 2]
+        expected = ['Iris', 3.4, 2]
 
         self.assertEqual(len(result), len(expected))
         for i in range(len(expected)):
@@ -260,7 +257,7 @@ class TestLODData(unittest.TestCase):
 
         self.assertTrue(isinstance(result, types.GeneratorType))
         self.assertEqual(next(result),
-                         u'{ 0 1,1 ?,2 Renato,3 \'Name with spaces\' }')
+                         '{ 0 1,1 ?,2 Renato,3 \'Name with spaces\' }')
 
 
     def test_null_value(self):
@@ -268,7 +265,7 @@ class TestLODData(unittest.TestCase):
         result = self.data.encode_data(fixture, self.attributes)
 
         self.assertTrue(isinstance(result, types.GeneratorType))
-        self.assertEqual(next(result), u'{ 0 1,1 ?,2 Renato,3 ? }')
+        self.assertEqual(next(result), '{ 0 1,1 ?,2 Renato,3 ? }')
 
     def test_sparse_matrix(self):
         fixture = [{0: 1}]

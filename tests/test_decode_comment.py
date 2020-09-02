@@ -10,10 +10,10 @@ class TestDecodeComment(unittest.TestCase):
         '''Comments without any space padding or special characters.'''
         decoder = self.get_decoder()
 
-        fixture = u'%This is a simple comment.'
+        fixture = '%This is a simple comment.'
 
         result = decoder._decode_comment(fixture)
-        expected = u'This is a simple comment.'
+        expected = 'This is a simple comment.'
 
         self.assertEqual(result, expected)
 
@@ -21,9 +21,9 @@ class TestDecodeComment(unittest.TestCase):
         '''Comments with space padding right after the % character.'''
         decoder = self.get_decoder()
 
-        fixture = u'% This is a simple comment.'
+        fixture = '% This is a simple comment.'
 
         result = decoder._decode_comment(fixture)
-        expected = u'This is a simple comment.'
+        expected = 'This is a simple comment.'
 
         self.assertEqual(result, expected)

@@ -10,9 +10,9 @@ class TestDecodeRelation(unittest.TestCase):
         '''Relation names without spaces.'''
         decoder = self.get_decoder()
 
-        fixture = u'@RELATION relation-name'
+        fixture = '@RELATION relation-name'
         result = decoder._decode_relation(fixture)
-        expected = u'relation-name'
+        expected = 'relation-name'
 
         self.assertEqual(result, expected)
 
@@ -20,9 +20,9 @@ class TestDecodeRelation(unittest.TestCase):
         '''Relation names with padding between @RELATION and the value.'''
         decoder = self.get_decoder()
 
-        fixture = u'@RELATION     relation-name'
+        fixture = '@RELATION     relation-name'
         result = decoder._decode_relation(fixture)
-        expected = u'relation-name'
+        expected = 'relation-name'
 
         self.assertEqual(result, expected)
 
@@ -31,16 +31,16 @@ class TestDecodeRelation(unittest.TestCase):
         decoder = self.get_decoder()
 
         # double quoted
-        fixture = u'@RELATION "relation-name"'
+        fixture = '@RELATION "relation-name"'
         result = decoder._decode_relation(fixture)
-        expected = u'relation-name'
+        expected = 'relation-name'
 
         self.assertEqual(result, expected)
 
         # simple quoted
-        fixture = u"@RELATION 'relation-name'"
+        fixture = "@RELATION 'relation-name'"
         result = decoder._decode_relation(fixture)
-        expected = u'relation-name'
+        expected = 'relation-name'
 
         self.assertEqual(result, expected)
 
@@ -49,16 +49,16 @@ class TestDecodeRelation(unittest.TestCase):
         decoder = self.get_decoder()
 
         # double quoted
-        fixture = u'@RELATION "%relation name"'
+        fixture = '@RELATION "%relation name"'
         result = decoder._decode_relation(fixture)
-        expected = u'%relation name'
+        expected = '%relation name'
 
         self.assertEqual(result, expected)
 
         # simple quoted
-        fixture = u"@RELATION 'relation {} name'"
+        fixture = "@RELATION 'relation {} name'"
         result = decoder._decode_relation(fixture)
-        expected = u'relation {} name'
+        expected = 'relation {} name'
 
         self.assertEqual(result, expected)
 
@@ -67,16 +67,16 @@ class TestDecodeRelation(unittest.TestCase):
         decoder = self.get_decoder()
 
         # double quoted
-        fixture = u'@RELATION "relation name"'
+        fixture = '@RELATION "relation name"'
         result = decoder._decode_relation(fixture)
-        expected = u'relation name'
+        expected = 'relation name'
 
         self.assertEqual(result, expected)
 
         # simple quoted
-        fixture = u"@RELATION 'relation name'"
+        fixture = "@RELATION 'relation name'"
         result = decoder._decode_relation(fixture)
-        expected = u'relation name'
+        expected = 'relation name'
 
         self.assertEqual(result, expected)
 
@@ -84,7 +84,7 @@ class TestDecodeRelation(unittest.TestCase):
         '''Relation names with spaces and without quotes.'''
         decoder = self.get_decoder()
 
-        fixture = u'@RELATION bad relation name'
+        fixture = '@RELATION bad relation name'
         self.assertRaises(
             arff.BadRelationFormat, 
             decoder._decode_relation,
@@ -95,14 +95,14 @@ class TestDecodeRelation(unittest.TestCase):
         '''Relation names with spaces and without quotes.'''
         decoder = self.get_decoder()
 
-        fixture = u'@RELATION %relationname'
+        fixture = '@RELATION %relationname'
         self.assertRaises(
             arff.BadRelationFormat, 
             decoder._decode_relation,
             fixture
         )
 
-        fixture = u'@RELATION relat,ionname'
+        fixture = '@RELATION relat,ionname'
         self.assertRaises(
             arff.BadRelationFormat, 
             decoder._decode_relation,

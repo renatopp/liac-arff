@@ -33,7 +33,7 @@ Features
 - Supports read and write the descriptions of files;
 - Supports missing values and names with spaces;
 - Supports unicode values and names;
-- Fully compatible with Python 2.7+ and Python 3.5-3.8;
+- Fully compatible with Python 3.6+;
 - Under `MIT License <http://opensource.org/licenses/MIT>`_
 
 --------------
@@ -44,13 +44,9 @@ Via pip::
 
     $ pip install liac-arff
 
-Via easy_install::
-
-    $ easy_install liac-arff
-
 Manually::
 
-    $ python setup.py install
+    $ pip install .
 
 
 -------------
