@@ -148,7 +148,6 @@ __author_email__ = ('renato.ppontes@gmail.com, '
 __version__ = '2.4.0'
 
 import re
-import sys
 import csv
 from typing import Optional
 
@@ -221,7 +220,6 @@ def _build_re_values():
         \S.*           # error
         ''' % {'value_re': value_re})
     return dense, sparse
-
 
 
 _RE_DENSE_VALUES, _RE_SPARSE_KEY_VALUES = _build_re_values()
@@ -927,7 +925,7 @@ class ArffEncoder:
         :return: a string with the encoded comment line.
         '''
         if s:
-            return '%s %s'%(_TK_COMMENT, s)
+            return '%s %s' % (_TK_COMMENT, s)
         else:
             return '%s' % _TK_COMMENT
 
@@ -945,7 +943,7 @@ class ArffEncoder:
                 name = '"%s"' % name
                 break
 
-        return '%s %s'%(_TK_RELATION, name)
+        return '%s %s' % (_TK_RELATION, name)
 
     def _encode_attribute(self, name, type_):
         '''(INTERNAL) Encodes an attribute line.
@@ -977,9 +975,9 @@ class ArffEncoder:
 
         if isinstance(type_, (tuple, list)):
             type_tmp = ['%s' % encode_string(type_k) for type_k in type_]
-            type_ = '{%s}'%(', '.join(type_tmp))
+            type_ = '{%s}' % (', '.join(type_tmp))
 
-        return '%s %s %s'%(_TK_ATTRIBUTE, name, type_)
+        return '%s %s %s' % (_TK_ATTRIBUTE, name, type_)
 
     def encode(self, obj):
         '''Encodes a given object to an ARFF file.
@@ -1022,7 +1020,8 @@ class ArffEncoder:
             if not isinstance(attr, (tuple, list)) or \
                len(attr) != 2 or \
                not isinstance(attr[0], str):
-                raise BadObject('Invalid attribute declaration "%s"'%str(attr))
+                raise BadObject(
+                        'Invalid attribute declaration "%s"' % str(attr))
 
             if isinstance(attr[1], str):
                 # Verify for invalid types
