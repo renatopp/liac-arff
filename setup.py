@@ -4,8 +4,8 @@ __author__ = 'Renato de Pontes Pereira, Matthias Feurer, Joel Nothman'
 __author_email__ = ('renato.ppontes@gmail.com, '
                     'feurerm@informatik.uni-freiburg.de, '
                     'joel.nothman@gmail.com')
-__version__ = '2.4.0'
-__date__ = '2019 02 06'
+__version__ = '2.5.0'
+__date__ = '2020 08 31'
 
 try:
     import setuptools
