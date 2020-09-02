@@ -2,7 +2,7 @@ import unittest
 import textwrap
 import arff
 
-class BaseTestDecodeConversor(object):
+class BaseTestDecodeConversor:
 
     # Note that we want to test the normalisation (e.g. handling of missing
     # values and quoting), as well as conversion from string to value type.
@@ -12,14 +12,14 @@ class BaseTestDecodeConversor(object):
     def _get_arff_loader(self, return_type, type_, values=None):
         encode_nominal = type_ == 'ENCODED_NOMINAL'
         if values is not None:
-            type_ = u'{' + u','.join(values) + u'}'
+            type_ = '{' + ','.join(values) + '}'
 
         def load(value):
             if self.use_sparse:
                 data = '{ 0 %s }' % value
             else:
                 data = '%s,0' % value
-            txt = textwrap.dedent(u'''
+            txt = textwrap.dedent('''
             @RELATION testing
 
             @ATTRIBUTE name {type_}
@@ -37,7 +37,7 @@ class BaseTestDecodeConversor(object):
         conversor = self.get_conversor('REAL')
 
         # From Integer
-        fixture = u'45'
+        fixture = '45'
         result = conversor(fixture)
         expected = 45.0
 
@@ -45,7 +45,7 @@ class BaseTestDecodeConversor(object):
         self.assertEqual(result, expected)
 
         # From Float
-        fixture = u'45.13233322'
+        fixture = '45.13233322'
         result = conversor(fixture)
         expected = 45.13233322
 
@@ -57,7 +57,7 @@ class BaseTestDecodeConversor(object):
         conversor = self.get_conversor('NUMERIC')
 
         # From Integer
-        fixture = u'45'
+        fixture = '45'
         result = conversor(fixture)
         expected = 45.0
 
@@ -65,7 +65,7 @@ class BaseTestDecodeConversor(object):
         self.assertEqual(result, expected)
 
         # From Float
-        fixture = u'45.13233322'
+        fixture = '45.13233322'
         result = conversor(fixture)
         expected = 45.13233322
 
@@ -77,7 +77,7 @@ class BaseTestDecodeConversor(object):
         conversor = self.get_conversor('INTEGER')
 
         # From Integer
-        fixture = u'45'
+        fixture = '45'
         result = conversor(fixture)
         expected = 45
 
@@ -85,7 +85,7 @@ class BaseTestDecodeConversor(object):
         self.assertEqual(result, expected)
 
         # From Float
-        fixture = u'"45.13233322"'
+        fixture = '"45.13233322"'
         result = conversor(fixture)
         expected = 45
 
@@ -96,42 +96,42 @@ class BaseTestDecodeConversor(object):
         '''Convert string value.'''
         conversor = self.get_conversor('STRING')
 
-        fixture = u'raposa'
+        fixture = 'raposa'
         result = conversor(fixture)
-        expected = u'raposa'
+        expected = 'raposa'
         self.assertEqual(result, expected)
 
-        fixture = u'"raposa"'
+        fixture = '"raposa"'
         result = conversor(fixture)
-        expected = u'raposa'
+        expected = 'raposa'
         self.assertEqual(result, expected)
 
     def test_nominal(self):
         '''Convert nominal value.'''
-        conversor = self.get_conversor('NOMINAL', [u'a', u'b', u'3.4'])
+        conversor = self.get_conversor('NOMINAL', ['a', 'b', '3.4'])
 
-        fixture = u'a'
+        fixture = 'a'
         result = conversor(fixture)
-        expected = u'a'
+        expected = 'a'
         self.assertEqual(result, expected)
 
-        fixture = u'3.4'
+        fixture = '3.4'
         result = conversor(fixture)
-        expected = u'3.4'
+        expected = '3.4'
         self.assertEqual(result, expected)
 
     def test_encoded_nominal(self):
         '''Convert nominal to encoded nominal value.'''
-        conversor = self.get_conversor('ENCODED_NOMINAL', [u'a', u'b', u'3.4'])
+        conversor = self.get_conversor('ENCODED_NOMINAL', ['a', 'b', '3.4'])
 
-        fixtures_and_expectations = [(u'a', 0), (u'b', 1), (u'3.4', 2)]
+        fixtures_and_expectations = [('a', 0), ('b', 1), ('3.4', 2)]
         for fixture, expected in fixtures_and_expectations:
             result = conversor(fixture)
             self.assertEqual(result, expected)
 
     def test_null_value(self):
         '''Values such as "?", or "".'''
-        conversor = self.get_conversor('NOMINAL', [u'a', u'b', u'3.4'])
+        conversor = self.get_conversor('NOMINAL', ['a', 'b', '3.4'])
         result = conversor('?')
         expected = None
         self.assertEqual(result, expected)
@@ -143,7 +143,7 @@ class BaseTestDecodeConversor(object):
             expected = None
             self.assertEqual(result, expected)
 
-        conversor = self.get_conversor('ENCODED_NOMINAL', [u'a', u'b', u'3.4'])
+        conversor = self.get_conversor('ENCODED_NOMINAL', ['a', 'b', '3.4'])
         result = conversor('?')
         expected = None
         self.assertEqual(result, expected)
@@ -168,7 +168,7 @@ class BaseTestDecodeConversor(object):
         conversor = self.get_conversor('NUMERIC')
 
         # From Integer
-        fixture = u'      45     '
+        fixture = '      45     '
         result = conversor(fixture)
         expected = 45.0
 
@@ -177,7 +177,7 @@ class BaseTestDecodeConversor(object):
 
     def test_invalid_nominal_value(self):
         '''Invalid nominal value.'''
-        conversor = self.get_conversor('NOMINAL', [u'a', u'b', u'3.4'])
+        conversor = self.get_conversor('NOMINAL', ['a', 'b', '3.4'])
 
         self.assertRaises(
             arff.BadNominalValue,

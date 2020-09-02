@@ -11,10 +11,10 @@ class TestDecodeAttribute(unittest.TestCase):
         between attribute name and type.'''
         decoder = self.get_decoder()
 
-        fixture = u'@ATTRIBUTE      attribute-name       NUMERIC'
+        fixture = '@ATTRIBUTE      attribute-name       NUMERIC'
 
         result = decoder._decode_attribute(fixture)
-        expected = u'attribute-name'
+        expected = 'attribute-name'
 
         self.assertEqual(len(result), 2)
         self.assertEqual(result[0], expected)
@@ -24,17 +24,17 @@ class TestDecodeAttribute(unittest.TestCase):
         decoder = self.get_decoder()
 
         # Double Quote
-        fixture = u'@ATTRIBUTE "attribute-name" NUMERIC'
+        fixture = '@ATTRIBUTE "attribute-name" NUMERIC'
         result = decoder._decode_attribute(fixture)
-        expected = u'attribute-name'
+        expected = 'attribute-name'
 
         self.assertEqual(len(result), 2)
         self.assertEqual(result[0], expected)
 
         # Simple Quote
-        fixture = u"@ATTRIBUTE 'attribute-name' NUMERIC"
+        fixture = "@ATTRIBUTE 'attribute-name' NUMERIC"
         result = decoder._decode_attribute(fixture)
-        expected = u'attribute-name'
+        expected = 'attribute-name'
 
         self.assertEqual(len(result), 2)
         self.assertEqual(result[0], expected)
@@ -44,9 +44,9 @@ class TestDecodeAttribute(unittest.TestCase):
         decoder = self.get_decoder()
 
         # Double Quote
-        fixture = u'@ATTRIBUTE 0 NUMERIC'
+        fixture = '@ATTRIBUTE 0 NUMERIC'
         result = decoder._decode_attribute(fixture)
-        expected = u'0'
+        expected = '0'
 
         self.assertEqual(len(result), 2)
         self.assertEqual(result[0], expected)
@@ -56,17 +56,17 @@ class TestDecodeAttribute(unittest.TestCase):
         decoder = self.get_decoder()
 
         # Double Quote
-        fixture = u'@ATTRIBUTE "%attribute-name" NUMERIC'
+        fixture = '@ATTRIBUTE "%attribute-name" NUMERIC'
         result = decoder._decode_attribute(fixture)
-        expected = u'%attribute-name'
+        expected = '%attribute-name'
 
         self.assertEqual(len(result), 2)
         self.assertEqual(result[0], expected)
 
         # Simple Quote
-        fixture = u"@ATTRIBUTE ',attribute {} name' NUMERIC"
+        fixture = "@ATTRIBUTE ',attribute {} name' NUMERIC"
         result = decoder._decode_attribute(fixture)
-        expected = u',attribute {} name'
+        expected = ',attribute {} name'
 
         self.assertEqual(len(result), 2)
         self.assertEqual(result[0], expected)
@@ -76,17 +76,17 @@ class TestDecodeAttribute(unittest.TestCase):
         decoder = self.get_decoder()
 
         # Double Quote
-        fixture = u'@ATTRIBUTE "attribute name" NUMERIC'
+        fixture = '@ATTRIBUTE "attribute name" NUMERIC'
         result = decoder._decode_attribute(fixture)
-        expected = u'attribute name'
+        expected = 'attribute name'
 
         self.assertEqual(len(result), 2)
         self.assertEqual(result[0], expected)
 
         # Simple Quote
-        fixture = u"@ATTRIBUTE 'attribute name' NUMERIC"
+        fixture = "@ATTRIBUTE 'attribute name' NUMERIC"
         result = decoder._decode_attribute(fixture)
-        expected = u'attribute name'
+        expected = 'attribute name'
 
         self.assertEqual(len(result), 2)
         self.assertEqual(result[0], expected)
@@ -95,14 +95,14 @@ class TestDecodeAttribute(unittest.TestCase):
         '''Attributes with bad format.'''
         decoder = self.get_decoder()
 
-        fixture = u'@ATTRIBUTE badformat'
+        fixture = '@ATTRIBUTE badformat'
         self.assertRaises(
             arff.BadAttributeFormat, 
             decoder._decode_attribute,
             fixture
         )
 
-        fixture = u'@ATTRIBUTE NUMERIC'
+        fixture = '@ATTRIBUTE NUMERIC'
         self.assertRaises(
             arff.BadAttributeFormat, 
             decoder._decode_attribute,
@@ -113,21 +113,21 @@ class TestDecodeAttribute(unittest.TestCase):
         '''Attributes with bad format.'''
         decoder = self.get_decoder()
 
-        fixture = u'@ATTRIBUTE %badformat'
+        fixture = '@ATTRIBUTE %badformat'
         self.assertRaises(
             arff.BadAttributeFormat, 
             decoder._decode_attribute,
             fixture
         )
 
-        fixture = u'@ATTRIBUTE na,me NUMERIC'
+        fixture = '@ATTRIBUTE na,me NUMERIC'
         self.assertRaises(
             arff.BadAttributeFormat, 
             decoder._decode_attribute,
             fixture
         )
 
-        fixture = u'@ATTRIBUTE {name NUMERIC'
+        fixture = '@ATTRIBUTE {name NUMERIC'
         self.assertRaises(
             arff.BadAttributeFormat, 
             decoder._decode_attribute,

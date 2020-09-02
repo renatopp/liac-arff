@@ -7,15 +7,15 @@ LIAC-ARFF
 
 The liac-arff module implements functions to read and write ARFF files in
 Python. It was created in the Connectionist Artificial Intelligence Laboratory
-(LIAC), which takes place at the Federal University of Rio Grande do Sul 
+(LIAC), which takes place at the Federal University of Rio Grande do Sul
 (UFRGS), in Brazil.
 
 ARFF (Attribute-Relation File Format) is an file format specially created for
 describe datasets which are used commonly for machine learning experiments and
-softwares. This file format was created to be used in Weka, the best 
+softwares. This file format was created to be used in Weka, the best
 representative software for machine learning automated experiments.
 
-You can clone the `arff-datasets <https://github.com/renatopp/arff-datasets>`_ 
+You can clone the `arff-datasets <https://github.com/renatopp/arff-datasets>`_
 repository for a large set of ARFF files.
 
 --------
@@ -28,12 +28,12 @@ Features
   and lists of dictionaries as used by SVMLight
 - Supports the following attribute types: NUMERIC, REAL, INTEGER, STRING, and
   NOMINAL;
-- Has an interface similar to other built-in modules such as ``json``, or 
+- Has an interface similar to other built-in modules such as ``json``, or
   ``zipfile``;
 - Supports read and write the descriptions of files;
 - Supports missing values and names with spaces;
 - Supports unicode values and names;
-- Fully compatible with Python 2.7+ and Python 3.5+;
+- Fully compatible with Python 3.6+;
 - Under `MIT License <http://opensource.org/licenses/MIT>`_
 
 --------------
@@ -44,13 +44,9 @@ Via pip::
 
     $ pip install liac-arff
 
-Via easy_install::
-
-    $ easy_install liac-arff
-
 Manually::
 
-    $ python setup.py install
+    $ pip install .
 
 
 -------------
@@ -147,6 +143,8 @@ Contributors
 - `Calvin Jeong (calvin) <http://ty.pe.kr/>`_
 - `Joel Nothman (jnothman) <https://github.com/jnothman>`_
 - `Guillaume Lemaitre (glemaitre) <https://github.com/glemaitre>`_
+- `Roman Yurchak (rth) <https://github.com/rth>`_
+- `Karthikeyan Singaravelan (tirkarthi) <https://github.com/tirkarthi>`_
 
 Project Page
 ------------
