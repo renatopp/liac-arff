@@ -44,6 +44,10 @@ Via pip::
 
     $ pip install liac-arff
 
+Via conda::
+
+    $ conda install -c conda-forge liac-arff
+
 Manually::
 
     $ pip install .
