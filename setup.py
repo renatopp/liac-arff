@@ -4,8 +4,8 @@ __author__ = 'Renato de Pontes Pereira, Matthias Feurer, Joel Nothman'
 __author_email__ = ('renato.ppontes@gmail.com, '
                     'feurerm@informatik.uni-freiburg.de, '
                     'joel.nothman@gmail.com')
-__version__ = '2.3.1'
-__date__ = '2018 07 16'
+__version__ = '2.5.0'
+__date__ = '2020 08 31'
 
 try:
     import setuptools
@@ -13,12 +13,12 @@ except ImportError:
     from ez_setup import use_setuptools
     use_setuptools()
 
-from setuptools import setup, find_packages
+import sys
+from setuptools import setup
 
 try:
-    f = open('README.rst','rU')
-    long_description = f.read()
-    f.close()
+    with open('README.rst', 'r'):
+        long_description = f.read()
 except:
     long_description = ''
 
@@ -32,7 +32,7 @@ setup(
     long_description=long_description,
     url='https://github.com/renatopp/liac-arff',
     download_url='https://github.com/renatopp/liac-arff',
-    tests_require=['mock'],
+    python_requires='>=3.6',
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Environment :: MacOS X',
@@ -45,11 +45,18 @@ setup(
         'Operating System :: Microsoft :: Windows',
         'Operating System :: POSIX :: Linux',
         'Programming Language :: Python',
-        ('Topic :: Software Development :: Libraries :: Python Modules'),
-        ('Topic :: Scientific/Engineering :: Artificial Intelligence'),
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: Implementation :: CPython',
+        'Programming Language :: Python :: Implementation :: PyPy',
+        'Topic :: Software Development :: Libraries :: Python Modules',
+        'Topic :: Scientific/Engineering :: Artificial Intelligence',
     ],
     keywords='arff weka parser liac python',
     py_modules=['arff'],
     package_data={'': ['README.rst', 'CHANGES.rst', 'LICENSE']},
+    data_files=[('LICENSE')],
     test_suite='tests',
 )

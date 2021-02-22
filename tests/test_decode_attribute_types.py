@@ -11,18 +11,18 @@ class TestDecodeAttributeTypes(unittest.TestCase):
         decoder = self.get_decoder()
 
         # Simple case
-        fixture = u'@ATTRIBUTE attribute-name NUMERIC'
+        fixture = '@ATTRIBUTE attribute-name NUMERIC'
         result = decoder._decode_attribute(fixture)
-        expected = (u'attribute-name', u'NUMERIC')
+        expected = ('attribute-name', 'NUMERIC')
 
         self.assertEqual(len(result), 2)
         self.assertEqual(result[0], expected[0])
         self.assertEqual(result[1], expected[1])
 
         # Case insensitive
-        fixture = u'@ATTRIBUTE attribute-name NuMeriC'
+        fixture = '@ATTRIBUTE attribute-name NuMeriC'
         result = decoder._decode_attribute(fixture)
-        expected = (u'attribute-name', u'NUMERIC')
+        expected = ('attribute-name', 'NUMERIC')
 
         self.assertEqual(len(result), 2)
         self.assertEqual(result[0], expected[0])
@@ -33,18 +33,18 @@ class TestDecodeAttributeTypes(unittest.TestCase):
         decoder = self.get_decoder()
 
         # Simple case
-        fixture = u'@ATTRIBUTE attribute-name REAL'
+        fixture = '@ATTRIBUTE attribute-name REAL'
         result = decoder._decode_attribute(fixture)
-        expected = (u'attribute-name', u'REAL')
+        expected = ('attribute-name', 'REAL')
 
         self.assertEqual(len(result), 2)
         self.assertEqual(result[0], expected[0])
         self.assertEqual(result[1], expected[1])
 
         # Case insensitive
-        fixture = u'@ATTRIBUTE attribute-name ReAl'
+        fixture = '@ATTRIBUTE attribute-name ReAl'
         result = decoder._decode_attribute(fixture)
-        expected = (u'attribute-name', u'REAL')
+        expected = ('attribute-name', 'REAL')
 
         self.assertEqual(len(result), 2)
         self.assertEqual(result[0], expected[0])
@@ -55,18 +55,18 @@ class TestDecodeAttributeTypes(unittest.TestCase):
         decoder = self.get_decoder()
 
         # Simple case
-        fixture = u'@ATTRIBUTE attribute-name INTEGER'
+        fixture = '@ATTRIBUTE attribute-name INTEGER'
         result = decoder._decode_attribute(fixture)
-        expected = (u'attribute-name', u'INTEGER')
+        expected = ('attribute-name', 'INTEGER')
 
         self.assertEqual(len(result), 2)
         self.assertEqual(result[0], expected[0])
         self.assertEqual(result[1], expected[1])
 
         # Case insensitive
-        fixture = u'@ATTRIBUTE attribute-name InteGeR'
+        fixture = '@ATTRIBUTE attribute-name InteGeR'
         result = decoder._decode_attribute(fixture)
-        expected = (u'attribute-name', u'INTEGER')
+        expected = ('attribute-name', 'INTEGER')
 
         self.assertEqual(len(result), 2)
         self.assertEqual(result[0], expected[0])
@@ -77,18 +77,18 @@ class TestDecodeAttributeTypes(unittest.TestCase):
         decoder = self.get_decoder()
 
         # Simple case
-        fixture = u'@ATTRIBUTE attribute-name STRING'
+        fixture = '@ATTRIBUTE attribute-name STRING'
         result = decoder._decode_attribute(fixture)
-        expected = (u'attribute-name', u'STRING')
+        expected = ('attribute-name', 'STRING')
 
         self.assertEqual(len(result), 2)
         self.assertEqual(result[0], expected[0])
         self.assertEqual(result[1], expected[1])
 
         # Case insensitive
-        fixture = u'@ATTRIBUTE attribute-name stRing'
+        fixture = '@ATTRIBUTE attribute-name stRing'
         result = decoder._decode_attribute(fixture)
-        expected = (u'attribute-name', u'STRING')
+        expected = ('attribute-name', 'STRING')
 
         self.assertEqual(len(result), 2)
         self.assertEqual(result[0], expected[0])
@@ -99,9 +99,9 @@ class TestDecodeAttributeTypes(unittest.TestCase):
         decoder = self.get_decoder()
 
         # Simple case
-        fixture = u'@ATTRIBUTE attribute-name {a, b, c}'
+        fixture = '@ATTRIBUTE attribute-name {a, b, c}'
         result = decoder._decode_attribute(fixture)
-        expected = (u'attribute-name', [u'a', u'b', u'c'])
+        expected = ('attribute-name', ['a', 'b', 'c'])
 
         self.assertEqual(len(result), 2)
         self.assertEqual(result[0], expected[0])
@@ -111,9 +111,9 @@ class TestDecodeAttributeTypes(unittest.TestCase):
         self.assertEqual(result[1][2], expected[1][2])
 
         # Quoted/Spaced/Number case
-        fixture = u'@ATTRIBUTE attribute-name {"name with spce", 1,    lol,2 }'
+        fixture = '@ATTRIBUTE attribute-name {"name with spce", 1,    lol,2 }'
         result = decoder._decode_attribute(fixture)
-        expected = (u'attribute-name', [u'name with spce', u'1', u'lol', u'2'])
+        expected = ('attribute-name', ['name with spce', '1', 'lol', '2'])
 
         self.assertEqual(len(result), 2)
         self.assertEqual(result[0], expected[0])
@@ -133,7 +133,7 @@ class TestDecodeAttributeTypes(unittest.TestCase):
         decoder = self.get_decoder()
 
         # Invalid type name
-        fixture = u'@ATTRIBUTE attribute-name NON-EXIST'
+        fixture = '@ATTRIBUTE attribute-name NON-EXIST'
         self.assertRaises(
             arff.BadAttributeType, 
             decoder._decode_attribute,
@@ -141,7 +141,7 @@ class TestDecodeAttributeTypes(unittest.TestCase):
         )
 
         # Invalid nominal structure
-        fixture = u'@ATTRIBUTE attribute-name {1, 2] 3'
+        fixture = '@ATTRIBUTE attribute-name {1, 2] 3'
         self.assertRaises(
             arff.BadAttributeType, 
             decoder._decode_attribute,

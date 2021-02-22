@@ -9,9 +9,9 @@ class TestEncodeComment(unittest.TestCase):
     def test_simple(self):
         encoder = self.get_encoder()
 
-        fixture = u'This is a simple comment.'
+        fixture = 'This is a simple comment.'
         result = encoder._encode_comment(fixture)
-        expected = u'% This is a simple comment.'
+        expected = '% This is a simple comment.'
 
         self.assertEqual(result, expected)
 

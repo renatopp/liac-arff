@@ -56,10 +56,10 @@ class TestLoads(unittest.TestCase):
         loads = self.get_loads()
         obj = loads(ARFF)
 
-        self.assertEqual(obj['description'], u'XOR Dataset')
-        self.assertEqual(obj['relation'], u'XOR')
-        self.assertEqual(obj['attributes'][0][0], u'input1')
-        self.assertEqual(obj['attributes'][0][1], u'REAL')
+        self.assertEqual(obj['description'], 'XOR Dataset')
+        self.assertEqual(obj['relation'], 'XOR')
+        self.assertEqual(obj['attributes'][0][0], 'input1')
+        self.assertEqual(obj['attributes'][0][1], 'REAL')
         self.assertEqual(obj['data'][0][0], 0.0)
         self.assertEqual(obj['data'][0][1], 0.0)
         self.assertEqual(obj['data'][0][2], 0.0)
@@ -68,11 +68,11 @@ class TestLoads(unittest.TestCase):
         loads = self.get_loads()
         obj = loads(ARFF_FORMAT_CORRECT)
 
-        self.assertEqual(obj['attributes'][0][0], u'number_of_files')
-        self.assertEqual(obj['attributes'][1][0], u'lines of code')
-        self.assertEqual(obj['attributes'][2][0], u'defect density')
+        self.assertEqual(obj['attributes'][0][0], 'number_of_files')
+        self.assertEqual(obj['attributes'][1][0], 'lines of code')
+        self.assertEqual(obj['attributes'][2][0], 'defect density')
 
-        self.assertEqual(obj['relation'], u'software metric')
+        self.assertEqual(obj['relation'], 'software metric')
 
     def test_format_error_relation(self):
         fixture = '''\
@@ -85,7 +85,7 @@ class TestLoads(unittest.TestCase):
         @data 10,10,10
         '''
         loads = self.get_loads()
-        fixture = u'@ATTRIBUTE {name NUMERIC'
+        fixture = '@ATTRIBUTE {name NUMERIC'
         self.assertRaises(arff.BadLayout, loads, fixture)
 
     def test_format_error_attribute(self):
@@ -100,7 +100,7 @@ class TestLoads(unittest.TestCase):
         '''
 
         loads = self.get_loads()
-        fixture = u'@ATTRIBUTE {name NUMERIC'
+        fixture = '@ATTRIBUTE {name NUMERIC'
         self.assertRaises(arff.BadLayout, loads, fixture)
 
     def test_sparse_input(self):

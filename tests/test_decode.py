@@ -34,30 +34,30 @@ rainy,71.0,91.0,TRUE,no
 % 
 '''
 
-description = u'\nDESCRIPTION HERE\n'
-relation = u'weather'
+description = '\nDESCRIPTION HERE\n'
+relation = 'weather'
 attributes = [
-    (u'outlook', [u'sunny', u'overcast', u'rainy']),
-    (u'temperature', 'REAL'),
-    (u'humidity', 'REAL'),
-    (u'windy', [u'TRUE', u'FALSE']),
-    (u'play', [u'yes', u'no'])
+    ('outlook', ['sunny', 'overcast', 'rainy']),
+    ('temperature', 'REAL'),
+    ('humidity', 'REAL'),
+    ('windy', ['TRUE', 'FALSE']),
+    ('play', ['yes', 'no'])
     ]
 data = [
-    [u'sunny', 85.0, 85.0, u'FALSE', u'no'],
-    [u'sunny', 80.0, 90.0, u'TRUE', u'no'],
-    [u'overcast', 83.0, 86.0, u'FALSE', u'yes'],
-    [u'rainy', 70.0, 96.0, u'FALSE', u'yes'],
-    [u'rainy', 68.0, 80.0, u'FALSE', u'yes'],
-    [u'rainy', 65.0, 70.0, u'TRUE', u'no'],
-    [u'overcast', 64.0, 65.0, u'TRUE', u'yes'],
-    [u'sunny', 72.0, 95.0, u'FALSE', u'no'],
-    [u'sunny', 69.0, 70.0, u'FALSE', u'yes'],
-    [u'rainy', 75.0, 80.0, u'FALSE', u'yes'],
-    [u'sunny', 75.0, 70.0, u'TRUE', u'yes'],
-    [u'overcast', 72.0, 90.0, u'TRUE', u'yes'],
-    [u'overcast', 81.0, 75.0, u'FALSE', u'yes'],
-    [u'rainy', 71.0, 91.0, u'TRUE', u'no']
+    ['sunny', 85.0, 85.0, 'FALSE', 'no'],
+    ['sunny', 80.0, 90.0, 'TRUE', 'no'],
+    ['overcast', 83.0, 86.0, 'FALSE', 'yes'],
+    ['rainy', 70.0, 96.0, 'FALSE', 'yes'],
+    ['rainy', 68.0, 80.0, 'FALSE', 'yes'],
+    ['rainy', 65.0, 70.0, 'TRUE', 'no'],
+    ['overcast', 64.0, 65.0, 'TRUE', 'yes'],
+    ['sunny', 72.0, 95.0, 'FALSE', 'no'],
+    ['sunny', 69.0, 70.0, 'FALSE', 'yes'],
+    ['rainy', 75.0, 80.0, 'FALSE', 'yes'],
+    ['sunny', 75.0, 70.0, 'TRUE', 'yes'],
+    ['overcast', 72.0, 90.0, 'TRUE', 'yes'],
+    ['overcast', 81.0, 75.0, 'FALSE', 'yes'],
+    ['rainy', 71.0, 91.0, 'TRUE', 'no']
 ]
 encoded_data = [
     [0, 85.0, 85.0, 1, 1],
@@ -77,17 +77,17 @@ encoded_data = [
 ]
 
 OBJ = {
-    u'description': description,
-    u'relation': relation,
-    u'attributes': attributes,
-    u'data': data
+    'description': description,
+    'relation': relation,
+    'attributes': attributes,
+    'data': data
 }
 
 ENCODED_OBJ = {
-    u'description': description,
-    u'relation': relation,
-    u'attributes': attributes,
-    u'data': encoded_data
+    'description': description,
+    'relation': relation,
+    'attributes': attributes,
+    'data': encoded_data
 }
 
 xor_dataset = '''% XOR Dataset
@@ -107,11 +107,11 @@ xor_dataset = '''% XOR Dataset
 %
 '''
 
-xor_description = u'XOR Dataset'
-xor_relation = u'XOR'
-xor_attributes = [(u'input1', u'REAL'),
-                  (u'input2', u'REAL'),
-                  (u'y', u'REAL')]
+xor_description = 'XOR Dataset'
+xor_relation = 'XOR'
+xor_attributes = [('input1', 'REAL'),
+                  ('input2', 'REAL'),
+                  ('y', 'REAL')]
 xor_data_coo = ([1., 1., 1., 1., 1., 1.],
             [1, 1, 2, 2, 3, 3],
             [1, 2, 0, 2, 0, 1])
@@ -120,17 +120,17 @@ xor_data_lod = [{},
                 {0: 1., 2: 1.},
                 {0: 1., 1: 1.}]
 xor_object_coo = {
-    u'description': xor_description,
-    u'relation': xor_relation,
-    u'attributes': xor_attributes,
-    u'data': xor_data_coo
+    'description': xor_description,
+    'relation': xor_relation,
+    'attributes': xor_attributes,
+    'data': xor_data_coo
 }
 
 xor_object_lod = {
-    u'description': xor_description,
-    u'relation': xor_relation,
-    u'attributes': xor_attributes,
-    u'data': xor_data_lod
+    'description': xor_description,
+    'relation': xor_relation,
+    'attributes': xor_attributes,
+    'data': xor_data_lod
 }
 
 
@@ -325,21 +325,21 @@ class TestTooManyAttributes(unittest.TestCase):
         decoder = arff.ArffDecoder()
         with self.assertRaisesRegexp(arff.BadDataFormat,
                                      'Bad @DATA instance format in line 10: '
-                                     '\{2 a\}'):
+                                     r'\{2 a\}'):
             decoder.decode(too_many_attributes, return_type=arff.DENSE)
 
     def test_coo(self):
         decoder = arff.ArffDecoder()
         with self.assertRaisesRegexp(arff.BadDataFormat,
                                      'Bad @DATA instance format in line 10: '
-                                     '\{2 a\}'):
+                                     r'\{2 a\}'):
             decoder.decode(too_many_attributes, return_type=arff.COO)
 
     def test_lod(self):
         decoder = arff.ArffDecoder()
         with self.assertRaisesRegexp(arff.BadDataFormat,
                                      'Bad @DATA instance format in line 10: '
-                                     '\{2 a\}'):
+                                     r'\{2 a\}'):
             decoder.decode(too_many_attributes, return_type=arff.LOD)
 
 
@@ -364,7 +364,7 @@ class TestDuplicateAttributeName(unittest.TestCase):
 
 class TestInvalidValues(unittest.TestCase):
     def setUp(self):
-        self.my_arff = textwrap.dedent(u'''
+        self.my_arff = textwrap.dedent('''
         @RELATION testing
         
         @ATTRIBUTE attr1 STRING
@@ -397,7 +397,7 @@ class TestInvalidValues(unittest.TestCase):
 
         fixture = self.my_arff.format(data="{0 a',1 'c d'}")
         with self.assertRaisesRegexp(arff.ArffException,
-                                     "',1 'c d'\}."):
+                                     r"',1 'c d'\}."):
             arff.load(fixture)
 
         fixture = self.my_arff.format(data="{0 a b,1 'c d'}")

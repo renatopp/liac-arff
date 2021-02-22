@@ -10,9 +10,9 @@ class TestEncodeRelation(unittest.TestCase):
         '''Relation name without spaces.'''
         encoder = self.get_encoder()
 
-        fixture = u'relation-name'
+        fixture = 'relation-name'
         result = encoder._encode_relation(fixture)
-        expected = u'@RELATION relation-name'
+        expected = '@RELATION relation-name'
 
         self.assertEqual(result, expected)
 
@@ -20,9 +20,9 @@ class TestEncodeRelation(unittest.TestCase):
         '''Relation name with spaces.'''
         encoder = self.get_encoder()
 
-        fixture = u'relation name and'
+        fixture = 'relation name and'
         result = encoder._encode_relation(fixture)
-        expected = u'@RELATION "relation name and"'
+        expected = '@RELATION "relation name and"'
 
         self.assertEqual(result, expected)
 
@@ -30,15 +30,15 @@ class TestEncodeRelation(unittest.TestCase):
         '''Relation name with spaces.'''
         encoder = self.get_encoder()
 
-        fixture = u'%relationnameand'
+        fixture = '%relationnameand'
         result = encoder._encode_relation(fixture)
-        expected = u'@RELATION "%relationnameand"'
+        expected = '@RELATION "%relationnameand"'
 
         self.assertEqual(result, expected)
 
-        fixture = u'relation,nameand'
+        fixture = 'relation,nameand'
         result = encoder._encode_relation(fixture)
-        expected = u'@RELATION "relation,nameand"'
+        expected = '@RELATION "relation,nameand"'
 
         self.assertEqual(result, expected)
 

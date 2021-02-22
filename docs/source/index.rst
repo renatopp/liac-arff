@@ -26,13 +26,9 @@ Via pip::
 
     $ pip install liac-arff
 
-Via easy_install::
-
-    $ easy_install liac-arff
-
 Manually::
 
-    $ python setup.py install
+    $ pip install .
 
 
 .. include:: ../../CHANGES.rst

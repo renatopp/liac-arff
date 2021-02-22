@@ -2,13 +2,22 @@
 What's New in LIAC-ARFF
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-LIAC-ARFF 2.3.2
-* fix: match all possible separator spaces to add quotes when encoding into
-  ARFF. These separator spaces will be preserved when decoding the ARFF files.
+LIAC-ARFF 2.5
+
+This is the last release supporting Python 2.
+
+* maintenance: drop support for Python 3.3 and 3.4, add support for Python 3.8
+* maintenance: improve compatibility with the upcoming Python 3.10
+* maintenance: automatically build the documentation.
+* maintenance: fix mypy errors
 
 LIAC-ARFF 2.4
 
 * enhancement: load data progressively with generator `return_type`.
+* enhancement: standard Java escape sequences are now decoded in string
+  attributes, and non-printable characters are now encoded with escaping.
+* fix: match all possible separator spaces to add quotes when encoding into
+  ARFF. These separator spaces will be preserved when decoding the ARFF files.
 
 LIAC-ARFF 2.3.1
 
