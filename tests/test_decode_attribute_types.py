@@ -125,9 +125,9 @@ class TestDecodeAttributeTypes(unittest.TestCase):
         self.assertEqual(result[1][3], expected[1][3])
 
         # Check non-regression of ReDos raised in https://github.com/renatopp/liac-arff/issues/117
-        
         start = time.time()
         fixture = u"@attribute width  {',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',}"
+        result = decoder._decode_attribute(fixture)
         stop = time.time()
         assert stop - start < 10
 
