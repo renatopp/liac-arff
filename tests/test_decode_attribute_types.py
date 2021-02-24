@@ -1,6 +1,5 @@
 import unittest
 import arff
-import time
 
 class TestDecodeAttributeTypes(unittest.TestCase):
     def get_decoder(self):
@@ -124,13 +123,6 @@ class TestDecodeAttributeTypes(unittest.TestCase):
         self.assertEqual(result[1][2], expected[1][2])
         self.assertEqual(result[1][3], expected[1][3])
 
-        # Check non-regression of ReDos raised in https://github.com/renatopp/liac-arff/issues/117
-        start = time.time()
-        fixture = u"@attribute width  {',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',}"
-        result = decoder._decode_attribute(fixture)
-        stop = time.time()
-        assert stop - start < 10
-
 
     def test_invalid_type(self):
         '''Invalid type name or structure.'''
@@ -152,3 +144,10 @@ class TestDecodeAttributeTypes(unittest.TestCase):
             fixture
         )
 
+        # Check non-regression of ReDos raised in https://github.com/renatopp/liac-arff/issues/117
+        fixture = u"@attribute width  {',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',"
+        self.assertRaises(
+            arff.BadAttributeType,
+            decoder._decode_attribute,
+            fixture
+        )
