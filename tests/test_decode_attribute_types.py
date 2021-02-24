@@ -1,5 +1,6 @@
 import unittest
 import arff
+import time
 
 class TestDecodeAttributeTypes(unittest.TestCase):
     def get_decoder(self):
@@ -125,7 +126,10 @@ class TestDecodeAttributeTypes(unittest.TestCase):
 
         # Check non-regression of ReDos raised in https://github.com/renatopp/liac-arff/issues/117
         
+        start = time.time()
         fixture = u"@attribute width  {',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',}"
+        stop = time.time()
+        assert stop - start < 10
 
 
     def test_invalid_type(self):
