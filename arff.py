@@ -163,7 +163,6 @@ _TK_DATA        = '@DATA'
 
 _RE_RELATION     = re.compile(r'^([^\{\}%,\s]*|\".*\"|\'.*\')$', re.UNICODE)
 _RE_ATTRIBUTE    = re.compile(r'^(\".*\"|\'.*\'|[^\{\}%,\s]*)\s+(.+)$', re.UNICODE)
-_RE_TYPE_NOMINAL = re.compile(r'^\{\s*((\".*\"|\'.*\'|\S*)\s*,\s*)*(\".*\"|\'.*\'|\S*)\s*\}$', re.UNICODE)
 _RE_QUOTE_CHARS = re.compile(r'["\'\\\s%,\000-\031]', re.UNICODE)
 _RE_ESCAPE_CHARS = re.compile(r'(?=["\'\\%])|[\n\r\t\000-\031]')
 _RE_SPARSE_LINE = re.compile(r'^\s*\{.*\}\s*$', re.UNICODE)
@@ -736,7 +735,7 @@ class ArffDecoder:
         name = str(name.strip('"\''))
 
         # Extracts the final type
-        if _RE_TYPE_NOMINAL.match(type_):
+        if type_[:1] == "{" and type_[-1:] == "}":
             try:
                 type_ = _parse_values(type_.strip('{} '))
             except Exception:
