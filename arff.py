@@ -27,12 +27,11 @@
 '''
 The liac-arff module implements functions to read and write ARFF files in
 Python. It was created in the Connectionist Artificial Intelligence Laboratory
-(LIAC), which takes place at the Federal University of Rio Grande do Sul
-(UFRGS), in Brazil.
+(LIAC), at the Federal University of Rio Grande do Sul (UFRGS), in Brazil.
 
-ARFF (Attribute-Relation File Format) is an file format specially created for
+ARFF (Attribute-Relation File Format) is a file format specially created to
 describe datasets which are commonly used for machine learning experiments and
-softwares. This file format was created to be used in Weka, the best
+software. This file format was created to be used in Weka, the best
 representative software for machine learning automated experiments.
 
 An ARFF file can be divided into two sections: header and data. The Header

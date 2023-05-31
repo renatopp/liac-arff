@@ -49,7 +49,7 @@ LIAC-ARFF 2.2.1
 LIAC-ARFF 2.2
 
 - fix: do not treat quoted questionmarks as missing values (issue #50)
-- fix: compability issue using zip with python2.7
+- fix: compatibility issue using zip with python2.7
 - fix: categorical quoting if comma is present (issue #15)
 - fix: remove training comment lines (issue #61)
 - new: test for python3.5 and python3.6 as well
