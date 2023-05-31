@@ -323,21 +323,21 @@ too_many_attributes = '''
 class TestTooManyAttributes(unittest.TestCase):
     def test_dense(self):
         decoder = arff.ArffDecoder()
-        with self.assertRaisesRegexp(arff.BadDataFormat,
+        with self.assertRaisesRegex(arff.BadDataFormat,
                                      'Bad @DATA instance format in line 10: '
                                      r'\{2 a\}'):
             decoder.decode(too_many_attributes, return_type=arff.DENSE)
 
     def test_coo(self):
         decoder = arff.ArffDecoder()
-        with self.assertRaisesRegexp(arff.BadDataFormat,
+        with self.assertRaisesRegex(arff.BadDataFormat,
                                      'Bad @DATA instance format in line 10: '
                                      r'\{2 a\}'):
             decoder.decode(too_many_attributes, return_type=arff.COO)
 
     def test_lod(self):
         decoder = arff.ArffDecoder()
-        with self.assertRaisesRegexp(arff.BadDataFormat,
+        with self.assertRaisesRegex(arff.BadDataFormat,
                                      'Bad @DATA instance format in line 10: '
                                      r'\{2 a\}'):
             decoder.decode(too_many_attributes, return_type=arff.LOD)
@@ -356,7 +356,7 @@ duplicate_attribute = '''@RELATION test
 class TestDuplicateAttributeName(unittest.TestCase):
     def test_decode(self):
         decoder = arff.ArffDecoder()
-        with self.assertRaisesRegexp(arff.BadAttributeName,
+        with self.assertRaisesRegex(arff.BadAttributeName,
                                      'Bad @ATTRIBUTE name attr1 at line 4, '
                                      'this name is already in use in line 3.'):
             decoder.decode(duplicate_attribute)
@@ -379,33 +379,33 @@ class TestInvalidValues(unittest.TestCase):
 
 
         fixture = self.my_arff.format(data="a','c d'")
-        with self.assertRaisesRegexp(arff.ArffException,
+        with self.assertRaisesRegex(arff.ArffException,
                                      "','c d'"):
             arff.load(fixture)
 
         fixture = self.my_arff.format(data="a b, 'c d'")
-        with self.assertRaisesRegexp(arff.ArffException,
+        with self.assertRaisesRegex(arff.ArffException,
                                      "'c d"):
             print(arff.load(fixture))
 
         fixture = self.my_arff.format(data="'a b', c d")
-        with self.assertRaisesRegexp(arff.ArffException,
+        with self.assertRaisesRegex(arff.ArffException,
                                      'c d'):
             print(arff.load(fixture))
 
     def test_sparse(self):
 
         fixture = self.my_arff.format(data="{0 a',1 'c d'}")
-        with self.assertRaisesRegexp(arff.ArffException,
+        with self.assertRaisesRegex(arff.ArffException,
                                      r"',1 'c d'\}."):
             arff.load(fixture)
 
         fixture = self.my_arff.format(data="{0 a b,1 'c d'}")
-        with self.assertRaisesRegexp(arff.ArffException,
+        with self.assertRaisesRegex(arff.ArffException,
                                      "b,1 'c d'"):
             print(arff.load(fixture))
 
         fixture = self.my_arff.format(data="{0 'a b', 1 c d}")
-        with self.assertRaisesRegexp(arff.ArffException,
+        with self.assertRaisesRegex(arff.ArffException,
                                      r'.*d\}'):
             print(arff.load(fixture))

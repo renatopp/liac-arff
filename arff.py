@@ -762,7 +762,7 @@ class ArffDecoder:
         name = str(name.strip('"\''))
 
         # Extracts the final type
-        if _RE_TYPE_NOMINAL.match(type_):
+        if type_[:1] == "{" and type_[-1:] == "}":
             try:
                 type_ = _parse_values(type_.strip('{} '))
             except Exception:
