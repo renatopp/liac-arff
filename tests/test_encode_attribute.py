@@ -13,7 +13,7 @@ class TestEncodeAttribute(unittest.TestCase):
         result = encoder._encode_attribute(*fixture)
         expected = '@ATTRIBUTE "attribute name" REAL'
 
-        self.assertEqual(result, expected)   
+        self.assertEqual(result, expected)
 
     def test_attribute_name_special(self):
         encoder = self.get_encoder()

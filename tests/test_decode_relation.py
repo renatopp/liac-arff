@@ -86,7 +86,7 @@ class TestDecodeRelation(unittest.TestCase):
 
         fixture = '@RELATION bad relation name'
         self.assertRaises(
-            arff.BadRelationFormat, 
+            arff.BadRelationFormat,
             decoder._decode_relation,
             fixture
         )
@@ -97,14 +97,14 @@ class TestDecodeRelation(unittest.TestCase):
 
         fixture = '@RELATION %relationname'
         self.assertRaises(
-            arff.BadRelationFormat, 
+            arff.BadRelationFormat,
             decoder._decode_relation,
             fixture
         )
 
         fixture = '@RELATION relat,ionname'
         self.assertRaises(
-            arff.BadRelationFormat, 
+            arff.BadRelationFormat,
             decoder._decode_relation,
             fixture
         )

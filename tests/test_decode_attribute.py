@@ -7,7 +7,7 @@ class TestDecodeAttribute(unittest.TestCase):
         return decoder
 
     def test_padding(self):
-        '''Attributes with spaces between attribute declaration and name, and 
+        '''Attributes with spaces between attribute declaration and name, and
         between attribute name and type.'''
         decoder = self.get_decoder()
 
@@ -97,14 +97,14 @@ class TestDecodeAttribute(unittest.TestCase):
 
         fixture = '@ATTRIBUTE badformat'
         self.assertRaises(
-            arff.BadAttributeFormat, 
+            arff.BadAttributeFormat,
             decoder._decode_attribute,
             fixture
         )
 
         fixture = '@ATTRIBUTE NUMERIC'
         self.assertRaises(
-            arff.BadAttributeFormat, 
+            arff.BadAttributeFormat,
             decoder._decode_attribute,
             fixture
         )
@@ -115,22 +115,21 @@ class TestDecodeAttribute(unittest.TestCase):
 
         fixture = '@ATTRIBUTE %badformat'
         self.assertRaises(
-            arff.BadAttributeFormat, 
+            arff.BadAttributeFormat,
             decoder._decode_attribute,
             fixture
         )
 
         fixture = '@ATTRIBUTE na,me NUMERIC'
         self.assertRaises(
-            arff.BadAttributeFormat, 
+            arff.BadAttributeFormat,
             decoder._decode_attribute,
             fixture
         )
 
         fixture = '@ATTRIBUTE {name NUMERIC'
         self.assertRaises(
-            arff.BadAttributeFormat, 
+            arff.BadAttributeFormat,
             decoder._decode_attribute,
             fixture
         )
-

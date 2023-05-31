@@ -131,7 +131,7 @@ class TestDecodeAttributeTypes(unittest.TestCase):
         # Invalid type name
         fixture = '@ATTRIBUTE attribute-name NON-EXIST'
         self.assertRaises(
-            arff.BadAttributeType, 
+            arff.BadAttributeType,
             decoder._decode_attribute,
             fixture
         )
@@ -139,7 +139,7 @@ class TestDecodeAttributeTypes(unittest.TestCase):
         # Invalid nominal structure
         fixture = '@ATTRIBUTE attribute-name {1, 2] 3'
         self.assertRaises(
-            arff.BadAttributeType, 
+            arff.BadAttributeType,
             decoder._decode_attribute,
             fixture
         )

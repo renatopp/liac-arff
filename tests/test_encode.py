@@ -101,7 +101,7 @@ class TestEncodeComment(unittest.TestCase):
         encoder = self.get_encoder()
 
         fixture = {
-            'relation':'name', 
+            'relation':'name',
             'attributes':[4],
             'data':[[1]]
         }
@@ -112,7 +112,7 @@ class TestEncodeComment(unittest.TestCase):
         )
         
         fixture = {
-            'relation':'name', 
+            'relation':'name',
             'attributes':[(2, 'REAL')],
             'data':[[1]]
         }
@@ -123,7 +123,7 @@ class TestEncodeComment(unittest.TestCase):
         )
 
         fixture = {
-            'relation':'name', 
+            'relation':'name',
             'attributes':[('NAME', 'REAL', 'MORE')],
             'data':[[1]]
         }
@@ -134,7 +134,7 @@ class TestEncodeComment(unittest.TestCase):
         )
 
         fixture = {
-            'relation':'name', 
+            'relation':'name',
             'attributes':[('NAME', 3)],
             'data':[[1]]
         }
@@ -148,8 +148,8 @@ class TestEncodeComment(unittest.TestCase):
         encoder = self.get_encoder()
 
         fixture = {
-            'relation':'name', 
-            'attributes':[('name','INVALID')], 
+            'relation':'name',
+            'attributes':[('name','INVALID')],
             'data':[[1]]
         }
         self.assertRaises(
