@@ -51,4 +51,3 @@ class TestDumpEscape(unittest.TestCase):
             obj = arff.loads(src)
             src = arff.dumps(obj)
             self.assertEqual(src, ARFF_DESTINY)
-

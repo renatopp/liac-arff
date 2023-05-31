@@ -14,4 +14,3 @@ class TestEncodeComment(unittest.TestCase):
         expected = '% This is a simple comment.'
 
         self.assertEqual(result, expected)
-

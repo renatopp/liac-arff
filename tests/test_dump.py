@@ -48,4 +48,3 @@ class TestDump(unittest.TestCase):
 
         fp.seek(0)
         self.assertEqual(fp.read(), ARFF)
-

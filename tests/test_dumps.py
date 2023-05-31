@@ -45,4 +45,3 @@ class TestDumps(unittest.TestCase):
         s = dumps(OBJ)
 
         self.assertEqual(s, ARFF)
-
