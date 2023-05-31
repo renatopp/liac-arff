@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 __author__ = 'Renato de Pontes Pereira, Matthias Feurer, Joel Nothman'
 __author_email__ = ('renato.ppontes@gmail.com, '
                     'feurerm@informatik.uni-freiburg.de, '
