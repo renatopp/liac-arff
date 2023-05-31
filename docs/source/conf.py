@@ -183,8 +183,8 @@ latex_elements = {
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'liac-arff.tex', u'liac-arff Documentation',
-   u'Renato de Pontes Pereira', 'manual'),
+    ('index', 'liac-arff.tex', u'liac-arff Documentation',
+     u'Renato de Pontes Pereira', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -227,9 +227,9 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'liac-arff', u'liac-arff Documentation',
-   u'Renato de Pontes Pereira', 'liac-arff', 'One line description of project.',
-   'Miscellaneous'),
+    ('index', 'liac-arff', u'liac-arff Documentation',
+     u'Renato de Pontes Pereira', 'liac-arff', 'One line description of project.',
+     'Miscellaneous'),
 ]
 
 # Documents to append as an appendix to all manuals.
