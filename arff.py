@@ -1021,7 +1021,7 @@ class ArffEncoder:
                len(attr) != 2 or \
                not isinstance(attr[0], str):
                 raise BadObject(
-                        'Invalid attribute declaration "%s"' % str(attr))
+                    'Invalid attribute declaration "%s"' % str(attr))
 
             if isinstance(attr[1], str):
                 # Verify for invalid types

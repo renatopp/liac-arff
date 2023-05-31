@@ -180,8 +180,8 @@ class TestCOOData(unittest.TestCase):
         attributes = (('', ''), ('', ''), ('', ''), ('', ''))
 
         fixture = COOStub([1, 1, 1, 1, 1, 1, 1],
-                [0, 0, 1, 3, 1, 0, 0],
-                [0, 2, 1, 3, 1, 0, 0])
+                          [0, 0, 1, 3, 1, 0, 0],
+                          [0, 2, 1, 3, 1, 0, 0])
 
         generator = self.data.encode_data(fixture, attributes)
         self.assertRaises(ValueError, next, generator)
