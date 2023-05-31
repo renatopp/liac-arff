@@ -155,7 +155,6 @@ class TestCOOData(unittest.TestCase):
         self.assertEqual(next(result),
                          '{ 0 1,1 ?,2 Renato,3 \'Name with spaces\' }')
 
-
     def test_null_value(self):
         fixture = COOStub([1, None, 'Renato', ''],
                           [0, 0, 0, 0],
@@ -258,7 +257,6 @@ class TestLODData(unittest.TestCase):
         self.assertTrue(isinstance(result, types.GeneratorType))
         self.assertEqual(next(result),
                          '{ 0 1,1 ?,2 Renato,3 \'Name with spaces\' }')
-
 
     def test_null_value(self):
         fixture = [{0: 1, 1: None, 2: 'Renato', 3: ''}]

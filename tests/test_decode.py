@@ -377,7 +377,6 @@ class TestInvalidValues(unittest.TestCase):
 
     def test_dense(self):
 
-
         fixture = self.my_arff.format(data="a','c d'")
         with self.assertRaisesRegex(arff.ArffException,
                                     "','c d'"):

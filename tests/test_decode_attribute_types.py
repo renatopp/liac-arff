@@ -124,7 +124,6 @@ class TestDecodeAttributeTypes(unittest.TestCase):
         self.assertEqual(result[1][2], expected[1][2])
         self.assertEqual(result[1][3], expected[1][3])
 
-
     def test_invalid_type(self):
         '''Invalid type name or structure.'''
         decoder = self.get_decoder()
