@@ -110,7 +110,7 @@ class TestEncodeComment(unittest.TestCase):
             encoder.encode,
             fixture
         )
-        
+
         fixture = {
             'relation': 'name',
             'attributes': [(2, 'REAL')],
