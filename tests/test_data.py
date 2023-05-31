@@ -94,7 +94,7 @@ class TestData(unittest.TestCase):
 
         encoder = arff.ArffEncoder()
         with self.assertRaisesRegex(arff.BadObject,
-                                     "Instance 1 has 2 attributes, expected 1"):
+                                    "Instance 1 has 2 attributes, expected 1"):
             encoder.encode(my_arff)
 
 
@@ -201,8 +201,8 @@ class TestCOOData(unittest.TestCase):
 
         encoder = arff.ArffEncoder()
         with self.assertRaisesRegex(arff.BadObject,
-                                     "Instance 1 has at least 2 attributes, "
-                                     "expected 1"):
+                                    "Instance 1 has at least 2 attributes, "
+                                    "expected 1"):
             encoder.encode(my_arff)
 
 
@@ -295,5 +295,5 @@ class TestLODData(unittest.TestCase):
 
         encoder = arff.ArffEncoder()
         with self.assertRaisesRegex(arff.BadObject,
-                                     "Instance 1 has 2 attributes, expected 1"):
+                                    "Instance 1 has 2 attributes, expected 1"):
             encoder.encode(my_arff)
