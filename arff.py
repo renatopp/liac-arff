@@ -333,8 +333,7 @@ class BadDataFormat(ArffException):
     def __init__(self, value):
         super().__init__()
         self.message = (
-            'Bad @DATA instance format in line %d: ' +
-            ('%s' % value)
+            'Bad @DATA instance format in line %%d: %s' % value
         )
 
 
@@ -351,9 +350,8 @@ class BadAttributeName(ArffException):
     def __init__(self, value, value2):
         super().__init__()
         self.message = (
-            ('Bad @ATTRIBUTE name %s at line' % value) +
-            ' %d, this name is already in use in line' +
-            (' %d.' % value2)
+            'Bad @ATTRIBUTE name %s at line %%d, '
+            'this name is already in use in line %d.' % (value, value2)
         )
 
 
@@ -364,8 +362,8 @@ class BadNominalValue(ArffException):
     def __init__(self, value):
         super().__init__()
         self.message = (
-            ('Data value %s not found in nominal declaration, ' % value)
-            + 'at line %d.'
+            'Data value %s not found in nominal declaration, '
+            'at line %%d.' % value
         )
 
 
@@ -375,8 +373,7 @@ class BadNominalFormatting(ArffException):
     def __init__(self, value):
         super().__init__()
         self.message = (
-            ('Nominal data value "%s" not properly quoted in line ' % value) +
-            '%d.'
+            'Nominal data value "%s" not properly quoted in line %%d.' % value
         )
 
 
