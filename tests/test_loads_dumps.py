@@ -1,10 +1,6 @@
 import os
 import unittest
 import arff
-try:
-    from StringIO import StringIO
-except ImportError:
-    from io import StringIO
 
 OBJ = {
     'description': '\nXOR Dataset\n\n\n',

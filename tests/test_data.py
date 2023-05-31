@@ -2,8 +2,6 @@ import types
 import unittest
 import arff
 
-from unittest import mock
-
 
 class ConversorStub:
     def __init__(self, r_value):
