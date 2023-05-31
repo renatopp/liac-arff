@@ -24,8 +24,8 @@ except:
 
 setup(
     name='liac-arff',
-    version= __version__,
-    author= __author__,
+    version=__version__,
+    author=__author__,
     author_email=__author_email__,
     license='MIT License',
     description='A module for read and write ARFF files in Python.',
