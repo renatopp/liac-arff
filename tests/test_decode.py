@@ -42,7 +42,7 @@ attributes = [
     ('humidity', 'REAL'),
     ('windy', ['TRUE', 'FALSE']),
     ('play', ['yes', 'no'])
-    ]
+]
 data = [
     ['sunny', 85.0, 85.0, 'FALSE', 'no'],
     ['sunny', 80.0, 90.0, 'TRUE', 'no'],
