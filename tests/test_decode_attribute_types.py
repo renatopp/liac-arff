@@ -144,8 +144,19 @@ class TestDecodeAttributeTypes(unittest.TestCase):
             fixture
         )
 
-        # Check non-regression of ReDos raised in https://github.com/renatopp/liac-arff/issues/117
-        fixture = u"@attribute width  {',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',"
+        # Check non-regression of ReDos raised in
+        # https://github.com/renatopp/liac-arff/issues/117
+        fixture = ("@attribute width  {"
+                   "',',',',',',',',',',"
+                   "',',',',',',',',',',"
+                   "',',',',',',',',',',"
+                   "',',',',',',',',',',"
+                   "',',',',',',',',',',"
+                   "',',',',',',',',',',"
+                   "',',',',',',',',',',"
+                   "',',',',',',',',',',"
+                   "',',',',',',',',',',"
+                   "',',',',',',',',',',")
         self.assertRaises(
             arff.BadAttributeType,
             decoder._decode_attribute,

@@ -148,13 +148,19 @@ class TestDecodeComment(unittest.TestCase):
         self.assertEqual(result['description'], expected['description'])
         self.assertEqual(result['relation'], expected['relation'])
 
-        self.assertEqual(len(result['attributes']), len(expected['attributes']))
-        self.assertEqual(result['attributes'][0][0], expected['attributes'][0][0])
-        self.assertEqual(result['attributes'][0][1][0], expected['attributes'][0][1][0])
-        self.assertEqual(result['attributes'][0][1][1], expected['attributes'][0][1][1])
-        self.assertEqual(result['attributes'][0][1][2], expected['attributes'][0][1][2])
+        self.assertEqual(len(result['attributes']),
+                         len(expected['attributes']))
+        self.assertEqual(result['attributes'][0][0],
+                         expected['attributes'][0][0])
+        self.assertEqual(result['attributes'][0][1][0],
+                         expected['attributes'][0][1][0])
+        self.assertEqual(result['attributes'][0][1][1],
+                         expected['attributes'][0][1][1])
+        self.assertEqual(result['attributes'][0][1][2],
+                         expected['attributes'][0][1][2])
 
-        self.assertEqual(result['attributes'][1][1], expected['attributes'][1][1])
+        self.assertEqual(result['attributes'][1][1],
+                         expected['attributes'][1][1])
 
         self.assertEqual(len(result['data']), len(expected['data']))
         self.assertEqual(result['data'][0][0], expected['data'][0][0])
@@ -172,13 +178,19 @@ class TestDecodeComment(unittest.TestCase):
         self.assertEqual(result['description'], expected['description'])
         self.assertEqual(result['relation'], expected['relation'])
 
-        self.assertEqual(len(result['attributes']), len(expected['attributes']))
-        self.assertEqual(result['attributes'][0][0], expected['attributes'][0][0])
-        self.assertEqual(result['attributes'][0][1][0], expected['attributes'][0][1][0])
-        self.assertEqual(result['attributes'][0][1][1], expected['attributes'][0][1][1])
-        self.assertEqual(result['attributes'][0][1][2], expected['attributes'][0][1][2])
+        self.assertEqual(len(result['attributes']),
+                         len(expected['attributes']))
+        self.assertEqual(result['attributes'][0][0],
+                         expected['attributes'][0][0])
+        self.assertEqual(result['attributes'][0][1][0],
+                         expected['attributes'][0][1][0])
+        self.assertEqual(result['attributes'][0][1][1],
+                         expected['attributes'][0][1][1])
+        self.assertEqual(result['attributes'][0][1][2],
+                         expected['attributes'][0][1][2])
 
-        self.assertEqual(result['attributes'][1][1], expected['attributes'][1][1])
+        self.assertEqual(result['attributes'][1][1],
+                         expected['attributes'][1][1])
 
         self.assertEqual(len(result['data']), len(expected['data']))
         self.assertEqual(result['data'][0][0], expected['data'][0][0])
@@ -213,7 +225,8 @@ class TestDecodeComment(unittest.TestCase):
 
     def test_decode_dense_gen_data_error(self):
         decoder = self.get_decoder()
-        result = decoder.decode(ARFF + '\nJU"N"K', return_type=arff.DENSE_GEN)
+        result = decoder.decode(ARFF + '\nJU"N"K',
+                                return_type=arff.DENSE_GEN)
         # no error for valid entries
         self.assertEqual(next(result['data']), OBJ['data'][0])
         # but error when getting all entries
@@ -223,7 +236,8 @@ class TestDecodeComment(unittest.TestCase):
 
     def test_decode_lod_gen_data_error(self):
         decoder = self.get_decoder()
-        result = decoder.decode(xor_dataset + '\nJU"N"K', return_type=arff.LOD_GEN)
+        result = decoder.decode(xor_dataset + '\nJU"N"K',
+                                return_type=arff.LOD_GEN)
         # no error for valid entries
         self.assertEqual(next(result['data']), xor_object_lod['data'][0])
         # but error when getting all entries
