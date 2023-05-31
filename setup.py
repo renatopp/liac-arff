@@ -16,7 +16,7 @@ except ImportError:
 from setuptools import setup
 
 try:
-    with open('README.rst', 'r'):
+    with open('README.rst', 'r') as f:
         long_description = f.read()
 except:
     long_description = ''
