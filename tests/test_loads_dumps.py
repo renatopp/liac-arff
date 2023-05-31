@@ -39,6 +39,7 @@ ARFF = '''%
 1.0,1.0,0.0
 '''
 
+
 class TestLoadDump(unittest.TestCase):
     def get_dumps(self):
         dumps = arff.dumps

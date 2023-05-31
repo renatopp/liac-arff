@@ -1,6 +1,7 @@
 import unittest
 import arff
 
+
 class TestDecodeRelation(unittest.TestCase):
     def get_decoder(self):
         decoder = arff.ArffDecoder()

@@ -1,6 +1,7 @@
 import unittest
 import arff
 
+
 class TestEncodeAttribute(unittest.TestCase):
     def get_encoder(self):
         decoder = arff.ArffEncoder()

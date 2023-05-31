@@ -21,6 +21,7 @@ ARFF = '''% XOR Dataset
 % 
 % '''
 
+
 class TestLoad(unittest.TestCase):
     def get_load(self):
         load = arff.load
