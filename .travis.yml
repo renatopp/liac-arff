@@ -10,8 +10,13 @@ matrix:
     - python: 3.10-dev
     - python: pypy3
 
-install: python setup.py install
+install:
+- pip install .
+- pip install flake8
+
 script:
+- flake8 arff.py
+- flake8 --ignore=W291,W293 tests
 - python setup.py test
 - source ci_scripts/create_doc.sh $TRAVIS_BRANCH "doc_result"
 

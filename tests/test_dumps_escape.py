@@ -1,9 +1,5 @@
 import unittest
 import arff
-try:
-    from StringIO import StringIO
-except ImportError:
-    from io import StringIO
 
 OBJ = {
     'description': 'teste',
@@ -18,9 +14,9 @@ OBJ = {
         ['lorem', 'b', 'thisisavalidstatement', '"b"'],
         ['lorem', 'b', 'this is a valid statement with an % symbol', '"b"'],
         ['lorem2', 'd', 'this is a valid statement', '"d"'],
-        ['lorem3', 'c', 'this is a valid statement with double quotes included """""""! ', '"c"'],
-        ['lorem4', 'a', 'this is a valid \\ statement with singlequotes included \' lol \'! ', '"a"']
-    ]
+        ['lorem3', 'c', 'this is a valid statement with double quotes included """""""! ', '"c"'],  # noqa: E501
+        ['lorem4', 'a', 'this is a valid \\ statement with singlequotes included \' lol \'! ', '"a"'],  # noqa: E501
+    ],
 }
 
 ARFF = '''% teste
@@ -37,7 +33,7 @@ lorem,b,'this is a valid statement with an \\% symbol',\'\\"b\\"\'
 lorem2,d,'this is a valid statement',\'\\"d\\"\'
 lorem3,c,'this is a valid statement with double quotes included \\"\\"\\"\\"\\"\\"\\"! ',\'\\"c\\"\'
 lorem4,a,'this is a valid \\\\ statement with singlequotes included \\\' lol \\\'! ',\'\\"a\\"\'
-'''
+'''  # noqa: E501
 
 
 class TestDumps(unittest.TestCase):

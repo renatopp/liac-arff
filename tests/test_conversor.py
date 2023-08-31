@@ -2,6 +2,7 @@ import unittest
 import textwrap
 import arff
 
+
 class BaseTestDecodeConversor:
 
     # Note that we want to test the normalisation (e.g. handling of missing

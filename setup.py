@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 __author__ = 'Renato de Pontes Pereira, Matthias Feurer, Joel Nothman'
 __author_email__ = ('renato.ppontes@gmail.com, '
                     'feurerm@informatik.uni-freiburg.de, '
@@ -13,19 +11,18 @@ except ImportError:
     from ez_setup import use_setuptools
     use_setuptools()
 
-import sys
 from setuptools import setup
 
 try:
-    with open('README.rst', 'r'):
+    with open('README.rst', 'r') as f:
         long_description = f.read()
-except:
+except OSError:
     long_description = ''
 
 setup(
     name='liac-arff',
-    version= __version__,
-    author= __author__,
+    version=__version__,
+    author=__author__,
     author_email=__author_email__,
     license='MIT License',
     description='A module for read and write ARFF files in Python.',

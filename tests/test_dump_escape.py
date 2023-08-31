@@ -1,6 +1,7 @@
 import unittest
 import arff
 
+
 ARFF_SOURCE = '''% 
 @RELATION teste
 
@@ -15,7 +16,7 @@ lorem, b, 'this is a valid statement with an % symbol','"b"'
 lorem2, d, 'this is a valid statement','"d"'
 lorem3, c, 'this is a valid statement with double quotes included """""""! ','"c"'
 lorem4, a, 'this is a valid statement with singlequotes included \\\' lol \\\'! ','"a"'
-'''
+'''  # noqa: E501
 
 ARFF_DESTINY = '''@RELATION teste
 
@@ -30,7 +31,7 @@ lorem,b,'this is a valid statement with an \\% symbol',\'\\"b\\"\'
 lorem2,d,'this is a valid statement',\'\\"d\\"\'
 lorem3,c,'this is a valid statement with double quotes included \\"\\"\\"\\"\\"\\"\\"! ',\'\\"c\\"\'
 lorem4,a,'this is a valid statement with singlequotes included \\\' lol \\\'! ',\'\\"a\\"\'
-'''
+'''  # noqa: E501
 
 
 class TestDumpEscape(unittest.TestCase):
@@ -51,4 +52,3 @@ class TestDumpEscape(unittest.TestCase):
             obj = arff.loads(src)
             src = arff.dumps(obj)
             self.assertEqual(src, ARFF_DESTINY)
-

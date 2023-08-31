@@ -1,9 +1,5 @@
 import unittest
 import arff
-try:
-    from StringIO import StringIO
-except ImportError:
-    from io import StringIO
 
 OBJ = {
     'description': 'XOR Dataset',
@@ -35,6 +31,7 @@ ARFF = '''% XOR Dataset
 1.0,1.0,0.0
 '''
 
+
 class TestDumps(unittest.TestCase):
     def get_dumps(self):
         dumps = arff.dumps
@@ -45,4 +42,3 @@ class TestDumps(unittest.TestCase):
         s = dumps(OBJ)
 
         self.assertEqual(s, ARFF)
-

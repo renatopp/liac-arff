@@ -1,10 +1,6 @@
 import os
 import unittest
 import arff
-try:
-    from StringIO import StringIO
-except ImportError:
-    from io import StringIO
 
 OBJ = {
     'description': '\nXOR Dataset\n\n\n',
@@ -39,6 +35,7 @@ ARFF = '''%
 1.0,1.0,0.0
 '''
 
+
 class TestLoadDump(unittest.TestCase):
     def get_dumps(self):
         dumps = arff.dumps
@@ -64,7 +61,8 @@ class TestLoadDump(unittest.TestCase):
 
     def test_issue_69(self):
         # https://github.com/renatopp/liac-arff/issues/69
-        example_arff_file = os.path.join(os.path.dirname(__file__), 'examples', 'issue69.arff')
+        example_arff_file = os.path.join(os.path.dirname(__file__),
+                                         'examples', 'issue69.arff')
         with open(example_arff_file) as fh:
             string = fh.read()
 

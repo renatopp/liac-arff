@@ -1,6 +1,7 @@
 import unittest
 import arff
 
+
 class TestEncodeRelation(unittest.TestCase):
     def get_encoder(self):
         decoder = arff.ArffEncoder()
@@ -41,4 +42,3 @@ class TestEncodeRelation(unittest.TestCase):
         expected = '@RELATION "relation,nameand"'
 
         self.assertEqual(result, expected)
-

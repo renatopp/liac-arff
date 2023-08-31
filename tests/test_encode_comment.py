@@ -1,6 +1,7 @@
 import unittest
 import arff
 
+
 class TestEncodeComment(unittest.TestCase):
     def get_encoder(self):
         decoder = arff.ArffEncoder()
@@ -14,4 +15,3 @@ class TestEncodeComment(unittest.TestCase):
         expected = '% This is a simple comment.'
 
         self.assertEqual(result, expected)
-

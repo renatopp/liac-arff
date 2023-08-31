@@ -2,8 +2,6 @@ import types
 import unittest
 import arff
 
-from unittest import mock
-
 
 class ConversorStub:
     def __init__(self, r_value):
@@ -94,7 +92,7 @@ class TestData(unittest.TestCase):
 
         encoder = arff.ArffEncoder()
         with self.assertRaisesRegex(arff.BadObject,
-                                     "Instance 1 has 2 attributes, expected 1"):
+                                    "Instance 1 has 2 attributes, expected 1"):
             encoder.encode(my_arff)
 
 
@@ -155,7 +153,6 @@ class TestCOOData(unittest.TestCase):
         self.assertEqual(next(result),
                          '{ 0 1,1 ?,2 Renato,3 \'Name with spaces\' }')
 
-
     def test_null_value(self):
         fixture = COOStub([1, None, 'Renato', ''],
                           [0, 0, 0, 0],
@@ -181,8 +178,8 @@ class TestCOOData(unittest.TestCase):
         attributes = (('', ''), ('', ''), ('', ''), ('', ''))
 
         fixture = COOStub([1, 1, 1, 1, 1, 1, 1],
-                [0, 0, 1, 3, 1, 0, 0],
-                [0, 2, 1, 3, 1, 0, 0])
+                          [0, 0, 1, 3, 1, 0, 0],
+                          [0, 2, 1, 3, 1, 0, 0])
 
         generator = self.data.encode_data(fixture, attributes)
         self.assertRaises(ValueError, next, generator)
@@ -201,8 +198,8 @@ class TestCOOData(unittest.TestCase):
 
         encoder = arff.ArffEncoder()
         with self.assertRaisesRegex(arff.BadObject,
-                                     "Instance 1 has at least 2 attributes, "
-                                     "expected 1"):
+                                    "Instance 1 has at least 2 attributes, "
+                                    "expected 1"):
             encoder.encode(my_arff)
 
 
@@ -259,7 +256,6 @@ class TestLODData(unittest.TestCase):
         self.assertEqual(next(result),
                          '{ 0 1,1 ?,2 Renato,3 \'Name with spaces\' }')
 
-
     def test_null_value(self):
         fixture = [{0: 1, 1: None, 2: 'Renato', 3: ''}]
         result = self.data.encode_data(fixture, self.attributes)
@@ -295,5 +291,5 @@ class TestLODData(unittest.TestCase):
 
         encoder = arff.ArffEncoder()
         with self.assertRaisesRegex(arff.BadObject,
-                                     "Instance 1 has 2 attributes, expected 1"):
+                                    "Instance 1 has 2 attributes, expected 1"):
             encoder.encode(my_arff)

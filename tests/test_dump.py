@@ -35,6 +35,7 @@ ARFF = '''% XOR Dataset
 1.0,1.0,0.0
 '''
 
+
 class TestDump(unittest.TestCase):
     def get_dump(self):
         dump = arff.dump
@@ -44,8 +45,7 @@ class TestDump(unittest.TestCase):
         dump = self.get_dump()
         fp = StringIO()
 
-        s = dump(OBJ, fp)
+        dump(OBJ, fp)
 
         fp.seek(0)
         self.assertEqual(fp.read(), ARFF)
-

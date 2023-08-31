@@ -21,6 +21,7 @@ ARFF = '''% XOR Dataset
 % 
 % '''
 
+
 class TestLoad(unittest.TestCase):
     def get_load(self):
         load = arff.load
@@ -39,4 +40,3 @@ class TestLoad(unittest.TestCase):
         self.assertEqual(obj['data'][0][0], 0.0)
         self.assertEqual(obj['data'][0][1], 0.0)
         self.assertEqual(obj['data'][0][2], 0.0)
-

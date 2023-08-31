@@ -42,7 +42,7 @@ attributes = [
     ('humidity', 'REAL'),
     ('windy', ['TRUE', 'FALSE']),
     ('play', ['yes', 'no'])
-    ]
+]
 data = [
     ['sunny', 85.0, 85.0, 'FALSE', 'no'],
     ['sunny', 80.0, 90.0, 'TRUE', 'no'],
@@ -113,8 +113,8 @@ xor_attributes = [('input1', 'REAL'),
                   ('input2', 'REAL'),
                   ('y', 'REAL')]
 xor_data_coo = ([1., 1., 1., 1., 1., 1.],
-            [1, 1, 2, 2, 3, 3],
-            [1, 2, 0, 2, 0, 1])
+                [1, 1, 2, 2, 3, 3],
+                [1, 2, 0, 2, 0, 1])
 xor_data_lod = [{},
                 {1: 1., 2: 1.},
                 {0: 1., 2: 1.},
@@ -148,13 +148,19 @@ class TestDecodeComment(unittest.TestCase):
         self.assertEqual(result['description'], expected['description'])
         self.assertEqual(result['relation'], expected['relation'])
 
-        self.assertEqual(len(result['attributes']), len(expected['attributes']))
-        self.assertEqual(result['attributes'][0][0], expected['attributes'][0][0])
-        self.assertEqual(result['attributes'][0][1][0], expected['attributes'][0][1][0])
-        self.assertEqual(result['attributes'][0][1][1], expected['attributes'][0][1][1])
-        self.assertEqual(result['attributes'][0][1][2], expected['attributes'][0][1][2])
+        self.assertEqual(len(result['attributes']),
+                         len(expected['attributes']))
+        self.assertEqual(result['attributes'][0][0],
+                         expected['attributes'][0][0])
+        self.assertEqual(result['attributes'][0][1][0],
+                         expected['attributes'][0][1][0])
+        self.assertEqual(result['attributes'][0][1][1],
+                         expected['attributes'][0][1][1])
+        self.assertEqual(result['attributes'][0][1][2],
+                         expected['attributes'][0][1][2])
 
-        self.assertEqual(result['attributes'][1][1], expected['attributes'][1][1])
+        self.assertEqual(result['attributes'][1][1],
+                         expected['attributes'][1][1])
 
         self.assertEqual(len(result['data']), len(expected['data']))
         self.assertEqual(result['data'][0][0], expected['data'][0][0])
@@ -172,13 +178,19 @@ class TestDecodeComment(unittest.TestCase):
         self.assertEqual(result['description'], expected['description'])
         self.assertEqual(result['relation'], expected['relation'])
 
-        self.assertEqual(len(result['attributes']), len(expected['attributes']))
-        self.assertEqual(result['attributes'][0][0], expected['attributes'][0][0])
-        self.assertEqual(result['attributes'][0][1][0], expected['attributes'][0][1][0])
-        self.assertEqual(result['attributes'][0][1][1], expected['attributes'][0][1][1])
-        self.assertEqual(result['attributes'][0][1][2], expected['attributes'][0][1][2])
+        self.assertEqual(len(result['attributes']),
+                         len(expected['attributes']))
+        self.assertEqual(result['attributes'][0][0],
+                         expected['attributes'][0][0])
+        self.assertEqual(result['attributes'][0][1][0],
+                         expected['attributes'][0][1][0])
+        self.assertEqual(result['attributes'][0][1][1],
+                         expected['attributes'][0][1][1])
+        self.assertEqual(result['attributes'][0][1][2],
+                         expected['attributes'][0][1][2])
 
-        self.assertEqual(result['attributes'][1][1], expected['attributes'][1][1])
+        self.assertEqual(result['attributes'][1][1],
+                         expected['attributes'][1][1])
 
         self.assertEqual(len(result['data']), len(expected['data']))
         self.assertEqual(result['data'][0][0], expected['data'][0][0])
@@ -213,7 +225,8 @@ class TestDecodeComment(unittest.TestCase):
 
     def test_decode_dense_gen_data_error(self):
         decoder = self.get_decoder()
-        result = decoder.decode(ARFF + '\nJU"N"K', return_type=arff.DENSE_GEN)
+        result = decoder.decode(ARFF + '\nJU"N"K',
+                                return_type=arff.DENSE_GEN)
         # no error for valid entries
         self.assertEqual(next(result['data']), OBJ['data'][0])
         # but error when getting all entries
@@ -223,7 +236,8 @@ class TestDecodeComment(unittest.TestCase):
 
     def test_decode_lod_gen_data_error(self):
         decoder = self.get_decoder()
-        result = decoder.decode(xor_dataset + '\nJU"N"K', return_type=arff.LOD_GEN)
+        result = decoder.decode(xor_dataset + '\nJU"N"K',
+                                return_type=arff.LOD_GEN)
         # no error for valid entries
         self.assertEqual(next(result['data']), xor_object_lod['data'][0])
         # but error when getting all entries
@@ -324,22 +338,22 @@ class TestTooManyAttributes(unittest.TestCase):
     def test_dense(self):
         decoder = arff.ArffDecoder()
         with self.assertRaisesRegex(arff.BadDataFormat,
-                                     'Bad @DATA instance format in line 10: '
-                                     r'\{2 a\}'):
+                                    'Bad @DATA instance format in line 10: '
+                                    r'\{2 a\}'):
             decoder.decode(too_many_attributes, return_type=arff.DENSE)
 
     def test_coo(self):
         decoder = arff.ArffDecoder()
         with self.assertRaisesRegex(arff.BadDataFormat,
-                                     'Bad @DATA instance format in line 10: '
-                                     r'\{2 a\}'):
+                                    'Bad @DATA instance format in line 10: '
+                                    r'\{2 a\}'):
             decoder.decode(too_many_attributes, return_type=arff.COO)
 
     def test_lod(self):
         decoder = arff.ArffDecoder()
         with self.assertRaisesRegex(arff.BadDataFormat,
-                                     'Bad @DATA instance format in line 10: '
-                                     r'\{2 a\}'):
+                                    'Bad @DATA instance format in line 10: '
+                                    r'\{2 a\}'):
             decoder.decode(too_many_attributes, return_type=arff.LOD)
 
 
@@ -357,8 +371,8 @@ class TestDuplicateAttributeName(unittest.TestCase):
     def test_decode(self):
         decoder = arff.ArffDecoder()
         with self.assertRaisesRegex(arff.BadAttributeName,
-                                     'Bad @ATTRIBUTE name attr1 at line 4, '
-                                     'this name is already in use in line 3.'):
+                                    'Bad @ATTRIBUTE name attr1 at line 4, '
+                                    'this name is already in use in line 3.'):
             decoder.decode(duplicate_attribute)
 
 
@@ -377,35 +391,34 @@ class TestInvalidValues(unittest.TestCase):
 
     def test_dense(self):
 
-
         fixture = self.my_arff.format(data="a','c d'")
         with self.assertRaisesRegex(arff.ArffException,
-                                     "','c d'"):
+                                    "','c d'"):
             arff.load(fixture)
 
         fixture = self.my_arff.format(data="a b, 'c d'")
         with self.assertRaisesRegex(arff.ArffException,
-                                     "'c d"):
+                                    "'c d"):
             print(arff.load(fixture))
 
         fixture = self.my_arff.format(data="'a b', c d")
         with self.assertRaisesRegex(arff.ArffException,
-                                     'c d'):
+                                    'c d'):
             print(arff.load(fixture))
 
     def test_sparse(self):
 
         fixture = self.my_arff.format(data="{0 a',1 'c d'}")
         with self.assertRaisesRegex(arff.ArffException,
-                                     r"',1 'c d'\}."):
+                                    r"',1 'c d'\}."):
             arff.load(fixture)
 
         fixture = self.my_arff.format(data="{0 a b,1 'c d'}")
         with self.assertRaisesRegex(arff.ArffException,
-                                     "b,1 'c d'"):
+                                    "b,1 'c d'"):
             print(arff.load(fixture))
 
         fixture = self.my_arff.format(data="{0 'a b', 1 c d}")
         with self.assertRaisesRegex(arff.ArffException,
-                                     r'.*d\}'):
+                                    r'.*d\}'):
             print(arff.load(fixture))

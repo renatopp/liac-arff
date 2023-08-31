@@ -1,6 +1,7 @@
 import unittest
 import arff
 
+
 class TestDecodeAttributeTypes(unittest.TestCase):
     def get_decoder(self):
         decoder = arff.ArffDecoder()
@@ -123,7 +124,6 @@ class TestDecodeAttributeTypes(unittest.TestCase):
         self.assertEqual(result[1][2], expected[1][2])
         self.assertEqual(result[1][3], expected[1][3])
 
-
     def test_invalid_type(self):
         '''Invalid type name or structure.'''
         decoder = self.get_decoder()
@@ -131,7 +131,7 @@ class TestDecodeAttributeTypes(unittest.TestCase):
         # Invalid type name
         fixture = '@ATTRIBUTE attribute-name NON-EXIST'
         self.assertRaises(
-            arff.BadAttributeType, 
+            arff.BadAttributeType,
             decoder._decode_attribute,
             fixture
         )
@@ -139,13 +139,24 @@ class TestDecodeAttributeTypes(unittest.TestCase):
         # Invalid nominal structure
         fixture = '@ATTRIBUTE attribute-name {1, 2] 3'
         self.assertRaises(
-            arff.BadAttributeType, 
+            arff.BadAttributeType,
             decoder._decode_attribute,
             fixture
         )
 
-        # Check non-regression of ReDos raised in https://github.com/renatopp/liac-arff/issues/117
-        fixture = u"@attribute width  {',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',',"
+        # Check non-regression of ReDos raised in
+        # https://github.com/renatopp/liac-arff/issues/117
+        fixture = ("@attribute width  {"
+                   "',',',',',',',',',',"
+                   "',',',',',',',',',',"
+                   "',',',',',',',',',',"
+                   "',',',',',',',',',',"
+                   "',',',',',',',',',',"
+                   "',',',',',',',',',',"
+                   "',',',',',',',',',',"
+                   "',',',',',',',',',',"
+                   "',',',',',',',',',',"
+                   "',',',',',',',',',',")
         self.assertRaises(
             arff.BadAttributeType,
             decoder._decode_attribute,

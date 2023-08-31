@@ -30,7 +30,7 @@ rainy,71.0,91.0,TRUE,no
 '''
 
 OBJ = {
-    'description':'\nDESCRIPTION HERE\n',
+    'description': '\nDESCRIPTION HERE\n',
     'relation': 'weather',
     'attributes': [
         ('outlook', ['sunny', 'overcast', 'rainy']),
@@ -83,14 +83,14 @@ class TestEncodeComment(unittest.TestCase):
     def test_invalid_object(self):
         encoder = self.get_encoder()
 
-        fixture = {'attributes':[('name','REAL')], 'data':[[1]]}
+        fixture = {'attributes': [('name', 'REAL')], 'data': [[1]]}
         self.assertRaises(
             arff.BadObject,
             encoder.encode,
             fixture
         )
 
-        fixture = {'relation':'name', 'data':[[1]]}
+        fixture = {'relation': 'name', 'data': [[1]]}
         self.assertRaises(
             arff.BadObject,
             encoder.encode,
@@ -101,20 +101,9 @@ class TestEncodeComment(unittest.TestCase):
         encoder = self.get_encoder()
 
         fixture = {
-            'relation':'name', 
-            'attributes':[4],
-            'data':[[1]]
-        }
-        self.assertRaises(
-            arff.BadObject,
-            encoder.encode,
-            fixture
-        )
-        
-        fixture = {
-            'relation':'name', 
-            'attributes':[(2, 'REAL')],
-            'data':[[1]]
+            'relation': 'name',
+            'attributes': [4],
+            'data': [[1]]
         }
         self.assertRaises(
             arff.BadObject,
@@ -123,9 +112,9 @@ class TestEncodeComment(unittest.TestCase):
         )
 
         fixture = {
-            'relation':'name', 
-            'attributes':[('NAME', 'REAL', 'MORE')],
-            'data':[[1]]
+            'relation': 'name',
+            'attributes': [(2, 'REAL')],
+            'data': [[1]]
         }
         self.assertRaises(
             arff.BadObject,
@@ -134,9 +123,20 @@ class TestEncodeComment(unittest.TestCase):
         )
 
         fixture = {
-            'relation':'name', 
-            'attributes':[('NAME', 3)],
-            'data':[[1]]
+            'relation': 'name',
+            'attributes': [('NAME', 'REAL', 'MORE')],
+            'data': [[1]]
+        }
+        self.assertRaises(
+            arff.BadObject,
+            encoder.encode,
+            fixture
+        )
+
+        fixture = {
+            'relation': 'name',
+            'attributes': [('NAME', 3)],
+            'data': [[1]]
         }
         self.assertRaises(
             arff.BadObject,
@@ -148,9 +148,9 @@ class TestEncodeComment(unittest.TestCase):
         encoder = self.get_encoder()
 
         fixture = {
-            'relation':'name', 
-            'attributes':[('name','INVALID')], 
-            'data':[[1]]
+            'relation': 'name',
+            'attributes': [('name', 'INVALID')],
+            'data': [[1]]
         }
         self.assertRaises(
             arff.BadObject,
@@ -167,8 +167,8 @@ class TestEncodeComment(unittest.TestCase):
             'data': [[0], [1]],
         }
         with self.assertRaisesRegex(arff.BadObject,
-                                     'Trying to use attribute name "name" '
-                                     'for the second time.'):
+                                    'Trying to use attribute name "name" '
+                                    'for the second time.'):
             encoder.encode(fixture)
 
     def test_encode_string(self):
